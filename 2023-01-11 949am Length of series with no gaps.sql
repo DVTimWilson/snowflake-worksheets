@@ -8,6 +8,7 @@ WITH logins(login_date) AS (
     SELECT '2022-03-18' :: DATE
 ),
 
+-- Assign row numbers
 logins_rn AS (
     SELECT
         login_date
@@ -15,6 +16,7 @@ logins_rn AS (
     FROM logins
 ),
 
+-- Combine row numbers and login dates
 logins_grp AS (
     SELECT
         login_date
@@ -23,18 +25,19 @@ logins_grp AS (
     FROM logins_rn
 ),
 
+-- Calculate number of days of continuous login time
 logins_length AS (
     SELECT
         MIN(login_date) AS min_login_date
         ,MAX(login_date) AS max_login_date
-        ,MAX(login_date) - MIN(login_date) + 1 AS length
+        ,MAX(login_date) - MIN(login_date) + 1 AS days
     FROM logins_grp
     GROUP BY grp
 )
 
-SELECT * FROM logins_rn
+--SELECT * FROM logins_rn
 --SELECT * FROM logins_grp
---SELECT * FROM logins_length
+SELECT * FROM logins_length
 ;
 
 
@@ -70,10 +73,6 @@ WITH logins(login_date) AS (
     SELECT '2022-03-16' :: DATE
     UNION ALL
     SELECT '2022-03-18' :: DATE
-    -- UNION ALL
-    -- SELECT '2022-03-21' :: DATE
-    -- UNION ALL
-    -- SELECT '2022-03-22' :: DATE
 )
 
 SELECT *
@@ -83,7 +82,7 @@ MATCH_RECOGNIZE(
     MEASURES
         FINAL MIN(login_date) AS min_date,
         FINAL MAX(login_date) AS max_date,
-        FINAL COUNT(*) AS length
+        FINAL COUNT(*) AS days
     --ALL ROWS PER MATCH
     PATTERN( a b* )
     DEFINE

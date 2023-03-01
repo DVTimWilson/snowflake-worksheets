@@ -18,6 +18,7 @@ WITH transactions(id, value_date, amount, expected_length) AS (
     SELECT 9959, '2022-03-14' :: DATE, 32.00, 1
 ),
 
+-- Assign row numbers
 transactions_rn AS (
     SELECT
         id
@@ -29,6 +30,7 @@ transactions_rn AS (
     FROM transactions
 ),
 
+-- Work out where the amount sign changes
 transactions_lowhigh AS (
     SELECT
         *
@@ -39,6 +41,7 @@ transactions_lowhigh AS (
     FROM transactions_rn
 ),    
 
+-- Distribute the low and high values across all rows
 transactions_lowhighall AS (
     SELECT
         *
@@ -53,10 +56,11 @@ transactions_lowhighall AS (
     FROM transactions_lowhigh
 ),
 
+-- Calculate lengths
 transactions_length AS (
     SELECT
         *
-        ,high2 - low2 + 1 AS length
+        ,high2 - low2 + 1 AS actual_length
     FROM transactions_lowhighall
 )
 
