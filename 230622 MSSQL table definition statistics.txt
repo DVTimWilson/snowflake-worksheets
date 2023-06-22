@@ -1,0 +1,11 @@
+select table_name, count(*) col_cnt, #table_name, count(distinct column_name),
+        sum(case when data_type in ('int','tinyint') then 1 else 0 end) as num_col_cnt,
+        sum(case when data_type in ('text','varchar','longtext') then 1 else 0 end) as str_col_cnt,
+        sum(case when data_type in ('date','timestamp','datetime') then 1 else 0 end) as dt_col_cnt,
+        sum(case when data_type in ('bit') then 1 else 0 end) as bool_col_cnt
+from information_schema.columns
+where table_schema = 'IOPCCMS'
+and column_name not in ('is_active','created','created_by','modified','modified_by','id')
+and table_name in ('case_association','case_document_material_sensitivity','case_update_method','criminal_investigation_vrr','criminal_investigation_vrr_received','criminal_letter','investigation_review_recommendation','iopc_department','iopc_office_department','organisational_learning_document','policy_advice_comment','review_recommendation_area','review_recommendation_priority','review_recommendation_source_type','review_recommendation_status')
+group by table_name
+order by 1;
