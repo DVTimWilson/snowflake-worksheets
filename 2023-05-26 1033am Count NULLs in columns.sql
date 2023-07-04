@@ -42,22 +42,24 @@ FROM (
     SELECT
       TableName
       ,TotalRows
-      ,Col
+      ,SUBSTRING(Col, 1, CHARINDEX(''__'', Col) - 1) AS Col
+      ,CAST(SUBSTRING(Col, CHARINDEX(''__'', Col) + 2) as INTEGER) AS Pos
       ,NullCount
       ,CAST(CAST(NullCount AS DECIMAL(12,2)) / NULLIF(CAST(TotalRows AS DECIMAL(12,2)),0) * 100.00 AS DECIMAL(12,2)) AS NullPct
     FROM (
         SELECT
           ''' || t.TABLE_NAME || ''' AS TableName,
           COUNT(*) AS TotalRows,
-          ' || LISTAGG(CAST('COUNT(*) - COUNT(' || c.COLUMN_NAME || ') AS ' || c.COLUMN_NAME AS varchar()), ',') || '
+          ' || LISTAGG('COUNT(*) - COUNT(' || c.COLUMN_NAME || ') AS ' || c.COLUMN_NAME || '__' || c.ORDINAL_POSITION, ',') || '
         FROM ' || t.TABLE_SCHEMA || '.' || t.TABLE_NAME || '
         ) AS t
     UNPIVOT (NullCount FOR Col IN 
-        (' || LISTAGG(CAST(c.COLUMN_NAME AS varchar()), ',') || ')
-    ) AS p'
+        (' || LISTAGG(CAST(c.COLUMN_NAME AS varchar()) || '__' || CAST(c.ORDINAL_POSITION AS varchar()), ',') || ')
+    ) AS p
+    ORDER BY Pos'
     
-            FROM DEV_DATA_VAULT_DB.INFORMATION_SCHEMA.TABLES t
-            JOIN INFORMATION_SCHEMA.COLUMNS c ON c.TABLE_NAME = t.TABLE_NAME AND c.TABLE_SCHEMA = t.TABLE_SCHEMA
+            FROM DATA_PRODUCT_DB.INFORMATION_SCHEMA.TABLES t
+            INNER JOIN INFORMATION_SCHEMA.COLUMNS c ON c.TABLE_NAME = t.TABLE_NAME AND c.TABLE_SCHEMA = t.TABLE_SCHEMA
             WHERE t.TABLE_SCHEMA = 'TWILSON_RAW_VAULT' AND t.TABLE_NAME LIKE '%DORI%'
             GROUP BY t.TABLE_NAME, t.TABLE_SCHEMA
     
