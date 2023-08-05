@@ -50,12 +50,26 @@ SELECT *
 FROM sampledata
 
 -- unknown OR anything/nothing is anything/nothing
+-- 1 A
 --WHERE status IN (NULL, 'A')
+-- 1 A
 --WHERE status = NULL OR status = 'A'
+-- no results
 --WHERE status IN (NULL, 'C')
 
 -- unknown AND anything/nothing is still unknown
+-- no results
 --WHERE status NOT IN (NULL, 'A')
+-- no results
 --WHERE NOT (status = NULL) AND NOT (status = 'A')
+-- no results
 --WHERE status NOT IN (NULL, 'C')
+;
+
+-- NULL
+SELECT NULL / 0 AS testing
+;
+
+-- NULL
+SELECT 0 / NULL AS testing
 ;

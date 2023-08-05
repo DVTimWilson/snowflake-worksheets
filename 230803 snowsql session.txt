@@ -1,0 +1,136 @@
+# Siemens source data: upload csv files to Snowflake internal named stage
+
+timwilson@devbox:~/PycharmProjects/siemens-dv/automate_dv_project/seeds/osc_data_extracts$ snowsql -c siemens
+
+Initiating login request with your identity provider. A browser window should have opened for you to complete the login. If you can't see it, check existing browser windows, or your OS settings. Press CTRL+C to abort and try again...
+
+Going to open: https://login.microsoftonline.com/b2fed733-ac51-4359-8f1e-ad7ddc3b46ec/saml2?SAMLRequest=nZJPc9owEMW%2Fikc925b%2FEEADZNwwBDpJy4BJ2tyEvAYFW3IlOSb59JUNzKSH5JCbRnq7v6d9O7o%2BloXzAkpzKcYo8DByQDCZcbEbo006cwfI0YaKjBZSwBi9gkbXk5GmZVGRpDZ7sYK%2FNWjj2EZCk%2FZhjGoliKSaayJoCZoYRtbJ%2FR0JPUyo1qCMxaFzSaa5Ze2NqYjvN03jNZEn1c4PMcY%2BHvpW1Uq%2BoXeI6nNGpaSRTBaXkqP90weIwMdxi7AKS1ieC79zcRrBZ5TtSaTJPE2X7vLXOkVOcvndjRS6LkGtQb1wBpvV3cmAtg4kC%2Fs4uvKgVrICt7HjC70dqzwtZJMX9ABMllVtbHPPnvwcMr%2BQO25HtpiOUXXg2eLH28Pg7Xk%2Bn62efwc0ncZBrZNbrBNxuJXHeHsY7MXj5s9TjhlyHi4Bh23AC61rWIg2VmOvcBi5eODiKMVD0huSGHtRL3hCztT64oKarvLivfPhlZwpqWVupCi4gM7lNrQ%2B%2B1HkUtYL3DjqDd1BHoBLs36WsWgbXwHz2%2FBCdFog0hlRky%2BOZeS%2Fb3JeyZ82pcV0KQvOXp2ZVCU1H4cYeEF3wzM376QESsqLJMsUaG3DLArZ3Cigxm6%2BUTUgf3Ki%2Fr%2F7k38%3D&RelayState=54029 to authenticate...
+
+* SnowSQL * v1.2.27
+
+Type SQL statements or !help
+
+TIM_WILSON#SANDBOX_XS@TIM_WILSON.TIM_WILSON>USE DATABASE SHARED_SANDBOX;
+
++----------------------------------+                                            
+
+| status                           |
+
+|----------------------------------|
+
+| Statement executed successfully. |
+
++----------------------------------+
+
+1 Row(s) produced. Time Elapsed: 0.132s
+
+TIM_WILSON#SANDBOX_XS@SHARED_SANDBOX.TIM_WILSON>USE SCHEMA OSC_DATA_EXTRACTS;
+
++----------------------------------+                                            
+
+| status                           |
+
+|----------------------------------|
+
+| Statement executed successfully. |
+
++----------------------------------+
+
+1 Row(s) produced. Time Elapsed: 0.074s
+
+TIM_WILSON#SANDBOX_XS@SHARED_SANDBOX.OSC_DATA_EXTRACTS>PUT file:///home/timwilson/PycharmProjects/siemens-dv/automate_dv_project/seeds/osc_data_extracts/*.csv @CSV_STAGE;
++---------------------------------+------------------------------------+-------------+-------------+--------------------+--------------------+----------+---------+
+
+| source                          | target                             | source_size | target_size | source_compression | target_compression | status   | message |
+
+|---------------------------------+------------------------------------+-------------+-------------+--------------------+--------------------+----------+---------|
+
+| SV_OSC_P_T_ACCNT_ADDR.csv       | SV_OSC_P_T_ACCNT_ADDR.csv.gz       |   345565524 |    68031408 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_ACCNT_CLASS.csv      | SV_OSC_P_T_ACCNT_CLASS.csv.gz      |   230011063 |    15593200 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_ACCNT_CUST_OP.csv    | SV_OSC_P_T_ACCNT_CUST_OP.csv.gz    |     7993006 |     1623472 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_ACCNT_EMAIL.csv      | SV_OSC_P_T_ACCNT_EMAIL.csv.gz      |     2014100 |      591952 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_ACCNT_FAX.csv        | SV_OSC_P_T_ACCNT_FAX.csv.gz        |    10631828 |     1922000 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_ACCNT_MKT_ATT.csv    | SV_OSC_P_T_ACCNT_MKT_ATT.csv.gz    |     8574165 |     1694352 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_ACCNT_ORG_PROF.csv   | SV_OSC_P_T_ACCNT_ORG_PROF.csv.gz   |   372992207 |    68444512 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_ACCNT_PHONE.csv      | SV_OSC_P_T_ACCNT_PHONE.csv.gz      |    50272559 |     8291808 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_ACCNT_REL.csv        | SV_OSC_P_T_ACCNT_REL.csv.gz        |   214499529 |    48610736 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_ACCNT_RESOURCE.csv   | SV_OSC_P_T_ACCNT_RESOURCE.csv.gz   |   204294676 |    21142432 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_ACCNT_SALES_PROF.csv | SV_OSC_P_T_ACCNT_SALES_PROF.csv.gz |    41922320 |     5695072 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_ACCNT_TREENODE.csv   | SV_OSC_P_T_ACCNT_TREENODE.csv.gz   |     4029893 |      867952 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_ACCNT_URL.csv        | SV_OSC_P_T_ACCNT_URL.csv.gz        |     3885893 |     1086400 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_ACTIVITY.csv         | SV_OSC_P_T_ACTIVITY.csv.gz         |  1551119748 |   354745824 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_ACT_ASS.csv          | SV_OSC_P_T_ACT_ASS.csv.gz          |   438984922 |    79410800 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_ACT_CONTACT.csv      | SV_OSC_P_T_ACT_CONTACT.csv.gz      |   123384158 |    28477216 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_ACT_OBJ.csv          | SV_OSC_P_T_ACT_OBJ.csv.gz          |       21538 |        5104 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_ASSAY.csv            | SV_OSC_P_T_ASSAY.csv.gz            |   159125681 |    19274912 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_ASSET.csv            | SV_OSC_P_T_ASSET.csv.gz            |   882696034 |   185843776 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_ASS_OPTY_REL.csv     | SV_OSC_P_T_ASS_OPTY_REL.csv.gz     |   136467622 |    31471568 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_COMPETITOR.csv       | SV_OSC_P_T_COMPETITOR.csv.gz       |      341203 |       71200 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_CON_ADDR.csv         | SV_OSC_P_T_CON_ADDR.csv.gz         |   116021010 |    18749456 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_CON_EMAIL.csv        | SV_OSC_P_T_CON_EMAIL.csv.gz        |    68093527 |    12873424 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_CON_MKT_ATT.csv      | SV_OSC_P_T_CON_MKT_ATT.csv.gz      |    18101099 |     3089344 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_CON_PHONE.csv        | SV_OSC_P_T_CON_PHONE.csv.gz        |   108882270 |    19306128 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_CON_PROF.csv         | SV_OSC_P_T_CON_PROF.csv.gz         |   272658918 |    45478288 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_EMP_RESOURCE.csv     | SV_OSC_P_T_EMP_RESOURCE.csv.gz     |     4514362 |      835296 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_LEAD.csv             | SV_OSC_P_T_LEAD.csv.gz             |    81812744 |    13187248 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_NOTE.csv             | SV_OSC_P_T_NOTE.csv.gz             |   224317216 |    56266976 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_OPTY.csv             | SV_OSC_P_T_OPTY.csv.gz             |   608622333 |   163416480 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_OPTY_LEAD.csv        | SV_OSC_P_T_OPTY_LEAD.csv.gz        |     1201175 |      328640 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_OPTY_RESOURCE.csv    | SV_OSC_P_T_OPTY_RESOURCE.csv.gz    |   285617280 |    74992768 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_OPTY_REVENUE.csv     | SV_OSC_P_T_OPTY_REVENUE.csv.gz     |  1032177294 |   238298992 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_PRODUCT.csv          | SV_OSC_P_T_PRODUCT.csv.gz          |    10792134 |     2121872 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_PRODUCT_INACTIVE.csv | SV_OSC_P_T_PRODUCT_INACTIVE.csv.gz |     6473218 |     1135072 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_PROJECT_C.csv        | SV_OSC_P_T_PROJECT_C.csv.gz        |    31718027 |     5890496 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_PTNR_INT.csv         | SV_OSC_P_T_PTNR_INT.csv.gz         |      400070 |      144464 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_SALES_PROGRAM.csv    | SV_OSC_P_T_SALES_PROGRAM.csv.gz    |       97524 |       20064 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_TERRITORY.csv        | SV_OSC_P_T_TERRITORY.csv.gz        |     1482974 |      298000 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_TERR_ACCOUNT.csv     | SV_OSC_P_T_TERR_ACCOUNT.csv.gz     |   323788484 |    51840432 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_TERR_RESOURCE.csv    | SV_OSC_P_T_TERR_RESOURCE.csv.gz    |    12387799 |     1645200 | NONE               | GZIP               | UPLOADED |         |
+
+| SV_OSC_P_T_WVP_OPTY_REL.csv     | SV_OSC_P_T_WVP_OPTY_REL.csv.gz     |    56831990 |    10183424 | NONE               | GZIP               | UPLOADED |         |
+
++---------------------------------+------------------------------------+-------------+-------------+--------------------+--------------------+----------+---------+
+
+42 Row(s) produced. Time Elapsed: 1635.375s
+
+TIM_WILSON#SANDBOX_XS@SHARED_SANDBOX.OSC_DATA_EXTRACTS>

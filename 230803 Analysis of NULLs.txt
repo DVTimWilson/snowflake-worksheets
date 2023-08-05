@@ -1,0 +1,2324 @@
+-- Add double quotes to protect funky column names
+
+USE DATABASE SHARED_SANDBOX
+;
+
+USE SCHEMA OSC_DATA_EXTRACTS
+;
+
+SELECT query_to_run || ' ORDER BY TableName, Pos;'
+FROM (
+    SELECT LISTAGG(TableQuery, ' UNION ALL ') AS query_to_run
+    FROM (
+        SELECT '
+    SELECT
+      TableName
+      ,TotalRows
+      ,SUBSTRING(Col, 1, CHARINDEX(''__'', Col) - 1) AS Col
+      ,CAST(SUBSTRING(Col, CHARINDEX(''__'', Col) + 2) as INTEGER) AS Pos
+      ,NullCount
+      ,CAST(CAST(NullCount AS DECIMAL(12,2)) / NULLIF(CAST(TotalRows AS DECIMAL(12,2)),0) * 100.00 AS DECIMAL(12,2)) AS NullPct
+    FROM (
+        SELECT
+          ''' || t.TABLE_NAME || ''' AS TableName,
+          COUNT(*) AS TotalRows,
+          ' || LISTAGG('COUNT(*) - COUNT("' || c.COLUMN_NAME || '") AS "' || c.COLUMN_NAME || '__' || c.ORDINAL_POSITION, '",') || '"
+        FROM ' || t.TABLE_SCHEMA || '.' || t.TABLE_NAME || '
+        ) AS t
+    UNPIVOT (NullCount FOR Col IN 
+        (' || LISTAGG('"' || CAST(c.COLUMN_NAME AS varchar()) || '__' || CAST(c.ORDINAL_POSITION AS varchar()), '",') || '")
+    ) AS p'
+    
+            FROM SHARED_SANDBOX.INFORMATION_SCHEMA.TABLES t
+            INNER JOIN INFORMATION_SCHEMA.COLUMNS c ON c.TABLE_NAME = t.TABLE_NAME AND c.TABLE_SCHEMA = t.TABLE_SCHEMA
+            WHERE t.TABLE_SCHEMA = 'OSC_DATA_EXTRACTS'
+                --AND t.TABLE_NAME = 'SV_OSC_P_T_ACT_OBJ' OR t.TABLE_NAME = 'SV_OSC_P_T_ACT_ASS'
+            GROUP BY t.TABLE_NAME, t.TABLE_SCHEMA
+    
+        ) AS t(TableQuery)
+) AS generate
+;
+
+
+-- Format the output with Poor SQL
+
+
+USE DATABASE SHARED_SANDBOX
+;
+
+USE SCHEMA OSC_DATA_EXTRACTS
+;
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_CON_PHONE' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("Contact.Phone Status") AS "Contact.Phone Status__4"
+		,COUNT(*) - COUNT("Contact.Phone Last Updated By (GID) (PII)") AS "Contact.Phone Last Updated By (GID) (PII)__7"
+		,COUNT(*) - COUNT("Contact.Phone Area Code") AS "Contact.Phone Area Code__12"
+		,COUNT(*) - COUNT("Contact.Phone Last Updated Timestamp") AS "Contact.Phone Last Updated Timestamp__6"
+		,COUNT(*) - COUNT("Contact.Phone Extension") AS "Contact.Phone Extension__8"
+		,COUNT(*) - COUNT("CONTACT_ID") AS "CONTACT_ID__2"
+		,COUNT(*) - COUNT("Contact.Phone Type") AS "Contact.Phone Type__3"
+		,COUNT(*) - COUNT("Contact.Phone Primary (Flag)") AS "Contact.Phone Primary (Flag)__5"
+		,COUNT(*) - COUNT("Contact.Phone Created Timestamp") AS "Contact.Phone Created Timestamp__9"
+		,COUNT(*) - COUNT("Contact.Phone (PII)") AS "Contact.Phone (PII)__13"
+		,COUNT(*) - COUNT("Contact.Phone Created By (GID) (PII)") AS "Contact.Phone Created By (GID) (PII)__10"
+		,COUNT(*) - COUNT("Contact.Phone Country Code") AS "Contact.Phone Country Code__11"
+		,COUNT(*) - COUNT("CONTACT_PHONE_ID") AS "CONTACT_PHONE_ID__1"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_CON_PHONE
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"Contact.Phone Status__4"
+			,"Contact.Phone Last Updated By (GID) (PII)__7"
+			,"Contact.Phone Area Code__12"
+			,"Contact.Phone Last Updated Timestamp__6"
+			,"Contact.Phone Extension__8"
+			,"CONTACT_ID__2"
+			,"Contact.Phone Type__3"
+			,"Contact.Phone Primary (Flag)__5"
+			,"Contact.Phone Created Timestamp__9"
+			,"Contact.Phone (PII)__13"
+			,"Contact.Phone Created By (GID) (PII)__10"
+			,"Contact.Phone Country Code__11"
+			,"CONTACT_PHONE_ID__1"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_TERRITORY' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("TERRITORYRESOURCE_ID") AS "TERRITORYRESOURCE_ID__2"
+		,COUNT(*) - COUNT("Territory.Name") AS "Territory.Name__7"
+		,COUNT(*) - COUNT("TERRITORYVERSION_ID") AS "TERRITORYVERSION_ID__1"
+		,COUNT(*) - COUNT("Territory.Grouping Territory (Flag)") AS "Territory.Grouping Territory (Flag)__12"
+		,COUNT(*) - COUNT("Territory.Last Update Date") AS "Territory.Last Update Date__10"
+		,COUNT(*) - COUNT("TERRITORY_ID") AS "TERRITORY_ID__3"
+		,COUNT(*) - COUNT("Territory.PARTY_ID") AS "Territory.PARTY_ID__4"
+		,COUNT(*) - COUNT("PARENTTERRITORY_ID") AS "PARENTTERRITORY_ID__16"
+		,COUNT(*) - COUNT("Territory.OWNERRESOURCE_ID") AS "Territory.OWNERRESOURCE_ID__5"
+		,COUNT(*) - COUNT("Territory.Forecast By Parent (Flag)") AS "Territory.Forecast By Parent (Flag)__13"
+		,COUNT(*) - COUNT("Territory.Latest Version (Flag)") AS "Territory.Latest Version (Flag)__9"
+		,COUNT(*) - COUNT("Territory.Description") AS "Territory.Description__15"
+		,COUNT(*) - COUNT("Territory.Level") AS "Territory.Level__8"
+		,COUNT(*) - COUNT("Territory.Number") AS "Territory.Number__6"
+		,COUNT(*) - COUNT("Territory.Last Update By") AS "Territory.Last Update By__11"
+		,COUNT(*) - COUNT("Territory.Eligible for Quota (Flag)") AS "Territory.Eligible for Quota (Flag)__14"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_TERRITORY
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"TERRITORYRESOURCE_ID__2"
+			,"Territory.Name__7"
+			,"TERRITORYVERSION_ID__1"
+			,"Territory.Grouping Territory (Flag)__12"
+			,"Territory.Last Update Date__10"
+			,"TERRITORY_ID__3"
+			,"Territory.PARTY_ID__4"
+			,"PARENTTERRITORY_ID__16"
+			,"Territory.OWNERRESOURCE_ID__5"
+			,"Territory.Forecast By Parent (Flag)__13"
+			,"Territory.Latest Version (Flag)__9"
+			,"Territory.Description__15"
+			,"Territory.Level__8"
+			,"Territory.Number__6"
+			,"Territory.Last Update By__11"
+			,"Territory.Eligible for Quota (Flag)__14"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_ACCNT_URL' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("Account.URL Last Updated Timestamp") AS "Account.URL Last Updated Timestamp__4"
+		,COUNT(*) - COUNT("ACCOUNT_ID") AS "ACCOUNT_ID__2"
+		,COUNT(*) - COUNT("Account.URL Primary (Flag)") AS "Account.URL Primary (Flag)__3"
+		,COUNT(*) - COUNT("ACCOUNT_URL_ID") AS "ACCOUNT_URL_ID__1"
+		,COUNT(*) - COUNT("Account URL") AS "Account URL__5"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_ACCNT_URL
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"Account.URL Last Updated Timestamp__4"
+			,"ACCOUNT_ID__2"
+			,"Account.URL Primary (Flag)__3"
+			,"ACCOUNT_URL_ID__1"
+			,"Account URL__5"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_SALES_PROGRAM' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("Sales Program Name") AS "Sales Program Name__6"
+		,COUNT(*) - COUNT("SALES_PROGRAM_ID") AS "SALES_PROGRAM_ID__1"
+		,COUNT(*) - COUNT("Sales Program Objective") AS "Sales Program Objective__5"
+		,COUNT(*) - COUNT("Sales Prorgam Country") AS "Sales Prorgam Country__2"
+		,COUNT(*) - COUNT("Sales Program Type") AS "Sales Program Type__3"
+		,COUNT(*) - COUNT("Sales Program Start Date") AS "Sales Program Start Date__4"
+		,COUNT(*) - COUNT("Sales Program End Date") AS "Sales Program End Date__7"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_SALES_PROGRAM
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"Sales Program Name__6"
+			,"SALES_PROGRAM_ID__1"
+			,"Sales Program Objective__5"
+			,"Sales Prorgam Country__2"
+			,"Sales Program Type__3"
+			,"Sales Program Start Date__4"
+			,"Sales Program End Date__7"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_WVP_OPTY_REL' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("Creation Date") AS "Creation Date__11"
+		,COUNT(*) - COUNT("Primary Winning Vendor (Flag)") AS "Primary Winning Vendor (Flag)__6"
+		,COUNT(*) - COUNT("Last Update Date") AS "Last Update Date__10"
+		,COUNT(*) - COUNT("Winning Vendor Name") AS "Winning Vendor Name__3"
+		,COUNT(*) - COUNT("Winning Vendor Product Name") AS "Winning Vendor Product Name__2"
+		,COUNT(*) - COUNT("WVP_INFORMATION_ID") AS "WVP_INFORMATION_ID__1"
+		,COUNT(*) - COUNT("Mark To Delete (Flag)") AS "Mark To Delete (Flag)__9"
+		,COUNT(*) - COUNT("PRODUCT_ID (Winning Vendor)") AS "PRODUCT_ID (Winning Vendor)__5"
+		,COUNT(*) - COUNT("Opportunity Number (Winning Vendor)") AS "Opportunity Number (Winning Vendor)__7"
+		,COUNT(*) - COUNT("OLI Number (Winning Vendor)") AS "OLI Number (Winning Vendor)__8"
+		,COUNT(*) - COUNT("Record Number (Winning Vendor)") AS "Record Number (Winning Vendor)__4"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_WVP_OPTY_REL
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"Creation Date__11"
+			,"Primary Winning Vendor (Flag)__6"
+			,"Last Update Date__10"
+			,"Winning Vendor Name__3"
+			,"Winning Vendor Product Name__2"
+			,"WVP_INFORMATION_ID__1"
+			,"Mark To Delete (Flag)__9"
+			,"PRODUCT_ID (Winning Vendor)__5"
+			,"Opportunity Number (Winning Vendor)__7"
+			,"OLI Number (Winning Vendor)__8"
+			,"Record Number (Winning Vendor)__4"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_ACT_CONTACT' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("Activity.Contact Last Updated By (GID) (PII)") AS "Activity.Contact Last Updated By (GID) (PII)__6"
+		,COUNT(*) - COUNT("Activity.Contact Created By (GID) (PII)") AS "Activity.Contact Created By (GID) (PII)__8"
+		,COUNT(*) - COUNT("ACTIVITY_ID") AS "ACTIVITY_ID__3"
+		,COUNT(*) - COUNT("Activity.Contact Created Timestamp") AS "Activity.Contact Created Timestamp__7"
+		,COUNT(*) - COUNT("RELATIONSHIP_ID") AS "RELATIONSHIP_ID__1"
+		,COUNT(*) - COUNT("Activity.Contact Last Updated Date") AS "Activity.Contact Last Updated Date__5"
+		,COUNT(*) - COUNT("Activity.Contact Attendee (Flag)") AS "Activity.Contact Attendee (Flag)__9"
+		,COUNT(*) - COUNT("Activity.Contact User Last Updated Timestamp") AS "Activity.Contact User Last Updated Timestamp__4"
+		,COUNT(*) - COUNT("CONTACT_ID") AS "CONTACT_ID__2"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_ACT_CONTACT
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"Activity.Contact Last Updated By (GID) (PII)__6"
+			,"Activity.Contact Created By (GID) (PII)__8"
+			,"ACTIVITY_ID__3"
+			,"Activity.Contact Created Timestamp__7"
+			,"RELATIONSHIP_ID__1"
+			,"Activity.Contact Last Updated Date__5"
+			,"Activity.Contact Attendee (Flag)__9"
+			,"Activity.Contact User Last Updated Timestamp__4"
+			,"CONTACT_ID__2"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_ACCNT_SALES_PROF' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("ACCOUNT_ID") AS "ACCOUNT_ID__2"
+		,COUNT(*) - COUNT("EMPLOYEE_ID (Account Owner)") AS "EMPLOYEE_ID (Account Owner)__3"
+		,COUNT(*) - COUNT("SALESACCOUNT_ID") AS "SALESACCOUNT_ID__1"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_ACCNT_SALES_PROF
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"ACCOUNT_ID__2"
+			,"EMPLOYEE_ID (Account Owner)__3"
+			,"SALESACCOUNT_ID__1"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_PTNR_INT' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("Partner Name (PII)") AS "Partner Name (PII)__2"
+		,COUNT(*) - COUNT("PARTNER_ID") AS "PARTNER_ID__1"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_PTNR_INT
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"Partner Name (PII)__2"
+			,"PARTNER_ID__1"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_ACCNT_PHONE' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("Account Phone Area Code (PII)") AS "Account Phone Area Code (PII)__7"
+		,COUNT(*) - COUNT("Account Phone Extension (PII)") AS "Account Phone Extension (PII)__5"
+		,COUNT(*) - COUNT("Account.Phone Last Updated Timestamp") AS "Account.Phone Last Updated Timestamp__4"
+		,COUNT(*) - COUNT("ACCOUNT_PHONE_ID") AS "ACCOUNT_PHONE_ID__1"
+		,COUNT(*) - COUNT("ACCOUNT_ID") AS "ACCOUNT_ID__2"
+		,COUNT(*) - COUNT("Account Phone Country Code (PII)") AS "Account Phone Country Code (PII)__6"
+		,COUNT(*) - COUNT("Account Phone (PII)") AS "Account Phone (PII)__8"
+		,COUNT(*) - COUNT("Account.Phone Primary (Flag)") AS "Account.Phone Primary (Flag)__3"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_ACCNT_PHONE
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"Account Phone Area Code (PII)__7"
+			,"Account Phone Extension (PII)__5"
+			,"Account.Phone Last Updated Timestamp__4"
+			,"ACCOUNT_PHONE_ID__1"
+			,"ACCOUNT_ID__2"
+			,"Account Phone Country Code (PII)__6"
+			,"Account Phone (PII)__8"
+			,"Account.Phone Primary (Flag)__3"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_ASSAY' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("Assay Number") AS "Assay Number__7"
+		,COUNT(*) - COUNT("Assay Created By (PII)") AS "Assay Created By (PII)__12"
+		,COUNT(*) - COUNT("Assay Last Update Date") AS "Assay Last Update Date__10"
+		,COUNT(*) - COUNT("Assay Availability") AS "Assay Availability__14"
+		,COUNT(*) - COUNT("System Number") AS "System Number__1"
+		,COUNT(*) - COUNT("Assay Country Release") AS "Assay Country Release__13"
+		,COUNT(*) - COUNT("Assay Name") AS "Assay Name__8"
+		,COUNT(*) - COUNT("ASSAY_ID") AS "ASSAY_ID__4"
+		,COUNT(*) - COUNT("Assay Last Updated By (PII)") AS "Assay Last Updated By (PII)__9"
+		,COUNT(*) - COUNT("OWNER_ID (Assay)") AS "OWNER_ID (Assay)__3"
+		,COUNT(*) - COUNT("Assay Record Number") AS "Assay Record Number__5"
+		,COUNT(*) - COUNT("Assay Record Name") AS "Assay Record Name__6"
+		,COUNT(*) - COUNT("System Name") AS "System Name__2"
+		,COUNT(*) - COUNT("Assay Creation Date") AS "Assay Creation Date__11"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_ASSAY
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"Assay Number__7"
+			,"Assay Created By (PII)__12"
+			,"Assay Last Update Date__10"
+			,"Assay Availability__14"
+			,"System Number__1"
+			,"Assay Country Release__13"
+			,"Assay Name__8"
+			,"ASSAY_ID__4"
+			,"Assay Last Updated By (PII)__9"
+			,"OWNER_ID (Assay)__3"
+			,"Assay Record Number__5"
+			,"Assay Record Name__6"
+			,"System Name__2"
+			,"Assay Creation Date__11"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_OPTY_LEAD' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("LEAD_ID") AS "LEAD_ID__2"
+		,COUNT(*) - COUNT("OPPORTUNITY_ID") AS "OPPORTUNITY_ID__1"
+		,COUNT(*) - COUNT("Lead Opportunity Assignment Created By (GID) (PII)") AS "Lead Opportunity Assignment Created By (GID) (PII)__6"
+		,COUNT(*) - COUNT("Lead Opportunity Assignment Last Updated By (GID) (PII)") AS "Lead Opportunity Assignment Last Updated By (GID) (PII)__4"
+		,COUNT(*) - COUNT("Lead Opportunity Assignment Last Updated Timestamp") AS "Lead Opportunity Assignment Last Updated Timestamp__3"
+		,COUNT(*) - COUNT("Lead Opportunity Assignment Created Timestamp") AS "Lead Opportunity Assignment Created Timestamp__5"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_OPTY_LEAD
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"LEAD_ID__2"
+			,"OPPORTUNITY_ID__1"
+			,"Lead Opportunity Assignment Created By (GID) (PII)__6"
+			,"Lead Opportunity Assignment Last Updated By (GID) (PII)__4"
+			,"Lead Opportunity Assignment Last Updated Timestamp__3"
+			,"Lead Opportunity Assignment Created Timestamp__5"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_ACCNT_FAX' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("ACCOUNT_ID") AS "ACCOUNT_ID__1"
+		,COUNT(*) - COUNT("Account Fax Number (PII)") AS "Account Fax Number (PII)__5"
+		,COUNT(*) - COUNT("Account.Fax Last Updated Timestamp") AS "Account.Fax Last Updated Timestamp__4"
+		,COUNT(*) - COUNT("Account Fax Area Code (PII)") AS "Account Fax Area Code (PII)__8"
+		,COUNT(*) - COUNT("Account.Fax Primary (Flag)") AS "Account.Fax Primary (Flag)__3"
+		,COUNT(*) - COUNT("Account Fax Extension (PII)") AS "Account Fax Extension (PII)__6"
+		,COUNT(*) - COUNT("Account Fax Country Code (PII)") AS "Account Fax Country Code (PII)__7"
+		,COUNT(*) - COUNT("ACCOUNT_FAX_ID") AS "ACCOUNT_FAX_ID__2"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_ACCNT_FAX
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"ACCOUNT_ID__1"
+			,"Account Fax Number (PII)__5"
+			,"Account.Fax Last Updated Timestamp__4"
+			,"Account Fax Area Code (PII)__8"
+			,"Account.Fax Primary (Flag)__3"
+			,"Account Fax Extension (PII)__6"
+			,"Account Fax Country Code (PII)__7"
+			,"ACCOUNT_FAX_ID__2"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_ASS_OPTY_REL' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("Asset.Oppty Relation Last Updated By (GID) (PII)") AS "Asset.Oppty Relation Last Updated By (GID) (PII)__6"
+		,COUNT(*) - COUNT("Asset.Oppty Relation Created By (GID) (PII)") AS "Asset.Oppty Relation Created By (GID) (PII)__7"
+		,COUNT(*) - COUNT("Asset Oppty Relation Created Timestamp") AS "Asset Oppty Relation Created Timestamp__8"
+		,COUNT(*) - COUNT("Relationship Type") AS "Relationship Type__2"
+		,COUNT(*) - COUNT("OLI Number") AS "OLI Number__4"
+		,COUNT(*) - COUNT("OPPORTUNITY_ID") AS "OPPORTUNITY_ID__3"
+		,COUNT(*) - COUNT("Sale Type") AS "Sale Type__1"
+		,COUNT(*) - COUNT("ASSET_ID") AS "ASSET_ID__5"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_ASS_OPTY_REL
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"Asset.Oppty Relation Last Updated By (GID) (PII)__6"
+			,"Asset.Oppty Relation Created By (GID) (PII)__7"
+			,"Asset Oppty Relation Created Timestamp__8"
+			,"Relationship Type__2"
+			,"OLI Number__4"
+			,"OPPORTUNITY_ID__3"
+			,"Sale Type__1"
+			,"ASSET_ID__5"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_OPTY_REVENUE' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("Expected Delivery Date") AS "Expected Delivery Date__48"
+		,COUNT(*) - COUNT("Alternate Exists (Flag)") AS "Alternate Exists (Flag)__62"
+		,COUNT(*) - COUNT("UOM") AS "UOM__1"
+		,COUNT(*) - COUNT("OLI.Local Attr 1") AS "OLI.Local Attr 1__29"
+		,COUNT(*) - COUNT("COMPETITOR_ID") AS "COMPETITOR_ID__55"
+		,COUNT(*) - COUNT("OLI.BL") AS "OLI.BL__35"
+		,COUNT(*) - COUNT("OLI.Sales Product Line") AS "OLI.Sales Product Line__21"
+		,COUNT(*) - COUNT("Competitor") AS "Competitor__56"
+		,COUNT(*) - COUNT("Siemens Probability") AS "Siemens Probability__2"
+		,COUNT(*) - COUNT("Finance Type") AS "Finance Type__44"
+		,COUNT(*) - COUNT("OLI.Local Attr LOV 2") AS "OLI.Local Attr LOV 2__25"
+		,COUNT(*) - COUNT("Expected Turnover Date") AS "Expected Turnover Date__45"
+		,COUNT(*) - COUNT("PRODUCT_ID (Primary Winning Vendor)") AS "PRODUCT_ID (Primary Winning Vendor)__13"
+		,COUNT(*) - COUNT("OLI.Local Attr LOV 1") AS "OLI.Local Attr LOV 1__26"
+		,COUNT(*) - COUNT("OLI.Local Attr 3") AS "OLI.Local Attr 3__27"
+		,COUNT(*) - COUNT("OLI.Local Attr 2") AS "OLI.Local Attr 2__28"
+		,COUNT(*) - COUNT("Prior Year Revenue Run Rate (LC)") AS "Prior Year Revenue Run Rate (LC)__16"
+		,COUNT(*) - COUNT("OLI.Status") AS "OLI.Status__20"
+		,COUNT(*) - COUNT("Alternate (Flag)") AS "Alternate (Flag)__63"
+		,COUNT(*) - COUNT("Product Rep Probability") AS "Product Rep Probability__15"
+		,COUNT(*) - COUNT("Comments") AS "Comments__57"
+		,COUNT(*) - COUNT("Include in Forecast (Flag)") AS "Include in Forecast (Flag)__40"
+		,COUNT(*) - COUNT("PSE Commitment (USA) (Flag)") AS "PSE Commitment (USA) (Flag)__12"
+		,COUNT(*) - COUNT("Contract Duration (Months)") AS "Contract Duration (Months)__53"
+		,COUNT(*) - COUNT("Reason Comments") AS "Reason Comments__8"
+		,COUNT(*) - COUNT("OLI.Created Timestamp") AS "OLI.Created Timestamp__32"
+		,COUNT(*) - COUNT("Purchasing Agreement") AS "Purchasing Agreement__11"
+		,COUNT(*) - COUNT("Capital Funnel Value (LC)") AS "Capital Funnel Value (LC)__58"
+		,COUNT(*) - COUNT("Sale Type") AS "Sale Type__6"
+		,COUNT(*) - COUNT("Sales Channel") AS "Sales Channel__5"
+		,COUNT(*) - COUNT("OLI.Created By (GID) (PII)") AS "OLI.Created By (GID) (PII)__33"
+		,COUNT(*) - COUNT("SALES_PROGRAM_ID") AS "SALES_PROGRAM_ID__3"
+		,COUNT(*) - COUNT("Atellica Grouping") AS "Atellica Grouping__59"
+		,COUNT(*) - COUNT("Lessor") AS "Lessor__38"
+		,COUNT(*) - COUNT("OLI.Local Attr LOV 3") AS "OLI.Local Attr LOV 3__24"
+		,COUNT(*) - COUNT("Decision Date") AS "Decision Date__51"
+		,COUNT(*) - COUNT("OLI_ID") AS "OLI_ID__19"
+		,COUNT(*) - COUNT("Reason") AS "Reason__9"
+		,COUNT(*) - COUNT("PRODUCT_ID") AS "PRODUCT_ID__14"
+		,COUNT(*) - COUNT("Expected Installation Date") AS "Expected Installation Date__47"
+		,COUNT(*) - COUNT("Quote Item Id") AS "Quote Item Id__10"
+		,COUNT(*) - COUNT("EMPLOYEE_ID (OLI Owner)") AS "EMPLOYEE_ID (OLI Owner)__49"
+		,COUNT(*) - COUNT("Count As Unit (Flag)") AS "Count As Unit (Flag)__52"
+		,COUNT(*) - COUNT("OLI.Close Date") AS "OLI.Close Date__34"
+		,COUNT(*) - COUNT("Sales Document Number RC") AS "Sales Document Number RC__4"
+		,COUNT(*) - COUNT("ACCOUNT_ID (End User)") AS "ACCOUNT_ID (End User)__64"
+		,COUNT(*) - COUNT("ASSAY_ID") AS "ASSAY_ID__61"
+		,COUNT(*) - COUNT("Lease End Date") AS "Lease End Date__39"
+		,COUNT(*) - COUNT("Funnel Value (LC)") AS "Funnel Value (LC)__43"
+		,COUNT(*) - COUNT("COMPETITOR_ID (Primary Incumbent Vendor)") AS "COMPETITOR_ID (Primary Incumbent Vendor)__54"
+		,COUNT(*) - COUNT("IBD O&U") AS "IBD O&U__41"
+		,COUNT(*) - COUNT("OLI.Local Currency") AS "OLI.Local Currency__23"
+		,COUNT(*) - COUNT("Demo System (Flag)") AS "Demo System (Flag)__50"
+		,COUNT(*) - COUNT("Expected Shipment Date") AS "Expected Shipment Date__46"
+		,COUNT(*) - COUNT("ASSET_ID") AS "ASSET_ID__60"
+		,COUNT(*) - COUNT("OLI_ID (Linked OLI)") AS "OLI_ID (Linked OLI)__18"
+		,COUNT(*) - COUNT("OLI Number") AS "OLI Number__36"
+		,COUNT(*) - COUNT("OLI.Last Updated Timestamp") AS "OLI.Last Updated Timestamp__30"
+		,COUNT(*) - COUNT("Recurring Revenue Funnel (LC)") AS "Recurring Revenue Funnel (LC)__7"
+		,COUNT(*) - COUNT("GZ") AS "GZ__42"
+		,COUNT(*) - COUNT("No Bid (Flag)") AS "No Bid (Flag)__37"
+		,COUNT(*) - COUNT("OLI.Department") AS "OLI.Department__31"
+		,COUNT(*) - COUNT("OPPORTUNITY_ID") AS "OPPORTUNITY_ID__17"
+		,COUNT(*) - COUNT("OLI.Quantity") AS "OLI.Quantity__22"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_OPTY_REVENUE
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"Expected Delivery Date__48"
+			,"Alternate Exists (Flag)__62"
+			,"UOM__1"
+			,"OLI.Local Attr 1__29"
+			,"COMPETITOR_ID__55"
+			,"OLI.BL__35"
+			,"OLI.Sales Product Line__21"
+			,"Competitor__56"
+			,"Siemens Probability__2"
+			,"Finance Type__44"
+			,"OLI.Local Attr LOV 2__25"
+			,"Expected Turnover Date__45"
+			,"PRODUCT_ID (Primary Winning Vendor)__13"
+			,"OLI.Local Attr LOV 1__26"
+			,"OLI.Local Attr 3__27"
+			,"OLI.Local Attr 2__28"
+			,"Prior Year Revenue Run Rate (LC)__16"
+			,"OLI.Status__20"
+			,"Alternate (Flag)__63"
+			,"Product Rep Probability__15"
+			,"Comments__57"
+			,"Include in Forecast (Flag)__40"
+			,"PSE Commitment (USA) (Flag)__12"
+			,"Contract Duration (Months)__53"
+			,"Reason Comments__8"
+			,"OLI.Created Timestamp__32"
+			,"Purchasing Agreement__11"
+			,"Capital Funnel Value (LC)__58"
+			,"Sale Type__6"
+			,"Sales Channel__5"
+			,"OLI.Created By (GID) (PII)__33"
+			,"SALES_PROGRAM_ID__3"
+			,"Atellica Grouping__59"
+			,"Lessor__38"
+			,"OLI.Local Attr LOV 3__24"
+			,"Decision Date__51"
+			,"OLI_ID__19"
+			,"Reason__9"
+			,"PRODUCT_ID__14"
+			,"Expected Installation Date__47"
+			,"Quote Item Id__10"
+			,"EMPLOYEE_ID (OLI Owner)__49"
+			,"Count As Unit (Flag)__52"
+			,"OLI.Close Date__34"
+			,"Sales Document Number RC__4"
+			,"ACCOUNT_ID (End User)__64"
+			,"ASSAY_ID__61"
+			,"Lease End Date__39"
+			,"Funnel Value (LC)__43"
+			,"COMPETITOR_ID (Primary Incumbent Vendor)__54"
+			,"IBD O&U__41"
+			,"OLI.Local Currency__23"
+			,"Demo System (Flag)__50"
+			,"Expected Shipment Date__46"
+			,"ASSET_ID__60"
+			,"OLI_ID (Linked OLI)__18"
+			,"OLI Number__36"
+			,"OLI.Last Updated Timestamp__30"
+			,"Recurring Revenue Funnel (LC)__7"
+			,"GZ__42"
+			,"No Bid (Flag)__37"
+			,"OLI.Department__31"
+			,"OPPORTUNITY_ID__17"
+			,"OLI.Quantity__22"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_ACCNT_CLASS' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("Account Classification.Classification Category") AS "Account Classification.Classification Category__4"
+		,COUNT(*) - COUNT("Account Classification.Status") AS "Account Classification.Status__2"
+		,COUNT(*) - COUNT("ACCOUNT_ID") AS "ACCOUNT_ID__1"
+		,COUNT(*) - COUNT("Account Classification.Assignment Criteria") AS "Account Classification.Assignment Criteria__5"
+		,COUNT(*) - COUNT("Account Classification.Primary (Flag)") AS "Account Classification.Primary (Flag)__3"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_ACCNT_CLASS
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"Account Classification.Classification Category__4"
+			,"Account Classification.Status__2"
+			,"ACCOUNT_ID__1"
+			,"Account Classification.Assignment Criteria__5"
+			,"Account Classification.Primary (Flag)__3"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_CON_ADDR' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("Contact.Address Site Number") AS "Contact.Address Site Number__13"
+		,COUNT(*) - COUNT("Contact.City") AS "Contact.City__9"
+		,COUNT(*) - COUNT("Contact.Postal Code Ext") AS "Contact.Postal Code Ext__4"
+		,COUNT(*) - COUNT("Contact.Addr Line Phonetic (PII)") AS "Contact.Addr Line Phonetic (PII)__27"
+		,COUNT(*) - COUNT("Contact.Address.Last Updated Timestamp") AS "Contact.Address.Last Updated Timestamp__12"
+		,COUNT(*) - COUNT("CONTACT_ID") AS "CONTACT_ID__1"
+		,COUNT(*) - COUNT("Contact.Address Preference (Flag)") AS "Contact.Address Preference (Flag)__15"
+		,COUNT(*) - COUNT("Contact.County") AS "Contact.County__7"
+		,COUNT(*) - COUNT("Contact.Address Created By (GID) (PII)") AS "Contact.Address Created By (GID) (PII)__25"
+		,COUNT(*) - COUNT("Contact.Address House Type") AS "Contact.Address House Type__22"
+		,COUNT(*) - COUNT("Contact.Address Line 1 (PII)") AS "Contact.Address Line 1 (PII)__20"
+		,COUNT(*) - COUNT("Contact.Additional Addr Element 2 (PII)") AS "Contact.Additional Addr Element 2 (PII)__29"
+		,COUNT(*) - COUNT("Contact.Address Primary (Flag)") AS "Contact.Address Primary (Flag)__14"
+		,COUNT(*) - COUNT("Contact.Address Line 4 (PII)") AS "Contact.Address Line 4 (PII)__17"
+		,COUNT(*) - COUNT("Contact.Address Location Directions") AS "Contact.Address Location Directions__16"
+		,COUNT(*) - COUNT("Contact.Address Description") AS "Contact.Address Description__23"
+		,COUNT(*) - COUNT("Contact.Additional Addr Element 3 (PII)") AS "Contact.Additional Addr Element 3 (PII)__28"
+		,COUNT(*) - COUNT("Contact.Address Line 3 (PII)") AS "Contact.Address Line 3 (PII)__18"
+		,COUNT(*) - COUNT("Contact.Currency") AS "Contact.Currency__6"
+		,COUNT(*) - COUNT("Contact.Postal Code") AS "Contact.Postal Code__5"
+		,COUNT(*) - COUNT("Contact.Address Created Timestamp") AS "Contact.Address Created Timestamp__24"
+		,COUNT(*) - COUNT("Contact.Address_ID") AS "Contact.Address_ID__11"
+		,COUNT(*) - COUNT("Contact.Address Line 2 (PII)") AS "Contact.Address Line 2 (PII)__19"
+		,COUNT(*) - COUNT("Contact.Address Country") AS "Contact.Address Country__26"
+		,COUNT(*) - COUNT("Contact.Adress Comment") AS "Contact.Adress Comment__10"
+		,COUNT(*) - COUNT("Contact.State") AS "Contact.State__2"
+		,COUNT(*) - COUNT("Contact.Province") AS "Contact.Province__3"
+		,COUNT(*) - COUNT("Contact.Contact Number") AS "Contact.Contact Number__8"
+		,COUNT(*) - COUNT("Contact.Address Last Updated By (GID) (PII)") AS "Contact.Address Last Updated By (GID) (PII)__21"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_CON_ADDR
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"Contact.Address Site Number__13"
+			,"Contact.City__9"
+			,"Contact.Postal Code Ext__4"
+			,"Contact.Addr Line Phonetic (PII)__27"
+			,"Contact.Address.Last Updated Timestamp__12"
+			,"CONTACT_ID__1"
+			,"Contact.Address Preference (Flag)__15"
+			,"Contact.County__7"
+			,"Contact.Address Created By (GID) (PII)__25"
+			,"Contact.Address House Type__22"
+			,"Contact.Address Line 1 (PII)__20"
+			,"Contact.Additional Addr Element 2 (PII)__29"
+			,"Contact.Address Primary (Flag)__14"
+			,"Contact.Address Line 4 (PII)__17"
+			,"Contact.Address Location Directions__16"
+			,"Contact.Address Description__23"
+			,"Contact.Additional Addr Element 3 (PII)__28"
+			,"Contact.Address Line 3 (PII)__18"
+			,"Contact.Currency__6"
+			,"Contact.Postal Code__5"
+			,"Contact.Address Created Timestamp__24"
+			,"Contact.Address_ID__11"
+			,"Contact.Address Line 2 (PII)__19"
+			,"Contact.Address Country__26"
+			,"Contact.Adress Comment__10"
+			,"Contact.State__2"
+			,"Contact.Province__3"
+			,"Contact.Contact Number__8"
+			,"Contact.Address Last Updated By (GID) (PII)__21"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_ACCNT_TREENODE' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("ACCOUNT_ID (Child)") AS "ACCOUNT_ID (Child)__2"
+		,COUNT(*) - COUNT("ACCOUNT_ID (Parent)") AS "ACCOUNT_ID (Parent)__1"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_ACCNT_TREENODE
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"ACCOUNT_ID (Child)__2"
+			,"ACCOUNT_ID (Parent)__1"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_ACT_ASS' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("Activity.Assignee Created Timestamp") AS "Activity.Assignee Created Timestamp__8"
+		,COUNT(*) - COUNT("EMPLOYEE_ID") AS "EMPLOYEE_ID__2"
+		,COUNT(*) - COUNT("ACTIVITY_ID") AS "ACTIVITY_ID__3"
+		,COUNT(*) - COUNT("Activity.Assignee Attendee (Flag)") AS "Activity.Assignee Attendee (Flag)__10"
+		,COUNT(*) - COUNT("Show Time As") AS "Show Time As__1"
+		,COUNT(*) - COUNT("Activity.Assignee Created By (GID) (PII)") AS "Activity.Assignee Created By (GID) (PII)__9"
+		,COUNT(*) - COUNT("Activity.Assignee User Last Updated Timestamp") AS "Activity.Assignee User Last Updated Timestamp__5"
+		,COUNT(*) - COUNT("Activity.Assignee.Response") AS "Activity.Assignee.Response__4"
+		,COUNT(*) - COUNT("Activity.Assignee Last Updated Timestamp") AS "Activity.Assignee Last Updated Timestamp__6"
+		,COUNT(*) - COUNT("Activity.Assignee Last Updated By (GID) (PII)") AS "Activity.Assignee Last Updated By (GID) (PII)__7"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_ACT_ASS
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"Activity.Assignee Created Timestamp__8"
+			,"EMPLOYEE_ID__2"
+			,"ACTIVITY_ID__3"
+			,"Activity.Assignee Attendee (Flag)__10"
+			,"Show Time As__1"
+			,"Activity.Assignee Created By (GID) (PII)__9"
+			,"Activity.Assignee User Last Updated Timestamp__5"
+			,"Activity.Assignee.Response__4"
+			,"Activity.Assignee Last Updated Timestamp__6"
+			,"Activity.Assignee Last Updated By (GID) (PII)__7"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_ACCNT_RESOURCE' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("Function (Position Type)") AS "Function (Position Type)__3"
+		,COUNT(*) - COUNT("EMPLOYEE_ID") AS "EMPLOYEE_ID__4"
+		,COUNT(*) - COUNT("SALESACCOUNT_ID") AS "SALESACCOUNT_ID__2"
+		,COUNT(*) - COUNT("Access") AS "Access__1"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_ACCNT_RESOURCE
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"Function (Position Type)__3"
+			,"EMPLOYEE_ID__4"
+			,"SALESACCOUNT_ID__2"
+			,"Access__1"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_TERR_ACCOUNT' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("SALESACCOUNT_ID") AS "SALESACCOUNT_ID__2"
+		,COUNT(*) - COUNT("TERRITORYVERSION_ID") AS "TERRITORYVERSION_ID__1"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_TERR_ACCOUNT
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"SALESACCOUNT_ID__2"
+			,"TERRITORYVERSION_ID__1"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_EMP_RESOURCE' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("Employee.Last Name (PII)") AS "Employee.Last Name (PII)__9"
+		,COUNT(*) - COUNT("EMPLOYEE_ID (Manager)") AS "EMPLOYEE_ID (Manager)__3"
+		,COUNT(*) - COUNT("Employee.Primary E-Mail (PII)") AS "Employee.Primary E-Mail (PII)__6"
+		,COUNT(*) - COUNT("Employee.First Name (PII)") AS "Employee.First Name (PII)__12"
+		,COUNT(*) - COUNT("Employee.User_Name (PII)") AS "Employee.User_Name (PII)__5"
+		,COUNT(*) - COUNT("Employee.Geography") AS "Employee.Geography__11"
+		,COUNT(*) - COUNT("Employee.Country") AS "Employee.Country__13"
+		,COUNT(*) - COUNT("Resource Profile ID") AS "Resource Profile ID__2"
+		,COUNT(*) - COUNT("Employee.Job Title (PII)") AS "Employee.Job Title (PII)__10"
+		,COUNT(*) - COUNT("Employee.Last Updated Timestamp") AS "Employee.Last Updated Timestamp__8"
+		,COUNT(*) - COUNT("Employee (GID) (PII)") AS "Employee (GID) (PII)__15"
+		,COUNT(*) - COUNT("EMPLOYEE_ID") AS "EMPLOYEE_ID__4"
+		,COUNT(*) - COUNT("Employee Number") AS "Employee Number__14"
+		,COUNT(*) - COUNT("Employee.Manager E-Mail (PII)") AS "Employee.Manager E-Mail (PII)__7"
+		,COUNT(*) - COUNT("Role") AS "Role__1"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_EMP_RESOURCE
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"Employee.Last Name (PII)__9"
+			,"EMPLOYEE_ID (Manager)__3"
+			,"Employee.Primary E-Mail (PII)__6"
+			,"Employee.First Name (PII)__12"
+			,"Employee.User_Name (PII)__5"
+			,"Employee.Geography__11"
+			,"Employee.Country__13"
+			,"Resource Profile ID__2"
+			,"Employee.Job Title (PII)__10"
+			,"Employee.Last Updated Timestamp__8"
+			,"Employee (GID) (PII)__15"
+			,"EMPLOYEE_ID__4"
+			,"Employee Number__14"
+			,"Employee.Manager E-Mail (PII)__7"
+			,"Role__1"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_ASSET' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("Asset Number") AS "Asset Number__58"
+		,COUNT(*) - COUNT("IB Local Attribute 2") AS "IB Local Attribute 2__28"
+		,COUNT(*) - COUNT("Asset.Status") AS "Asset.Status__38"
+		,COUNT(*) - COUNT("Importance") AS "Importance__19"
+		,COUNT(*) - COUNT("IB Vendor Name") AS "IB Vendor Name__23"
+		,COUNT(*) - COUNT("PRODUCT_ID") AS "PRODUCT_ID__11"
+		,COUNT(*) - COUNT("Asset Recurring Revenue (LC) (In Vitro only)") AS "Asset Recurring Revenue (LC) (In Vitro only)__55"
+		,COUNT(*) - COUNT("Serial Number") AS "Serial Number__7"
+		,COUNT(*) - COUNT("Contract Cancelled") AS "Contract Cancelled__34"
+		,COUNT(*) - COUNT("Asset.Last Updated Timestamp") AS "Asset.Last Updated Timestamp__40"
+		,COUNT(*) - COUNT("MTDA (Flag)") AS "MTDA (Flag)__12"
+		,COUNT(*) - COUNT("Asset.Sales Product Line") AS "Asset.Sales Product Line__39"
+		,COUNT(*) - COUNT("Dealer (Asset)") AS "Dealer (Asset)__33"
+		,COUNT(*) - COUNT("Legal Form of the Authorization Owner") AS "Legal Form of the Authorization Owner__17"
+		,COUNT(*) - COUNT("Service Contract Description") AS "Service Contract Description__5"
+		,COUNT(*) - COUNT("ACCOUNT_ID") AS "ACCOUNT_ID__67"
+		,COUNT(*) - COUNT("Asset Installation Date") AS "Asset Installation Date__62"
+		,COUNT(*) - COUNT("Asset Ship-to Account (SAP)") AS "Asset Ship-to Account (SAP)__49"
+		,COUNT(*) - COUNT("Local Currency") AS "Local Currency__15"
+		,COUNT(*) - COUNT("IB Local Attribute LOV 3") AS "IB Local Attribute LOV 3__24"
+		,COUNT(*) - COUNT("Reason to Inactivate Asset") AS "Reason to Inactivate Asset__10"
+		,COUNT(*) - COUNT("Legal Form of the Authorization Owner ID") AS "Legal Form of the Authorization Owner ID__16"
+		,COUNT(*) - COUNT("Service Contract Annual Price") AS "Service Contract Annual Price__6"
+		,COUNT(*) - COUNT("ASSET_ID") AS "ASSET_ID__37"
+		,COUNT(*) - COUNT("Asset Active OLI Count") AS "Asset Active OLI Count__65"
+		,COUNT(*) - COUNT("IB Local Attribute 1") AS "IB Local Attribute 1__29"
+		,COUNT(*) - COUNT("IBR - Expected Replacement Date") AS "IBR - Expected Replacement Date__21"
+		,COUNT(*) - COUNT("Asset.Created By (GID) (PII)") AS "Asset.Created By (GID) (PII)__43"
+		,COUNT(*) - COUNT("IBR - Comments") AS "IBR - Comments__22"
+		,COUNT(*) - COUNT("Asset Service Contract Start Date") AS "Asset Service Contract Start Date__51"
+		,COUNT(*) - COUNT("IPB Country") AS "IPB Country__18"
+		,COUNT(*) - COUNT("Service Contract Number") AS "Service Contract Number__4"
+		,COUNT(*) - COUNT("Service Partner Type") AS "Service Partner Type__1"
+		,COUNT(*) - COUNT("Asset Equipment EoS Date") AS "Asset Equipment EoS Date__64"
+		,COUNT(*) - COUNT("Equipment Number") AS "Equipment Number__32"
+		,COUNT(*) - COUNT("Asset Shipped Date") AS "Asset Shipped Date__50"
+		,COUNT(*) - COUNT("ACCOUNT_ID (End User)") AS "ACCOUNT_ID (End User)__66"
+		,COUNT(*) - COUNT("Authorization required (Flag)") AS "Authorization required (Flag)__36"
+		,COUNT(*) - COUNT("Asset Secondary SSE (PII)") AS "Asset Secondary SSE (PII)__53"
+		,COUNT(*) - COUNT("Asset Sales Document") AS "Asset Sales Document__54"
+		,COUNT(*) - COUNT("Asset LIS Connection") AS "Asset LIS Connection__60"
+		,COUNT(*) - COUNT("IB Local Attribute LOV 2") AS "IB Local Attribute LOV 2__25"
+		,COUNT(*) - COUNT("Location/Room") AS "Location/Room__13"
+		,COUNT(*) - COUNT("Finance Type (In Vitro only)") AS "Finance Type (In Vitro only)__30"
+		,COUNT(*) - COUNT("Asset Service Contract End Date") AS "Asset Service Contract End Date__52"
+		,COUNT(*) - COUNT("Asset Material Number") AS "Asset Material Number__59"
+		,COUNT(*) - COUNT("Asset.Created Timestamp") AS "Asset.Created Timestamp__42"
+		,COUNT(*) - COUNT("Asset.Last Updated By (Full Name) (PII)") AS "Asset.Last Updated By (Full Name) (PII)__41"
+		,COUNT(*) - COUNT("Sales Contract Annual Price (LC) (In Vitro only)") AS "Sales Contract Annual Price (LC) (In Vitro only)__9"
+		,COUNT(*) - COUNT("IBR - Replacement Strategy") AS "IBR - Replacement Strategy__20"
+		,COUNT(*) - COUNT("Asset Last Service Activity Date") AS "Asset Last Service Activity Date__61"
+		,COUNT(*) - COUNT("Asset Primary SSE (PII)") AS "Asset Primary SSE (PII)__57"
+		,COUNT(*) - COUNT("Service Contract Type") AS "Service Contract Type__2"
+		,COUNT(*) - COUNT("Service Contract Total Price") AS "Service Contract Total Price__3"
+		,COUNT(*) - COUNT("Asset Unique Device Identifier") AS "Asset Unique Device Identifier__47"
+		,COUNT(*) - COUNT("Evolve Capable (Flag)") AS "Evolve Capable (Flag)__31"
+		,COUNT(*) - COUNT("Sales Contract End Date (In Vitro only)") AS "Sales Contract End Date (In Vitro only)__8"
+		,COUNT(*) - COUNT("Asset Software Version") AS "Asset Software Version__48"
+		,COUNT(*) - COUNT("Asset Purchase Order Number") AS "Asset Purchase Order Number__56"
+		,COUNT(*) - COUNT("Competitor Asset (Flag)") AS "Competitor Asset (Flag)__35"
+		,COUNT(*) - COUNT("Local System Identifier") AS "Local System Identifier__14"
+		,COUNT(*) - COUNT("Asset.BL") AS "Asset.BL__45"
+		,COUNT(*) - COUNT("IB Local Attribute 3") AS "IB Local Attribute 3__27"
+		,COUNT(*) - COUNT("IB Local Attribute LOV 1") AS "IB Local Attribute LOV 1__26"
+		,COUNT(*) - COUNT("Asset.Created By (Full Name) (PII)") AS "Asset.Created By (Full Name) (PII)__44"
+		,COUNT(*) - COUNT("Asset FL Number") AS "Asset FL Number__63"
+		,COUNT(*) - COUNT("Asset Waranty End Date") AS "Asset Waranty End Date__46"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_ASSET
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"Asset Number__58"
+			,"IB Local Attribute 2__28"
+			,"Asset.Status__38"
+			,"Importance__19"
+			,"IB Vendor Name__23"
+			,"PRODUCT_ID__11"
+			,"Asset Recurring Revenue (LC) (In Vitro only)__55"
+			,"Serial Number__7"
+			,"Contract Cancelled__34"
+			,"Asset.Last Updated Timestamp__40"
+			,"MTDA (Flag)__12"
+			,"Asset.Sales Product Line__39"
+			,"Dealer (Asset)__33"
+			,"Legal Form of the Authorization Owner__17"
+			,"Service Contract Description__5"
+			,"ACCOUNT_ID__67"
+			,"Asset Installation Date__62"
+			,"Asset Ship-to Account (SAP)__49"
+			,"Local Currency__15"
+			,"IB Local Attribute LOV 3__24"
+			,"Reason to Inactivate Asset__10"
+			,"Legal Form of the Authorization Owner ID__16"
+			,"Service Contract Annual Price__6"
+			,"ASSET_ID__37"
+			,"Asset Active OLI Count__65"
+			,"IB Local Attribute 1__29"
+			,"IBR - Expected Replacement Date__21"
+			,"Asset.Created By (GID) (PII)__43"
+			,"IBR - Comments__22"
+			,"Asset Service Contract Start Date__51"
+			,"IPB Country__18"
+			,"Service Contract Number__4"
+			,"Service Partner Type__1"
+			,"Asset Equipment EoS Date__64"
+			,"Equipment Number__32"
+			,"Asset Shipped Date__50"
+			,"ACCOUNT_ID (End User)__66"
+			,"Authorization required (Flag)__36"
+			,"Asset Secondary SSE (PII)__53"
+			,"Asset Sales Document__54"
+			,"Asset LIS Connection__60"
+			,"IB Local Attribute LOV 2__25"
+			,"Location/Room__13"
+			,"Finance Type (In Vitro only)__30"
+			,"Asset Service Contract End Date__52"
+			,"Asset Material Number__59"
+			,"Asset.Created Timestamp__42"
+			,"Asset.Last Updated By (Full Name) (PII)__41"
+			,"Sales Contract Annual Price (LC) (In Vitro only)__9"
+			,"IBR - Replacement Strategy__20"
+			,"Asset Last Service Activity Date__61"
+			,"Asset Primary SSE (PII)__57"
+			,"Service Contract Type__2"
+			,"Service Contract Total Price__3"
+			,"Asset Unique Device Identifier__47"
+			,"Evolve Capable (Flag)__31"
+			,"Sales Contract End Date (In Vitro only)__8"
+			,"Asset Software Version__48"
+			,"Asset Purchase Order Number__56"
+			,"Competitor Asset (Flag)__35"
+			,"Local System Identifier__14"
+			,"Asset.BL__45"
+			,"IB Local Attribute 3__27"
+			,"IB Local Attribute LOV 1__26"
+			,"Asset.Created By (Full Name) (PII)__44"
+			,"Asset FL Number__63"
+			,"Asset Waranty End Date__46"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_ACT_OBJ' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("ACTIVITY_ID") AS "ACTIVITY_ID__4"
+		,COUNT(*) - COUNT("Completed") AS "Completed__3"
+		,COUNT(*) - COUNT("Activity.Objective Last Updated By (GID) (PII)") AS "Activity.Objective Last Updated By (GID) (PII)__6"
+		,COUNT(*) - COUNT("OBJECTIVE_ID") AS "OBJECTIVE_ID__1"
+		,COUNT(*) - COUNT("Objective Code") AS "Objective Code__2"
+		,COUNT(*) - COUNT("Activity.Objective Created Timestamp") AS "Activity.Objective Created Timestamp__7"
+		,COUNT(*) - COUNT("Activity.Objective Last Updated Timestamp") AS "Activity.Objective Last Updated Timestamp__5"
+		,COUNT(*) - COUNT("Activity.Objective Created By (GID) (PII)") AS "Activity.Objective Created By (GID) (PII)__8"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_ACT_OBJ
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"ACTIVITY_ID__4"
+			,"Completed__3"
+			,"Activity.Objective Last Updated By (GID) (PII)__6"
+			,"OBJECTIVE_ID__1"
+			,"Objective Code__2"
+			,"Activity.Objective Created Timestamp__7"
+			,"Activity.Objective Last Updated Timestamp__5"
+			,"Activity.Objective Created By (GID) (PII)__8"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_CON_MKT_ATT' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("Contact.Mkt Attr Comments") AS "Contact.Mkt Attr Comments__8"
+		,COUNT(*) - COUNT("CONTACT_ID") AS "CONTACT_ID__1"
+		,COUNT(*) - COUNT("Contact.Mkt Attr Value") AS "Contact.Mkt Attr Value__2"
+		,COUNT(*) - COUNT("Contact.Mkt Attr Last Updated Timestamp") AS "Contact.Mkt Attr Last Updated Timestamp__4"
+		,COUNT(*) - COUNT("Contact.Mkt Attr Type") AS "Contact.Mkt Attr Type__3"
+		,COUNT(*) - COUNT("Contact.Mkt Attr Created Timestamp") AS "Contact.Mkt Attr Created Timestamp__6"
+		,COUNT(*) - COUNT("Contact.Mkt Attr Category Count") AS "Contact.Mkt Attr Category Count__9"
+		,COUNT(*) - COUNT("Contact.Mkt Attr Category Code") AS "Contact.Mkt Attr Category Code__11"
+		,COUNT(*) - COUNT("Contact.Mkt Attr Last Updated By (GID) (PII)") AS "Contact.Mkt Attr Last Updated By (GID) (PII)__5"
+		,COUNT(*) - COUNT("Contact.Mkt Attr Created By (GID) (PII)") AS "Contact.Mkt Attr Created By (GID) (PII)__7"
+		,COUNT(*) - COUNT("Contact.Mkt Attr BA/BL") AS "Contact.Mkt Attr BA/BL__12"
+		,COUNT(*) - COUNT("Contact.Mkt Attr Category Content") AS "Contact.Mkt Attr Category Content__10"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_CON_MKT_ATT
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"Contact.Mkt Attr Comments__8"
+			,"CONTACT_ID__1"
+			,"Contact.Mkt Attr Value__2"
+			,"Contact.Mkt Attr Last Updated Timestamp__4"
+			,"Contact.Mkt Attr Type__3"
+			,"Contact.Mkt Attr Created Timestamp__6"
+			,"Contact.Mkt Attr Category Count__9"
+			,"Contact.Mkt Attr Category Code__11"
+			,"Contact.Mkt Attr Last Updated By (GID) (PII)__5"
+			,"Contact.Mkt Attr Created By (GID) (PII)__7"
+			,"Contact.Mkt Attr BA/BL__12"
+			,"Contact.Mkt Attr Category Content__10"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_CON_PROF' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("Contact.Status") AS "Contact.Status__3"
+		,COUNT(*) - COUNT("Contact Never Email") AS "Contact Never Email__20"
+		,COUNT(*) - COUNT("Contact Local Attr LOV 1") AS "Contact Local Attr LOV 1__25"
+		,COUNT(*) - COUNT("EMPLOYEE_ID (Owner)") AS "EMPLOYEE_ID (Owner)__1"
+		,COUNT(*) - COUNT("Contact Title (PII)") AS "Contact Title (PII)__11"
+		,COUNT(*) - COUNT("Contact.Do Not Mail (Flag)") AS "Contact.Do Not Mail (Flag)__7"
+		,COUNT(*) - COUNT("Contact.Last Updated By (GID) (PII)") AS "Contact.Last Updated By (GID) (PII)__5"
+		,COUNT(*) - COUNT("Contact.Last Updated By (Full Name) (PII)") AS "Contact.Last Updated By (Full Name) (PII)__6"
+		,COUNT(*) - COUNT("Contact.Created Timestamp") AS "Contact.Created Timestamp__8"
+		,COUNT(*) - COUNT("Contact Local Attr 1") AS "Contact Local Attr 1__28"
+		,COUNT(*) - COUNT("Affinity") AS "Affinity__40"
+		,COUNT(*) - COUNT("Contact Print Address 2 (PII)") AS "Contact Print Address 2 (PII)__14"
+		,COUNT(*) - COUNT("CONTACT_ID") AS "CONTACT_ID__2"
+		,COUNT(*) - COUNT("Contact Buying Behavior") AS "Contact Buying Behavior__39"
+		,COUNT(*) - COUNT("Contact Salutation") AS "Contact Salutation__12"
+		,COUNT(*) - COUNT("Contact Post Office") AS "Contact Post Office__18"
+		,COUNT(*) - COUNT("Contact First Name (PII)") AS "Contact First Name (PII)__35"
+		,COUNT(*) - COUNT("Contact Job Role (PII)") AS "Contact Job Role (PII)__31"
+		,COUNT(*) - COUNT("Contact Number") AS "Contact Number__19"
+		,COUNT(*) - COUNT("Contact Department") AS "Contact Department__37"
+		,COUNT(*) - COUNT("Contact Local Attr LOV 2") AS "Contact Local Attr LOV 2__24"
+		,COUNT(*) - COUNT("Contact Department of Correspondence") AS "Contact Department of Correspondence__36"
+		,COUNT(*) - COUNT("Contact Local Attr 2") AS "Contact Local Attr 2__27"
+		,COUNT(*) - COUNT("Contact Job Title (PII)") AS "Contact Job Title (PII)__30"
+		,COUNT(*) - COUNT("Contact Never Call") AS "Contact Never Call__21"
+		,COUNT(*) - COUNT("Contact Last Name (PII)") AS "Contact Last Name (PII)__29"
+		,COUNT(*) - COUNT("Contact Postbox") AS "Contact Postbox__17"
+		,COUNT(*) - COUNT("Contact.Last Updated Timestamp") AS "Contact.Last Updated Timestamp__4"
+		,COUNT(*) - COUNT("Contact.Created By (GID) (PII)") AS "Contact.Created By (GID) (PII)__9"
+		,COUNT(*) - COUNT("Contact Influence Level") AS "Contact Influence Level__32"
+		,COUNT(*) - COUNT("Contact Print Address 1 (PII)") AS "Contact Print Address 1 (PII)__15"
+		,COUNT(*) - COUNT("Account Name For Correspondence") AS "Account Name For Correspondence__42"
+		,COUNT(*) - COUNT("Contact Local Attr LOV 3") AS "Contact Local Attr LOV 3__23"
+		,COUNT(*) - COUNT("Contact Graduate Title") AS "Contact Graduate Title__33"
+		,COUNT(*) - COUNT("Contact Name Suffix (PII)") AS "Contact Name Suffix (PII)__22"
+		,COUNT(*) - COUNT("Contact Local Attr 3") AS "Contact Local Attr 3__26"
+		,COUNT(*) - COUNT("ACCOUNT_ID (Contact)") AS "ACCOUNT_ID (Contact)__41"
+		,COUNT(*) - COUNT("Contact GDPR (Flag)") AS "Contact GDPR (Flag)__34"
+		,COUNT(*) - COUNT("Contact Buying Role") AS "Contact Buying Role__38"
+		,COUNT(*) - COUNT("Contact.Created By (Full Name) (PII)") AS "Contact.Created By (Full Name) (PII)__10"
+		,COUNT(*) - COUNT("Contact Preferred Language") AS "Contact Preferred Language__16"
+		,COUNT(*) - COUNT("Contact Print Address 3 (PII)") AS "Contact Print Address 3 (PII)__13"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_CON_PROF
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"Contact.Status__3"
+			,"Contact Never Email__20"
+			,"Contact Local Attr LOV 1__25"
+			,"EMPLOYEE_ID (Owner)__1"
+			,"Contact Title (PII)__11"
+			,"Contact.Do Not Mail (Flag)__7"
+			,"Contact.Last Updated By (GID) (PII)__5"
+			,"Contact.Last Updated By (Full Name) (PII)__6"
+			,"Contact.Created Timestamp__8"
+			,"Contact Local Attr 1__28"
+			,"Affinity__40"
+			,"Contact Print Address 2 (PII)__14"
+			,"CONTACT_ID__2"
+			,"Contact Buying Behavior__39"
+			,"Contact Salutation__12"
+			,"Contact Post Office__18"
+			,"Contact First Name (PII)__35"
+			,"Contact Job Role (PII)__31"
+			,"Contact Number__19"
+			,"Contact Department__37"
+			,"Contact Local Attr LOV 2__24"
+			,"Contact Department of Correspondence__36"
+			,"Contact Local Attr 2__27"
+			,"Contact Job Title (PII)__30"
+			,"Contact Never Call__21"
+			,"Contact Last Name (PII)__29"
+			,"Contact Postbox__17"
+			,"Contact.Last Updated Timestamp__4"
+			,"Contact.Created By (GID) (PII)__9"
+			,"Contact Influence Level__32"
+			,"Contact Print Address 1 (PII)__15"
+			,"Account Name For Correspondence__42"
+			,"Contact Local Attr LOV 3__23"
+			,"Contact Graduate Title__33"
+			,"Contact Name Suffix (PII)__22"
+			,"Contact Local Attr 3__26"
+			,"ACCOUNT_ID (Contact)__41"
+			,"Contact GDPR (Flag)__34"
+			,"Contact Buying Role__38"
+			,"Contact.Created By (Full Name) (PII)__10"
+			,"Contact Preferred Language__16"
+			,"Contact Print Address 3 (PII)__13"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_LEAD' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("Eloqua Lead Answer 2") AS "Eloqua Lead Answer 2__79"
+		,COUNT(*) - COUNT("Lead List/Campaign Name") AS "Lead List/Campaign Name__57"
+		,COUNT(*) - COUNT("Lead.FL Number") AS "Lead.FL Number__29"
+		,COUNT(*) - COUNT("Prospect Lead Type Ext") AS "Prospect Lead Type Ext__6"
+		,COUNT(*) - COUNT("Lead.GZ (Multi)") AS "Lead.GZ (Multi)__27"
+		,COUNT(*) - COUNT("Lead.Contact City (PII)") AS "Lead.Contact City (PII)__46"
+		,COUNT(*) - COUNT("Last Automatic Assignment Date") AS "Last Automatic Assignment Date__59"
+		,COUNT(*) - COUNT("Lead.Contact Job Role (PII)") AS "Lead.Contact Job Role (PII)__41"
+		,COUNT(*) - COUNT("Lead.IB Vendor") AS "Lead.IB Vendor__26"
+		,COUNT(*) - COUNT("Lead.Contract Duration (months)") AS "Lead.Contract Duration (months)__35"
+		,COUNT(*) - COUNT("Lead.Contact Job Title (PII)") AS "Lead.Contact Job Title (PII)__40"
+		,COUNT(*) - COUNT("Lead Nr From Source") AS "Lead Nr From Source__55"
+		,COUNT(*) - COUNT("Lead.Contact Postal Code (PII)") AS "Lead.Contact Postal Code (PII)__37"
+		,COUNT(*) - COUNT("Account Name (Available under Contact Details)") AS "Account Name (Available under Contact Details)__86"
+		,COUNT(*) - COUNT("LEAD_ID") AS "LEAD_ID__11"
+		,COUNT(*) - COUNT("Lead.Graduate Title (PII)") AS "Lead.Graduate Title (PII)__28"
+		,COUNT(*) - COUNT("Lead.Close Date") AS "Lead.Close Date__49"
+		,COUNT(*) - COUNT("Lead.Contact County (PII)") AS "Lead.Contact County (PII)__45"
+		,COUNT(*) - COUNT("Lead.BL (Multi)") AS "Lead.BL (Multi)__51"
+		,COUNT(*) - COUNT("Eloqua Lead Answer 7") AS "Eloqua Lead Answer 7__74"
+		,COUNT(*) - COUNT("Lead.Created By (GID) (PII)") AS "Lead.Created By (GID) (PII)__32"
+		,COUNT(*) - COUNT("Postpone Until") AS "Postpone Until__10"
+		,COUNT(*) - COUNT("PRODUCT_ID") AS "PRODUCT_ID__8"
+		,COUNT(*) - COUNT("Lead.Sales Product Line") AS "Lead.Sales Product Line__16"
+		,COUNT(*) - COUNT("Lead.Contact Phone (PII)") AS "Lead.Contact Phone (PII)__38"
+		,COUNT(*) - COUNT("Lead Name") AS "Lead Name__56"
+		,COUNT(*) - COUNT("Eloqua Lead Question 1") AS "Eloqua Lead Question 1__71"
+		,COUNT(*) - COUNT("CONTACT_ID") AS "CONTACT_ID__82"
+		,COUNT(*) - COUNT("Lead.Status") AS "Lead.Status__14"
+		,COUNT(*) - COUNT("Lead.Created By (Full Name) (PII)") AS "Lead.Created By (Full Name) (PII)__33"
+		,COUNT(*) - COUNT("Lead.Department") AS "Lead.Department__30"
+		,COUNT(*) - COUNT("Eloqua Lead Question 2") AS "Eloqua Lead Question 2__69"
+		,COUNT(*) - COUNT("Submitter Email Address (PII)") AS "Submitter Email Address (PII)__3"
+		,COUNT(*) - COUNT("Lead.Contact Email (PII)") AS "Lead.Contact Email (PII)__43"
+		,COUNT(*) - COUNT("Lead Number") AS "Lead Number__54"
+		,COUNT(*) - COUNT("Primary Interest") AS "Primary Interest__9"
+		,COUNT(*) - COUNT("Eloqua Lead Question 8") AS "Eloqua Lead Question 8__63"
+		,COUNT(*) - COUNT("Eloqua Lead Answer 10") AS "Eloqua Lead Answer 10__80"
+		,COUNT(*) - COUNT("Lead.Contact Address Line 2 (PII)") AS "Lead.Contact Address Line 2 (PII)__47"
+		,COUNT(*) - COUNT("Lead.Sale Type") AS "Lead.Sale Type__17"
+		,COUNT(*) - COUNT("Lead.Contact First Name (PII)") AS "Lead.Contact First Name (PII)__42"
+		,COUNT(*) - COUNT("Eloqua Lead Answer 4") AS "Eloqua Lead Answer 4__77"
+		,COUNT(*) - COUNT("Lead.Contact Last Name (PII)") AS "Lead.Contact Last Name (PII)__39"
+		,COUNT(*) - COUNT("Eloqua Lead Question 3") AS "Eloqua Lead Question 3__68"
+		,COUNT(*) - COUNT("Lead.Status Reason") AS "Lead.Status Reason__12"
+		,COUNT(*) - COUNT("Submitter Last Name (PII)") AS "Submitter Last Name (PII)__1"
+		,COUNT(*) - COUNT("Siemens Tracking Code") AS "Siemens Tracking Code__4"
+		,COUNT(*) - COUNT("Lead.Prospective Contact Email (PII)") AS "Lead.Prospective Contact Email (PII)__18"
+		,COUNT(*) - COUNT("Eloqua Lead Question 9") AS "Eloqua Lead Question 9__62"
+		,COUNT(*) - COUNT("Lead.Salutation (PII)") AS "Lead.Salutation (PII)__15"
+		,COUNT(*) - COUNT("CAMPAIGN_ID") AS "CAMPAIGN_ID__83"
+		,COUNT(*) - COUNT("Existing Primary Contact (PII)") AS "Existing Primary Contact (PII)__60"
+		,COUNT(*) - COUNT("ACCOUNT_ID") AS "ACCOUNT_ID__85"
+		,COUNT(*) - COUNT("Lead.Primary Contact Last Name (PII)") AS "Lead.Primary Contact Last Name (PII)__19"
+		,COUNT(*) - COUNT("Lead.Status Comment") AS "Lead.Status Comment__13"
+		,COUNT(*) - COUNT("Lead.Contact Address Line 1 (PII)") AS "Lead.Contact Address Line 1 (PII)__48"
+		,COUNT(*) - COUNT("Eloqua Lead Question 6") AS "Eloqua Lead Question 6__65"
+		,COUNT(*) - COUNT("Eloqua Lead Answer 6") AS "Eloqua Lead Answer 6__75"
+		,COUNT(*) - COUNT("Lead.Last Updated By (Full Name) (PII)") AS "Lead.Last Updated By (Full Name) (PII)__24"
+		,COUNT(*) - COUNT("Eloqua Lead Question 7") AS "Eloqua Lead Question 7__64"
+		,COUNT(*) - COUNT("Lead.Last Updated Timestamp") AS "Lead.Last Updated Timestamp__22"
+		,COUNT(*) - COUNT("Eloqua Lead Answer 1") AS "Eloqua Lead Answer 1__81"
+		,COUNT(*) - COUNT("Lead.Last Updated By (GID) (PII)") AS "Lead.Last Updated By (GID) (PII)__23"
+		,COUNT(*) - COUNT("Eloqua Lead Question 10") AS "Eloqua Lead Question 10__70"
+		,COUNT(*) - COUNT("Lead.Primary Contact First Name (PII)") AS "Lead.Primary Contact First Name (PII)__20"
+		,COUNT(*) - COUNT("Lead Submission Date") AS "Lead Submission Date__52"
+		,COUNT(*) - COUNT("Eloqua Lead Answer 8") AS "Eloqua Lead Answer 8__73"
+		,COUNT(*) - COUNT("Lead Comments") AS "Lead Comments__58"
+		,COUNT(*) - COUNT("Submitter First Name (PII)") AS "Submitter First Name (PII)__2"
+		,COUNT(*) - COUNT("Lead.Created Timestamp") AS "Lead.Created Timestamp__31"
+		,COUNT(*) - COUNT("ASSET_ID") AS "ASSET_ID__84"
+		,COUNT(*) - COUNT("Eloqua Lead Question 4") AS "Eloqua Lead Question 4__67"
+		,COUNT(*) - COUNT("Lead.City Area") AS "Lead.City Area__50"
+		,COUNT(*) - COUNT("Prospect Target Program Name") AS "Prospect Target Program Name__5"
+		,COUNT(*) - COUNT("Lead.IB Vendor Product") AS "Lead.IB Vendor Product__25"
+		,COUNT(*) - COUNT("Lead Origin") AS "Lead Origin__53"
+		,COUNT(*) - COUNT("Eloqua Lead Answer 5") AS "Eloqua Lead Answer 5__76"
+		,COUNT(*) - COUNT("Eloqua Lead Question 5") AS "Eloqua Lead Question 5__66"
+		,COUNT(*) - COUNT("Lead.Opportunity Type") AS "Lead.Opportunity Type__21"
+		,COUNT(*) - COUNT("Prospect Lead Type Business") AS "Prospect Lead Type Business__7"
+		,COUNT(*) - COUNT("Eloqua Lead Answer 9") AS "Eloqua Lead Answer 9__72"
+		,COUNT(*) - COUNT("Lead.Country") AS "Lead.Country__34"
+		,COUNT(*) - COUNT("Lead.Contact Department (PII)") AS "Lead.Contact Department (PII)__44"
+		,COUNT(*) - COUNT("Eloqua Lead Answer 3") AS "Eloqua Lead Answer 3__78"
+		,COUNT(*) - COUNT("Lead.Contact State (PII)") AS "Lead.Contact State (PII)__36"
+		,COUNT(*) - COUNT("EMPLOYEE_ID") AS "EMPLOYEE_ID__61"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_LEAD
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"Eloqua Lead Answer 2__79"
+			,"Lead List/Campaign Name__57"
+			,"Lead.FL Number__29"
+			,"Prospect Lead Type Ext__6"
+			,"Lead.GZ (Multi)__27"
+			,"Lead.Contact City (PII)__46"
+			,"Last Automatic Assignment Date__59"
+			,"Lead.Contact Job Role (PII)__41"
+			,"Lead.IB Vendor__26"
+			,"Lead.Contract Duration (months)__35"
+			,"Lead.Contact Job Title (PII)__40"
+			,"Lead Nr From Source__55"
+			,"Lead.Contact Postal Code (PII)__37"
+			,"Account Name (Available under Contact Details)__86"
+			,"LEAD_ID__11"
+			,"Lead.Graduate Title (PII)__28"
+			,"Lead.Close Date__49"
+			,"Lead.Contact County (PII)__45"
+			,"Lead.BL (Multi)__51"
+			,"Eloqua Lead Answer 7__74"
+			,"Lead.Created By (GID) (PII)__32"
+			,"Postpone Until__10"
+			,"PRODUCT_ID__8"
+			,"Lead.Sales Product Line__16"
+			,"Lead.Contact Phone (PII)__38"
+			,"Lead Name__56"
+			,"Eloqua Lead Question 1__71"
+			,"CONTACT_ID__82"
+			,"Lead.Status__14"
+			,"Lead.Created By (Full Name) (PII)__33"
+			,"Lead.Department__30"
+			,"Eloqua Lead Question 2__69"
+			,"Submitter Email Address (PII)__3"
+			,"Lead.Contact Email (PII)__43"
+			,"Lead Number__54"
+			,"Primary Interest__9"
+			,"Eloqua Lead Question 8__63"
+			,"Eloqua Lead Answer 10__80"
+			,"Lead.Contact Address Line 2 (PII)__47"
+			,"Lead.Sale Type__17"
+			,"Lead.Contact First Name (PII)__42"
+			,"Eloqua Lead Answer 4__77"
+			,"Lead.Contact Last Name (PII)__39"
+			,"Eloqua Lead Question 3__68"
+			,"Lead.Status Reason__12"
+			,"Submitter Last Name (PII)__1"
+			,"Siemens Tracking Code__4"
+			,"Lead.Prospective Contact Email (PII)__18"
+			,"Eloqua Lead Question 9__62"
+			,"Lead.Salutation (PII)__15"
+			,"CAMPAIGN_ID__83"
+			,"Existing Primary Contact (PII)__60"
+			,"ACCOUNT_ID__85"
+			,"Lead.Primary Contact Last Name (PII)__19"
+			,"Lead.Status Comment__13"
+			,"Lead.Contact Address Line 1 (PII)__48"
+			,"Eloqua Lead Question 6__65"
+			,"Eloqua Lead Answer 6__75"
+			,"Lead.Last Updated By (Full Name) (PII)__24"
+			,"Eloqua Lead Question 7__64"
+			,"Lead.Last Updated Timestamp__22"
+			,"Eloqua Lead Answer 1__81"
+			,"Lead.Last Updated By (GID) (PII)__23"
+			,"Eloqua Lead Question 10__70"
+			,"Lead.Primary Contact First Name (PII)__20"
+			,"Lead Submission Date__52"
+			,"Eloqua Lead Answer 8__73"
+			,"Lead Comments__58"
+			,"Submitter First Name (PII)__2"
+			,"Lead.Created Timestamp__31"
+			,"ASSET_ID__84"
+			,"Eloqua Lead Question 4__67"
+			,"Lead.City Area__50"
+			,"Prospect Target Program Name__5"
+			,"Lead.IB Vendor Product__25"
+			,"Lead Origin__53"
+			,"Eloqua Lead Answer 5__76"
+			,"Eloqua Lead Question 5__66"
+			,"Lead.Opportunity Type__21"
+			,"Prospect Lead Type Business__7"
+			,"Eloqua Lead Answer 9__72"
+			,"Lead.Country__34"
+			,"Lead.Contact Department (PII)__44"
+			,"Eloqua Lead Answer 3__78"
+			,"Lead.Contact State (PII)__36"
+			,"EMPLOYEE_ID__61"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_ACCNT_ORG_PROF' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("Channel Indicator") AS "Channel Indicator__44"
+		,COUNT(*) - COUNT("OSC Account Number") AS "OSC Account Number__14"
+		,COUNT(*) - COUNT("Account.Last Updated By (Full Name) (PII)") AS "Account.Last Updated By (Full Name) (PII)__54"
+		,COUNT(*) - COUNT("Type of Account") AS "Type of Account__2"
+		,COUNT(*) - COUNT("Account Local Attr LOV 3") AS "Account Local Attr LOV 3__74"
+		,COUNT(*) - COUNT("Account Search Term") AS "Account Search Term__63"
+		,COUNT(*) - COUNT("In Vitro Sales Area") AS "In Vitro Sales Area__27"
+		,COUNT(*) - COUNT("Account Name for Corr. 2") AS "Account Name for Corr. 2__66"
+		,COUNT(*) - COUNT("Account Name 3") AS "Account Name 3__69"
+		,COUNT(*) - COUNT("SISIC") AS "SISIC__7"
+		,COUNT(*) - COUNT("Bed Size") AS "Bed Size__50"
+		,COUNT(*) - COUNT("Marked for Deletion") AS "Marked for Deletion__17"
+		,COUNT(*) - COUNT("Account Name for Corr. 4") AS "Account Name for Corr. 4__64"
+		,COUNT(*) - COUNT("Account.Created By (Full Name) (PII)") AS "Account.Created By (Full Name) (PII)__60"
+		,COUNT(*) - COUNT("In Vitro SAP Partner Role Code") AS "In Vitro SAP Partner Role Code__25"
+		,COUNT(*) - COUNT("EMPLOYEE_ID (Business Partner In Vitro)") AS "EMPLOYEE_ID (Business Partner In Vitro)__32"
+		,COUNT(*) - COUNT("Account.Created By (GID) (PII)") AS "Account.Created By (GID) (PII)__59"
+		,COUNT(*) - COUNT("EMPLOYEE_ID (Account Primary Sales Rep POC)") AS "EMPLOYEE_ID (Account Primary Sales Rep POC)__37"
+		,COUNT(*) - COUNT("Account.Do Not Call (Flag)") AS "Account.Do Not Call (Flag)__57"
+		,COUNT(*) - COUNT("Home Page") AS "Home Page__29"
+		,COUNT(*) - COUNT("EMPLOYEE_ID (Account Primary Sales Rep In-Vitro)") AS "EMPLOYEE_ID (Account Primary Sales Rep In-Vitro)__39"
+		,COUNT(*) - COUNT("In Vitro Sales Rep Code") AS "In Vitro Sales Rep Code__26"
+		,COUNT(*) - COUNT("EMPLOYEE_ID (Account Primary Sales Rep In-Vivo)") AS "EMPLOYEE_ID (Account Primary Sales Rep In-Vivo)__38"
+		,COUNT(*) - COUNT("Trusted Customer") AS "Trusted Customer__3"
+		,COUNT(*) - COUNT("Account.Last Updated By (GID) (PII)") AS "Account.Last Updated By (GID) (PII)__53"
+		,COUNT(*) - COUNT("Account.Do Not E-Mail (Flag)") AS "Account.Do Not E-Mail (Flag)__56"
+		,COUNT(*) - COUNT("Currency") AS "Currency__42"
+		,COUNT(*) - COUNT("SISIC Description") AS "SISIC Description__6"
+		,COUNT(*) - COUNT("Account Local Attr LOV 2") AS "Account Local Attr LOV 2__75"
+		,COUNT(*) - COUNT("Coverage Type") AS "Coverage Type__43"
+		,COUNT(*) - COUNT("Customer Sanctioned Party") AS "Customer Sanctioned Party__41"
+		,COUNT(*) - COUNT("CCL Ambition Score") AS "CCL Ambition Score__45"
+		,COUNT(*) - COUNT("Account Name") AS "Account Name__71"
+		,COUNT(*) - COUNT("Account Zone") AS "Account Zone__61"
+		,COUNT(*) - COUNT("Account Buying Group ID") AS "Account Buying Group ID__83"
+		,COUNT(*) - COUNT("Third Party ID") AS "Third Party ID__4"
+		,COUNT(*) - COUNT("Account Country") AS "Account Country__80"
+		,COUNT(*) - COUNT("Account Local Attr LOV 1") AS "Account Local Attr LOV 1__76"
+		,COUNT(*) - COUNT("In Vivo Sales Area 2") AS "In Vivo Sales Area 2__23"
+		,COUNT(*) - COUNT("Account Local Attr LOV 4") AS "Account Local Attr LOV 4__73"
+		,COUNT(*) - COUNT("International Account Name 2") AS "International Account Name 2__21"
+		,COUNT(*) - COUNT("Organization Size") AS "Organization Size__15"
+		,COUNT(*) - COUNT("Account Local Attr LOV 5") AS "Account Local Attr LOV 5__72"
+		,COUNT(*) - COUNT("Account Local Attr 3") AS "Account Local Attr 3__77"
+		,COUNT(*) - COUNT("Sales Activity Target") AS "Sales Activity Target__11"
+		,COUNT(*) - COUNT("IFA Number") AS "IFA Number__28"
+		,COUNT(*) - COUNT("CCL Actual Score") AS "CCL Actual Score__46"
+		,COUNT(*) - COUNT("EMPLOYEE_ID (Account Secondary Sales Rep In-Vitro)") AS "EMPLOYEE_ID (Account Secondary Sales Rep In-Vitro)__34"
+		,COUNT(*) - COUNT("ACCOUNT_ID") AS "ACCOUNT_ID__51"
+		,COUNT(*) - COUNT("Account Local Attr 2") AS "Account Local Attr 2__78"
+		,COUNT(*) - COUNT("SAP-ID") AS "SAP-ID__9"
+		,COUNT(*) - COUNT("Account Name 2") AS "Account Name 2__70"
+		,COUNT(*) - COUNT("SAP Account Group") AS "SAP Account Group__10"
+		,COUNT(*) - COUNT("Old SAP ID") AS "Old SAP ID__16"
+		,COUNT(*) - COUNT("Global Account Type") AS "Global Account Type__30"
+		,COUNT(*) - COUNT("In Vivo Sales Area") AS "In Vivo Sales Area__24"
+		,COUNT(*) - COUNT("International Account Name") AS "International Account Name__22"
+		,COUNT(*) - COUNT("Reference Customer (Flag)") AS "Reference Customer (Flag)__12"
+		,COUNT(*) - COUNT("EMPLOYEE_ID (Business Partner In Vivo)") AS "EMPLOYEE_ID (Business Partner In Vivo)__31"
+		,COUNT(*) - COUNT("Sub Provider Type") AS "Sub Provider Type__5"
+		,COUNT(*) - COUNT("Account Name for Corr. 3") AS "Account Name for Corr. 3__65"
+		,COUNT(*) - COUNT("Account.Last Updated Timestamp") AS "Account.Last Updated Timestamp__52"
+		,COUNT(*) - COUNT("Varian Equivalent Account ID") AS "Varian Equivalent Account ID__1"
+		,COUNT(*) - COUNT("Account Segment In Vitro") AS "Account Segment In Vitro__62"
+		,COUNT(*) - COUNT("SAP-ID In Vitro") AS "SAP-ID In Vitro__8"
+		,COUNT(*) - COUNT("Account Class In Vitro (DX)") AS "Account Class In Vitro (DX)__82"
+		,COUNT(*) - COUNT("International Account Name 4") AS "International Account Name 4__19"
+		,COUNT(*) - COUNT("Department Type") AS "Department Type__40"
+		,COUNT(*) - COUNT("EMPLOYEE_ID (Account Secondary Sales Rep In-Vivo)") AS "EMPLOYEE_ID (Account Secondary Sales Rep In-Vivo)__33"
+		,COUNT(*) - COUNT("Account Class In Vivo (EQ)") AS "Account Class In Vivo (EQ)__81"
+		,COUNT(*) - COUNT("Legal Structure") AS "Legal Structure__18"
+		,COUNT(*) - COUNT("Business Partner Number") AS "Business Partner Number__47"
+		,COUNT(*) - COUNT("Account Name 4") AS "Account Name 4__68"
+		,COUNT(*) - COUNT("EMPLOYEE_ID (Account Primary SSE)") AS "EMPLOYEE_ID (Account Primary SSE)__35"
+		,COUNT(*) - COUNT("Account Local Attr 1") AS "Account Local Attr 1__79"
+		,COUNT(*) - COUNT("Blocking Status") AS "Blocking Status__49"
+		,COUNT(*) - COUNT("Blocking Status Reason") AS "Blocking Status Reason__48"
+		,COUNT(*) - COUNT("Account Name for Corr.") AS "Account Name for Corr.__67"
+		,COUNT(*) - COUNT("Provider Type") AS "Provider Type__13"
+		,COUNT(*) - COUNT("Account.Created Timestamp") AS "Account.Created Timestamp__58"
+		,COUNT(*) - COUNT("EMPLOYEE_ID (Account Primary Sales Rep Ultrasound)") AS "EMPLOYEE_ID (Account Primary Sales Rep Ultrasound)__36"
+		,COUNT(*) - COUNT("International Account Name 3") AS "International Account Name 3__20"
+		,COUNT(*) - COUNT("Account.Do Not Mail (Flag)") AS "Account.Do Not Mail (Flag)__55"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_ACCNT_ORG_PROF
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"Channel Indicator__44"
+			,"OSC Account Number__14"
+			,"Account.Last Updated By (Full Name) (PII)__54"
+			,"Type of Account__2"
+			,"Account Local Attr LOV 3__74"
+			,"Account Search Term__63"
+			,"In Vitro Sales Area__27"
+			,"Account Name for Corr. 2__66"
+			,"Account Name 3__69"
+			,"SISIC__7"
+			,"Bed Size__50"
+			,"Marked for Deletion__17"
+			,"Account Name for Corr. 4__64"
+			,"Account.Created By (Full Name) (PII)__60"
+			,"In Vitro SAP Partner Role Code__25"
+			,"EMPLOYEE_ID (Business Partner In Vitro)__32"
+			,"Account.Created By (GID) (PII)__59"
+			,"EMPLOYEE_ID (Account Primary Sales Rep POC)__37"
+			,"Account.Do Not Call (Flag)__57"
+			,"Home Page__29"
+			,"EMPLOYEE_ID (Account Primary Sales Rep In-Vitro)__39"
+			,"In Vitro Sales Rep Code__26"
+			,"EMPLOYEE_ID (Account Primary Sales Rep In-Vivo)__38"
+			,"Trusted Customer__3"
+			,"Account.Last Updated By (GID) (PII)__53"
+			,"Account.Do Not E-Mail (Flag)__56"
+			,"Currency__42"
+			,"SISIC Description__6"
+			,"Account Local Attr LOV 2__75"
+			,"Coverage Type__43"
+			,"Customer Sanctioned Party__41"
+			,"CCL Ambition Score__45"
+			,"Account Name__71"
+			,"Account Zone__61"
+			,"Account Buying Group ID__83"
+			,"Third Party ID__4"
+			,"Account Country__80"
+			,"Account Local Attr LOV 1__76"
+			,"In Vivo Sales Area 2__23"
+			,"Account Local Attr LOV 4__73"
+			,"International Account Name 2__21"
+			,"Organization Size__15"
+			,"Account Local Attr LOV 5__72"
+			,"Account Local Attr 3__77"
+			,"Sales Activity Target__11"
+			,"IFA Number__28"
+			,"CCL Actual Score__46"
+			,"EMPLOYEE_ID (Account Secondary Sales Rep In-Vitro)__34"
+			,"ACCOUNT_ID__51"
+			,"Account Local Attr 2__78"
+			,"SAP-ID__9"
+			,"Account Name 2__70"
+			,"SAP Account Group__10"
+			,"Old SAP ID__16"
+			,"Global Account Type__30"
+			,"In Vivo Sales Area__24"
+			,"International Account Name__22"
+			,"Reference Customer (Flag)__12"
+			,"EMPLOYEE_ID (Business Partner In Vivo)__31"
+			,"Sub Provider Type__5"
+			,"Account Name for Corr. 3__65"
+			,"Account.Last Updated Timestamp__52"
+			,"Varian Equivalent Account ID__1"
+			,"Account Segment In Vitro__62"
+			,"SAP-ID In Vitro__8"
+			,"Account Class In Vitro (DX)__82"
+			,"International Account Name 4__19"
+			,"Department Type__40"
+			,"EMPLOYEE_ID (Account Secondary Sales Rep In-Vivo)__33"
+			,"Account Class In Vivo (EQ)__81"
+			,"Legal Structure__18"
+			,"Business Partner Number__47"
+			,"Account Name 4__68"
+			,"EMPLOYEE_ID (Account Primary SSE)__35"
+			,"Account Local Attr 1__79"
+			,"Blocking Status__49"
+			,"Blocking Status Reason__48"
+			,"Account Name for Corr.__67"
+			,"Provider Type__13"
+			,"Account.Created Timestamp__58"
+			,"EMPLOYEE_ID (Account Primary Sales Rep Ultrasound)__36"
+			,"International Account Name 3__20"
+			,"Account.Do Not Mail (Flag)__55"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_ACCNT_REL' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("OBJECT_ID") AS "OBJECT_ID__5"
+		,COUNT(*) - COUNT("SUBJECT_ID") AS "SUBJECT_ID__1"
+		,COUNT(*) - COUNT("Relationship Account Job Role (PII)") AS "Relationship Account Job Role (PII)__3"
+		,COUNT(*) - COUNT("Account Relationship Status") AS "Account Relationship Status__7"
+		,COUNT(*) - COUNT("Account Relationship Detail") AS "Account Relationship Detail__8"
+		,COUNT(*) - COUNT("Account Relationship Type") AS "Account Relationship Type__6"
+		,COUNT(*) - COUNT("Relationship Account Department") AS "Relationship Account Department__4"
+		,COUNT(*) - COUNT("Relationship Account Job Title (PII)") AS "Relationship Account Job Title (PII)__2"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_ACCNT_REL
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"OBJECT_ID__5"
+			,"SUBJECT_ID__1"
+			,"Relationship Account Job Role (PII)__3"
+			,"Account Relationship Status__7"
+			,"Account Relationship Detail__8"
+			,"Account Relationship Type__6"
+			,"Relationship Account Department__4"
+			,"Relationship Account Job Title (PII)__2"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_ACCNT_MKT_ATT' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("Account.Mkt Att Last Updated By (GID) (PII)") AS "Account.Mkt Att Last Updated By (GID) (PII)__2"
+		,COUNT(*) - COUNT("Account Mkt Att Comments (PII)") AS "Account Mkt Att Comments (PII)__7"
+		,COUNT(*) - COUNT("Account Mkt Att Type") AS "Account Mkt Att Type__5"
+		,COUNT(*) - COUNT("ACCOUNT_ID") AS "ACCOUNT_ID__1"
+		,COUNT(*) - COUNT("Account.Mkt Att Created By (GID) (PII)") AS "Account.Mkt Att Created By (GID) (PII)__3"
+		,COUNT(*) - COUNT("Account Mkt Att Value") AS "Account Mkt Att Value__4"
+		,COUNT(*) - COUNT("Account Mkt Att Count") AS "Account Mkt Att Count__6"
+		,COUNT(*) - COUNT("Account Mkt Att AB/BL") AS "Account Mkt Att AB/BL__8"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_ACCNT_MKT_ATT
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"Account.Mkt Att Last Updated By (GID) (PII)__2"
+			,"Account Mkt Att Comments (PII)__7"
+			,"Account Mkt Att Type__5"
+			,"ACCOUNT_ID__1"
+			,"Account.Mkt Att Created By (GID) (PII)__3"
+			,"Account Mkt Att Value__4"
+			,"Account Mkt Att Count__6"
+			,"Account Mkt Att AB/BL__8"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_ACTIVITY' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("Activity.Created Timestamp") AS "Activity.Created Timestamp__34"
+		,COUNT(*) - COUNT("Activity Local Attr 1") AS "Activity Local Attr 1__46"
+		,COUNT(*) - COUNT("ASSET_ID") AS "ASSET_ID__15"
+		,COUNT(*) - COUNT("System Name") AS "System Name__1"
+		,COUNT(*) - COUNT("ACCOUNT_ID") AS "ACCOUNT_ID__47"
+		,COUNT(*) - COUNT("Activity.Type") AS "Activity.Type__19"
+		,COUNT(*) - COUNT("Activity.BL (Multi)") AS "Activity.BL (Multi)__38"
+		,COUNT(*) - COUNT("Purpose") AS "Purpose__4"
+		,COUNT(*) - COUNT("Activity Local Attr 2") AS "Activity Local Attr 2__45"
+		,COUNT(*) - COUNT("Activity.Last Updated By (Full Name) (PII)") AS "Activity.Last Updated By (Full Name) (PII)__28"
+		,COUNT(*) - COUNT("Activity Local Attr 3") AS "Activity Local Attr 3__44"
+		,COUNT(*) - COUNT("Activity Local Attr LOV 3") AS "Activity Local Attr LOV 3__41"
+		,COUNT(*) - COUNT("PROJECT_ID") AS "PROJECT_ID__5"
+		,COUNT(*) - COUNT("Meeting Location") AS "Meeting Location__10"
+		,COUNT(*) - COUNT("OPPORTUNITY_ID") AS "OPPORTUNITY_ID__9"
+		,COUNT(*) - COUNT("Activity.Description") AS "Activity.Description__32"
+		,COUNT(*) - COUNT("Activity.Primary Contact (PII)") AS "Activity.Primary Contact (PII)__23"
+		,COUNT(*) - COUNT("Activity Local Attr LOV 1") AS "Activity Local Attr LOV 1__43"
+		,COUNT(*) - COUNT("Private (Flag)") AS "Private (Flag)__6"
+		,COUNT(*) - COUNT("Activity.Subtype") AS "Activity.Subtype__20"
+		,COUNT(*) - COUNT("Activity.Created By (Full Name) (PII)") AS "Activity.Created By (Full Name) (PII)__36"
+		,COUNT(*) - COUNT("Activity.End Date") AS "Activity.End Date__30"
+		,COUNT(*) - COUNT("Mandatory") AS "Mandatory__11"
+		,COUNT(*) - COUNT("Activity.Country") AS "Activity.Country__37"
+		,COUNT(*) - COUNT("Activity.Status") AS "Activity.Status__21"
+		,COUNT(*) - COUNT("Activity.Last Updated Timestamp") AS "Activity.Last Updated Timestamp__26"
+		,COUNT(*) - COUNT("Activity Number") AS "Activity Number__40"
+		,COUNT(*) - COUNT("Sales Product Line") AS "Sales Product Line__3"
+		,COUNT(*) - COUNT("EMPLOYEE_ID") AS "EMPLOYEE_ID__13"
+		,COUNT(*) - COUNT("Activity.Last Updated By (GID) (PII)") AS "Activity.Last Updated By (GID) (PII)__27"
+		,COUNT(*) - COUNT("Activity.Created By (GID) (PII)") AS "Activity.Created By (GID) (PII)__35"
+		,COUNT(*) - COUNT("PARTNERPARTY_ID") AS "PARTNERPARTY_ID__8"
+		,COUNT(*) - COUNT("All Day") AS "All Day__17"
+		,COUNT(*) - COUNT("Priority") AS "Priority__7"
+		,COUNT(*) - COUNT("Activity Owner Name (PII)") AS "Activity Owner Name (PII)__39"
+		,COUNT(*) - COUNT("CONTACT_ID") AS "CONTACT_ID__14"
+		,COUNT(*) - COUNT("Activity Local Attr LOV 2") AS "Activity Local Attr LOV 2__42"
+		,COUNT(*) - COUNT("LEAD_ID") AS "LEAD_ID__12"
+		,COUNT(*) - COUNT("Activity.Due Date") AS "Activity.Due Date__31"
+		,COUNT(*) - COUNT("Activity.Start Date") AS "Activity.Start Date__22"
+		,COUNT(*) - COUNT("System Link") AS "System Link__2"
+		,COUNT(*) - COUNT("ACTIVITY_ID") AS "ACTIVITY_ID__18"
+		,COUNT(*) - COUNT("Activity.Name") AS "Activity.Name__24"
+		,COUNT(*) - COUNT("Appointment Success Importance") AS "Appointment Success Importance__16"
+		,COUNT(*) - COUNT("Activity.Department") AS "Activity.Department__33"
+		,COUNT(*) - COUNT("Activity.Meeting Minutes") AS "Activity.Meeting Minutes__25"
+		,COUNT(*) - COUNT("Activity.Function") AS "Activity.Function__29"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_ACTIVITY
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"Activity.Created Timestamp__34"
+			,"Activity Local Attr 1__46"
+			,"ASSET_ID__15"
+			,"System Name__1"
+			,"ACCOUNT_ID__47"
+			,"Activity.Type__19"
+			,"Activity.BL (Multi)__38"
+			,"Purpose__4"
+			,"Activity Local Attr 2__45"
+			,"Activity.Last Updated By (Full Name) (PII)__28"
+			,"Activity Local Attr 3__44"
+			,"Activity Local Attr LOV 3__41"
+			,"PROJECT_ID__5"
+			,"Meeting Location__10"
+			,"OPPORTUNITY_ID__9"
+			,"Activity.Description__32"
+			,"Activity.Primary Contact (PII)__23"
+			,"Activity Local Attr LOV 1__43"
+			,"Private (Flag)__6"
+			,"Activity.Subtype__20"
+			,"Activity.Created By (Full Name) (PII)__36"
+			,"Activity.End Date__30"
+			,"Mandatory__11"
+			,"Activity.Country__37"
+			,"Activity.Status__21"
+			,"Activity.Last Updated Timestamp__26"
+			,"Activity Number__40"
+			,"Sales Product Line__3"
+			,"EMPLOYEE_ID__13"
+			,"Activity.Last Updated By (GID) (PII)__27"
+			,"Activity.Created By (GID) (PII)__35"
+			,"PARTNERPARTY_ID__8"
+			,"All Day__17"
+			,"Priority__7"
+			,"Activity Owner Name (PII)__39"
+			,"CONTACT_ID__14"
+			,"Activity Local Attr LOV 2__42"
+			,"LEAD_ID__12"
+			,"Activity.Due Date__31"
+			,"Activity.Start Date__22"
+			,"System Link__2"
+			,"ACTIVITY_ID__18"
+			,"Activity.Name__24"
+			,"Appointment Success Importance__16"
+			,"Activity.Department__33"
+			,"Activity.Meeting Minutes__25"
+			,"Activity.Function__29"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_OPTY' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("Service Opportunity") AS "Service Opportunity__1"
+		,COUNT(*) - COUNT("Oppty Local Attr LOV 2") AS "Oppty Local Attr LOV 2__25"
+		,COUNT(*) - COUNT("Oppty.Lease End Date") AS "Oppty.Lease End Date__11"
+		,COUNT(*) - COUNT("ACCOUNT_ID") AS "ACCOUNT_ID__42"
+		,COUNT(*) - COUNT("Oppty Local Attr LOV 3") AS "Oppty Local Attr LOV 3__24"
+		,COUNT(*) - COUNT("CONTACT_ID") AS "CONTACT_ID__39"
+		,COUNT(*) - COUNT("Oppty.Tender RFP Due Date") AS "Oppty.Tender RFP Due Date__5"
+		,COUNT(*) - COUNT("Oppty Local Attr 1") AS "Oppty Local Attr 1__29"
+		,COUNT(*) - COUNT("AR Group") AS "AR Group__41"
+		,COUNT(*) - COUNT("Oppty.Last Updated By (GID) (PII)") AS "Oppty.Last Updated By (GID) (PII)__13"
+		,COUNT(*) - COUNT("Oppty.Tender RFP Type") AS "Oppty.Tender RFP Type__4"
+		,COUNT(*) - COUNT("Business Type") AS "Business Type__40"
+		,COUNT(*) - COUNT("Must Win (Flag)") AS "Must Win (Flag)__34"
+		,COUNT(*) - COUNT("EMPLOYEE_ID (Opportunity Owner)") AS "EMPLOYEE_ID (Opportunity Owner)__36"
+		,COUNT(*) - COUNT("Oppty Number") AS "Oppty Number__22"
+		,COUNT(*) - COUNT("OPPORTUNITY_ID (Linked Service Opportunity)") AS "OPPORTUNITY_ID (Linked Service Opportunity)__30"
+		,COUNT(*) - COUNT("Oppty.Last Updated Timestamp") AS "Oppty.Last Updated Timestamp__12"
+		,COUNT(*) - COUNT("PROJECT_ID") AS "PROJECT_ID__2"
+		,COUNT(*) - COUNT("Oppty Local Attr 2") AS "Oppty Local Attr 2__28"
+		,COUNT(*) - COUNT("Oppty.CPQ Run Assignment") AS "Oppty.CPQ Run Assignment__19"
+		,COUNT(*) - COUNT("Oppty.Created Timestamp") AS "Oppty.Created Timestamp__16"
+		,COUNT(*) - COUNT("Oppty Type") AS "Oppty Type__21"
+		,COUNT(*) - COUNT("Oppty.Last Updated By (Full Name) (PII)") AS "Oppty.Last Updated By (Full Name) (PII)__14"
+		,COUNT(*) - COUNT("PARTNER_ID") AS "PARTNER_ID__3"
+		,COUNT(*) - COUNT("Oppty.Quote Number") AS "Oppty.Quote Number__7"
+		,COUNT(*) - COUNT("Oppty.Project Progress") AS "Oppty.Project Progress__8"
+		,COUNT(*) - COUNT("Oppty Name") AS "Oppty Name__23"
+		,COUNT(*) - COUNT("Oppty.Created By (Full Name) (PII)") AS "Oppty.Created By (Full Name) (PII)__18"
+		,COUNT(*) - COUNT("OPPORTUNITY_ID") AS "OPPORTUNITY_ID__33"
+		,COUNT(*) - COUNT("Key Portfolio Element") AS "Key Portfolio Element__35"
+		,COUNT(*) - COUNT("OPPORTUNITY_ID (Alternate Opportunity)") AS "OPPORTUNITY_ID (Alternate Opportunity)__32"
+		,COUNT(*) - COUNT("Current Sales Stage") AS "Current Sales Stage__37"
+		,COUNT(*) - COUNT("Oppty.Lessor") AS "Oppty.Lessor__10"
+		,COUNT(*) - COUNT("Oppty.Department") AS "Oppty.Department__15"
+		,COUNT(*) - COUNT("Oppty.Tender or RFP Number") AS "Oppty.Tender or RFP Number__6"
+		,COUNT(*) - COUNT("Oppty.Owner Name") AS "Oppty.Owner Name__9"
+		,COUNT(*) - COUNT("Oppty Local Attr LOV 1") AS "Oppty Local Attr LOV 1__26"
+		,COUNT(*) - COUNT("Oppty.Created By (GID) (PII)") AS "Oppty.Created By (GID) (PII)__17"
+		,COUNT(*) - COUNT("OPPORTUNITY_ID (Linked Opportunity)") AS "OPPORTUNITY_ID (Linked Opportunity)__31"
+		,COUNT(*) - COUNT("Oppty.Close Date") AS "Oppty.Close Date__20"
+		,COUNT(*) - COUNT("Oppty Local Attr 3") AS "Oppty Local Attr 3__27"
+		,COUNT(*) - COUNT("Cross-Collaboration") AS "Cross-Collaboration__38"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_OPTY
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"Service Opportunity__1"
+			,"Oppty Local Attr LOV 2__25"
+			,"Oppty.Lease End Date__11"
+			,"ACCOUNT_ID__42"
+			,"Oppty Local Attr LOV 3__24"
+			,"CONTACT_ID__39"
+			,"Oppty.Tender RFP Due Date__5"
+			,"Oppty Local Attr 1__29"
+			,"AR Group__41"
+			,"Oppty.Last Updated By (GID) (PII)__13"
+			,"Oppty.Tender RFP Type__4"
+			,"Business Type__40"
+			,"Must Win (Flag)__34"
+			,"EMPLOYEE_ID (Opportunity Owner)__36"
+			,"Oppty Number__22"
+			,"OPPORTUNITY_ID (Linked Service Opportunity)__30"
+			,"Oppty.Last Updated Timestamp__12"
+			,"PROJECT_ID__2"
+			,"Oppty Local Attr 2__28"
+			,"Oppty.CPQ Run Assignment__19"
+			,"Oppty.Created Timestamp__16"
+			,"Oppty Type__21"
+			,"Oppty.Last Updated By (Full Name) (PII)__14"
+			,"PARTNER_ID__3"
+			,"Oppty.Quote Number__7"
+			,"Oppty.Project Progress__8"
+			,"Oppty Name__23"
+			,"Oppty.Created By (Full Name) (PII)__18"
+			,"OPPORTUNITY_ID__33"
+			,"Key Portfolio Element__35"
+			,"OPPORTUNITY_ID (Alternate Opportunity)__32"
+			,"Current Sales Stage__37"
+			,"Oppty.Lessor__10"
+			,"Oppty.Department__15"
+			,"Oppty.Tender or RFP Number__6"
+			,"Oppty.Owner Name__9"
+			,"Oppty Local Attr LOV 1__26"
+			,"Oppty.Created By (GID) (PII)__17"
+			,"OPPORTUNITY_ID (Linked Opportunity)__31"
+			,"Oppty.Close Date__20"
+			,"Oppty Local Attr 3__27"
+			,"Cross-Collaboration__38"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_CON_EMAIL' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("Contact.E-Mail Last Updated Timestamp") AS "Contact.E-Mail Last Updated Timestamp__4"
+		,COUNT(*) - COUNT("Contact.E-Mail Last Updated By (GID) (PII)") AS "Contact.E-Mail Last Updated By (GID) (PII)__5"
+		,COUNT(*) - COUNT("CONTACT_EMAIL_ID") AS "CONTACT_EMAIL_ID__2"
+		,COUNT(*) - COUNT("Contact.E-Mail (PII)") AS "Contact.E-Mail (PII)__8"
+		,COUNT(*) - COUNT("Contact. Email Status") AS "Contact. Email Status__9"
+		,COUNT(*) - COUNT("CONTACT_ID") AS "CONTACT_ID__1"
+		,COUNT(*) - COUNT("Contact.E-Mail Primary (Flag)") AS "Contact.E-Mail Primary (Flag)__3"
+		,COUNT(*) - COUNT("Contact.E-Mail Created Timestamp") AS "Contact.E-Mail Created Timestamp__6"
+		,COUNT(*) - COUNT("Contact.E-Mail Created By (GID) (PII)") AS "Contact.E-Mail Created By (GID) (PII)__7"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_CON_EMAIL
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"Contact.E-Mail Last Updated Timestamp__4"
+			,"Contact.E-Mail Last Updated By (GID) (PII)__5"
+			,"CONTACT_EMAIL_ID__2"
+			,"Contact.E-Mail (PII)__8"
+			,"Contact. Email Status__9"
+			,"CONTACT_ID__1"
+			,"Contact.E-Mail Primary (Flag)__3"
+			,"Contact.E-Mail Created Timestamp__6"
+			,"Contact.E-Mail Created By (GID) (PII)__7"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_COMPETITOR' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("Competitor.Last Update Date") AS "Competitor.Last Update Date__8"
+		,COUNT(*) - COUNT("Competitor.Created Timestamp") AS "Competitor.Created Timestamp__9"
+		,COUNT(*) - COUNT("Competitor.OSC Number") AS "Competitor.OSC Number__5"
+		,COUNT(*) - COUNT("Competitor.Last Updated By (GID) (PII)") AS "Competitor.Last Updated By (GID) (PII)__7"
+		,COUNT(*) - COUNT("Competitor.Name") AS "Competitor.Name__6"
+		,COUNT(*) - COUNT("Competitor.Created By (GID) (PII)") AS "Competitor.Created By (GID) (PII)__10"
+		,COUNT(*) - COUNT("Competitor.Unique Name") AS "Competitor.Unique Name__2"
+		,COUNT(*) - COUNT("ACCOUNT_ID (Competitor)") AS "ACCOUNT_ID (Competitor)__11"
+		,COUNT(*) - COUNT("Competitor.Validated (Flag)") AS "Competitor.Validated (Flag)__1"
+		,COUNT(*) - COUNT("Competitor.Type") AS "Competitor.Type__3"
+		,COUNT(*) - COUNT("Competitor.Status Code") AS "Competitor.Status Code__4"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_COMPETITOR
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"Competitor.Last Update Date__8"
+			,"Competitor.Created Timestamp__9"
+			,"Competitor.OSC Number__5"
+			,"Competitor.Last Updated By (GID) (PII)__7"
+			,"Competitor.Name__6"
+			,"Competitor.Created By (GID) (PII)__10"
+			,"Competitor.Unique Name__2"
+			,"ACCOUNT_ID (Competitor)__11"
+			,"Competitor.Validated (Flag)__1"
+			,"Competitor.Type__3"
+			,"Competitor.Status Code__4"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_TERR_RESOURCE' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("TERRITORYVERSION_ID") AS "TERRITORYVERSION_ID__1"
+		,COUNT(*) - COUNT("TERRITORYRESOURCE_ID") AS "TERRITORYRESOURCE_ID__2"
+		,COUNT(*) - COUNT("EMPLOYEE_ID") AS "EMPLOYEE_ID__3"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_TERR_RESOURCE
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"TERRITORYVERSION_ID__1"
+			,"TERRITORYRESOURCE_ID__2"
+			,"EMPLOYEE_ID__3"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_PROJECT_C' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("Project.Created By (GID) (PII)") AS "Project.Created By (GID) (PII)__43"
+		,COUNT(*) - COUNT("Project.Strategic Priority") AS "Project.Strategic Priority__5"
+		,COUNT(*) - COUNT("Project.Equipment AT (LC)") AS "Project.Equipment AT (LC)__35"
+		,COUNT(*) - COUNT("LINKEDPROJECT_ID") AS "LINKEDPROJECT_ID__53"
+		,COUNT(*) - COUNT("Project.Last Updated By (Full Name) (PII)") AS "Project.Last Updated By (Full Name) (PII)__21"
+		,COUNT(*) - COUNT("Project.Next Milestone") AS "Project.Next Milestone__10"
+		,COUNT(*) - COUNT("Project.Local Attr LOV 3") AS "Project.Local Attr LOV 3__13"
+		,COUNT(*) - COUNT("Project.Contract Value (LC)") AS "Project.Contract Value (LC)__45"
+		,COUNT(*) - COUNT("Project.Status") AS "Project.Status__6"
+		,COUNT(*) - COUNT("Project Number") AS "Project Number__49"
+		,COUNT(*) - COUNT("Project.Equipment LD (LC)") AS "Project.Equipment LD (LC)__33"
+		,COUNT(*) - COUNT("Project.CS DI (LC)") AS "Project.CS DI (LC)__40"
+		,COUNT(*) - COUNT("Project.Local Attr LOV 2") AS "Project.Local Attr LOV 2__14"
+		,COUNT(*) - COUNT("Project.Local Attr 3") AS "Project.Local Attr 3__16"
+		,COUNT(*) - COUNT("ES Project Type") AS "ES Project Type__54"
+		,COUNT(*) - COUNT("Project.Equipment POC (LC)") AS "Project.Equipment POC (LC)__32"
+		,COUNT(*) - COUNT("Project.CS Reagents LD (LC)") AS "Project.CS Reagents LD (LC)__39"
+		,COUNT(*) - COUNT("Project.First Revenue Recognition Date") AS "Project.First Revenue Recognition Date__28"
+		,COUNT(*) - COUNT("Project.CS Reagents POC (LC)") AS "Project.CS Reagents POC (LC)__38"
+		,COUNT(*) - COUNT("Project Attributes") AS "Project Attributes__51"
+		,COUNT(*) - COUNT("PROJECT_ID") AS "PROJECT_ID__3"
+		,COUNT(*) - COUNT("Project.Contract Duration") AS "Project.Contract Duration__47"
+		,COUNT(*) - COUNT("Project.Contract Signature Date") AS "Project.Contract Signature Date__46"
+		,COUNT(*) - COUNT("Project.Equipment VAR (LC)") AS "Project.Equipment VAR (LC)__30"
+		,COUNT(*) - COUNT("Project.Created Timestamp") AS "Project.Created Timestamp__42"
+		,COUNT(*) - COUNT("Project Name") AS "Project Name__50"
+		,COUNT(*) - COUNT("Project.CS VAR (LC)") AS "Project.CS VAR (LC)__36"
+		,COUNT(*) - COUNT("Project.Local Attr 1") AS "Project.Local Attr 1__18"
+		,COUNT(*) - COUNT("Project.Equipment DI (LC)") AS "Project.Equipment DI (LC)__34"
+		,COUNT(*) - COUNT("Reasons") AS "Reasons__2"
+		,COUNT(*) - COUNT("Other Reasons") AS "Other Reasons__52"
+		,COUNT(*) - COUNT("Project.Last Updated Timestamp") AS "Project.Last Updated Timestamp__19"
+		,COUNT(*) - COUNT("Project.Local Attr 2") AS "Project.Local Attr 2__17"
+		,COUNT(*) - COUNT("Project.Local Attr LOV 1") AS "Project.Local Attr LOV 1__15"
+		,COUNT(*) - COUNT("Project.Other (LC)") AS "Project.Other (LC)__9"
+		,COUNT(*) - COUNT("Project.FY+1 - Order Entry (LC)") AS "Project.FY+1 - Order Entry (LC)__25"
+		,COUNT(*) - COUNT("Project.Project Progress") AS "Project.Project Progress__8"
+		,COUNT(*) - COUNT("Project.FY+2 - Revenue (LC)") AS "Project.FY+2 - Revenue (LC)__22"
+		,COUNT(*) - COUNT("Project.FY+1 - Revenue (LC)") AS "Project.FY+1 - Revenue (LC)__24"
+		,COUNT(*) - COUNT("Project.CS AT (LC)") AS "Project.CS AT (LC)__41"
+		,COUNT(*) - COUNT("Project.FY+2 - Order Entry (LC)") AS "Project.FY+2 - Order Entry (LC)__23"
+		,COUNT(*) - COUNT("Project.VAS Contract (LC)") AS "Project.VAS Contract (LC)__4"
+		,COUNT(*) - COUNT("Project Type") AS "Project Type__48"
+		,COUNT(*) - COUNT("Project.Siemens Probability") AS "Project.Siemens Probability__7"
+		,COUNT(*) - COUNT("Project.Local Currency") AS "Project.Local Currency__12"
+		,COUNT(*) - COUNT("Project.Milestone Achieved") AS "Project.Milestone Achieved__11"
+		,COUNT(*) - COUNT("Project.FY - Revenue (LC)") AS "Project.FY - Revenue (LC)__26"
+		,COUNT(*) - COUNT("Project.FY - Order Entry (LC)") AS "Project.FY - Order Entry (LC)__27"
+		,COUNT(*) - COUNT("Project.ES Sale Type") AS "Project.ES Sale Type__29"
+		,COUNT(*) - COUNT("Project.CS US (LC)") AS "Project.CS US (LC)__37"
+		,COUNT(*) - COUNT("Project.Equipment US (LC)") AS "Project.Equipment US (LC)__31"
+		,COUNT(*) - COUNT("Winning Vendor") AS "Winning Vendor__1"
+		,COUNT(*) - COUNT("Project.Last Updated By (GID) (PII)") AS "Project.Last Updated By (GID) (PII)__20"
+		,COUNT(*) - COUNT("Project.Created By (Full Name) (PII)") AS "Project.Created By (Full Name) (PII)__44"
+		,COUNT(*) - COUNT("ACCOUNT_ID") AS "ACCOUNT_ID__55"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_PROJECT_C
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"Project.Created By (GID) (PII)__43"
+			,"Project.Strategic Priority__5"
+			,"Project.Equipment AT (LC)__35"
+			,"LINKEDPROJECT_ID__53"
+			,"Project.Last Updated By (Full Name) (PII)__21"
+			,"Project.Next Milestone__10"
+			,"Project.Local Attr LOV 3__13"
+			,"Project.Contract Value (LC)__45"
+			,"Project.Status__6"
+			,"Project Number__49"
+			,"Project.Equipment LD (LC)__33"
+			,"Project.CS DI (LC)__40"
+			,"Project.Local Attr LOV 2__14"
+			,"Project.Local Attr 3__16"
+			,"ES Project Type__54"
+			,"Project.Equipment POC (LC)__32"
+			,"Project.CS Reagents LD (LC)__39"
+			,"Project.First Revenue Recognition Date__28"
+			,"Project.CS Reagents POC (LC)__38"
+			,"Project Attributes__51"
+			,"PROJECT_ID__3"
+			,"Project.Contract Duration__47"
+			,"Project.Contract Signature Date__46"
+			,"Project.Equipment VAR (LC)__30"
+			,"Project.Created Timestamp__42"
+			,"Project Name__50"
+			,"Project.CS VAR (LC)__36"
+			,"Project.Local Attr 1__18"
+			,"Project.Equipment DI (LC)__34"
+			,"Reasons__2"
+			,"Other Reasons__52"
+			,"Project.Last Updated Timestamp__19"
+			,"Project.Local Attr 2__17"
+			,"Project.Local Attr LOV 1__15"
+			,"Project.Other (LC)__9"
+			,"Project.FY+1 - Order Entry (LC)__25"
+			,"Project.Project Progress__8"
+			,"Project.FY+2 - Revenue (LC)__22"
+			,"Project.FY+1 - Revenue (LC)__24"
+			,"Project.CS AT (LC)__41"
+			,"Project.FY+2 - Order Entry (LC)__23"
+			,"Project.VAS Contract (LC)__4"
+			,"Project Type__48"
+			,"Project.Siemens Probability__7"
+			,"Project.Local Currency__12"
+			,"Project.Milestone Achieved__11"
+			,"Project.FY - Revenue (LC)__26"
+			,"Project.FY - Order Entry (LC)__27"
+			,"Project.ES Sale Type__29"
+			,"Project.CS US (LC)__37"
+			,"Project.Equipment US (LC)__31"
+			,"Winning Vendor__1"
+			,"Project.Last Updated By (GID) (PII)__20"
+			,"Project.Created By (Full Name) (PII)__44"
+			,"ACCOUNT_ID__55"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_PRODUCT_INACTIVE' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("Vendor") AS "Vendor__1"
+		,COUNT(*) - COUNT("Product.Created By (GID) (PII)") AS "Product.Created By (GID) (PII)__8"
+		,COUNT(*) - COUNT("Product Description") AS "Product Description__13"
+		,COUNT(*) - COUNT("Product.GZ") AS "Product.GZ__6"
+		,COUNT(*) - COUNT("Product Status Code") AS "Product Status Code__11"
+		,COUNT(*) - COUNT("Product.Sales Product Line") AS "Product.Sales Product Line__3"
+		,COUNT(*) - COUNT("Product.Last Updated By (GID) (PII)") AS "Product.Last Updated By (GID) (PII)__5"
+		,COUNT(*) - COUNT("Elligible to Sell (Flag)") AS "Elligible to Sell (Flag)__14"
+		,COUNT(*) - COUNT("Product.Last Updated Timestamp") AS "Product.Last Updated Timestamp__4"
+		,COUNT(*) - COUNT("Product Type") AS "Product Type__10"
+		,COUNT(*) - COUNT("Product Name") AS "Product Name__12"
+		,COUNT(*) - COUNT("Product.Created Timestamp") AS "Product.Created Timestamp__7"
+		,COUNT(*) - COUNT("Product.BL") AS "Product.BL__9"
+		,COUNT(*) - COUNT("PRODUCT_ID") AS "PRODUCT_ID__2"
+		,COUNT(*) - COUNT("ACCOUNT_ID (Competitor)") AS "ACCOUNT_ID (Competitor)__15"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_PRODUCT_INACTIVE
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"Vendor__1"
+			,"Product.Created By (GID) (PII)__8"
+			,"Product Description__13"
+			,"Product.GZ__6"
+			,"Product Status Code__11"
+			,"Product.Sales Product Line__3"
+			,"Product.Last Updated By (GID) (PII)__5"
+			,"Elligible to Sell (Flag)__14"
+			,"Product.Last Updated Timestamp__4"
+			,"Product Type__10"
+			,"Product Name__12"
+			,"Product.Created Timestamp__7"
+			,"Product.BL__9"
+			,"PRODUCT_ID__2"
+			,"ACCOUNT_ID (Competitor)__15"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_OPTY_RESOURCE' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("Oppty Number") AS "Oppty Number__1"
+		,COUNT(*) - COUNT("EMPLOYEE_ID") AS "EMPLOYEE_ID__4"
+		,COUNT(*) - COUNT("OPPORTUNITY_ID") AS "OPPORTUNITY_ID__2"
+		,COUNT(*) - COUNT("Function (Position Type)") AS "Function (Position Type)__3"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_OPTY_RESOURCE
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"Oppty Number__1"
+			,"EMPLOYEE_ID__4"
+			,"OPPORTUNITY_ID__2"
+			,"Function (Position Type)__3"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_NOTE' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("Account Note.Created Date") AS "Account Note.Created Date__6"
+		,COUNT(*) - COUNT("Note ID") AS "Note ID__2"
+		,COUNT(*) - COUNT("Note Text") AS "Note Text__1"
+		,COUNT(*) - COUNT("Account Note.Created By (PII)") AS "Account Note.Created By (PII)__7"
+		,COUNT(*) - COUNT("Entity Type") AS "Entity Type__3"
+		,COUNT(*) - COUNT("Account Note.Last Update Date") AS "Account Note.Last Update Date__5"
+		,COUNT(*) - COUNT("ACCOUNT_ID") AS "ACCOUNT_ID__4"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_NOTE
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"Account Note.Created Date__6"
+			,"Note ID__2"
+			,"Note Text__1"
+			,"Account Note.Created By (PII)__7"
+			,"Entity Type__3"
+			,"Account Note.Last Update Date__5"
+			,"ACCOUNT_ID__4"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_ACCNT_EMAIL' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("Account.E-Mail Last Updated Timestamp") AS "Account.E-Mail Last Updated Timestamp__4"
+		,COUNT(*) - COUNT("ACCOUNT_ID") AS "ACCOUNT_ID__1"
+		,COUNT(*) - COUNT("Account E-Mail Adress (PII)") AS "Account E-Mail Adress (PII)__5"
+		,COUNT(*) - COUNT("Account.E-Mail Primary (Flag)") AS "Account.E-Mail Primary (Flag)__3"
+		,COUNT(*) - COUNT("ACCOUNT_EMAIL_ID") AS "ACCOUNT_EMAIL_ID__2"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_ACCNT_EMAIL
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"Account.E-Mail Last Updated Timestamp__4"
+			,"ACCOUNT_ID__1"
+			,"Account E-Mail Adress (PII)__5"
+			,"Account.E-Mail Primary (Flag)__3"
+			,"ACCOUNT_EMAIL_ID__2"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_PRODUCT' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("Product Description") AS "Product Description__15"
+		,COUNT(*) - COUNT("Vendor") AS "Vendor__1"
+		,COUNT(*) - COUNT("Product.Last Updated By (GID) (PII)") AS "Product.Last Updated By (GID) (PII)__6"
+		,COUNT(*) - COUNT("Product.Created By (GID) (PII)") AS "Product.Created By (GID) (PII)__9"
+		,COUNT(*) - COUNT("Product.Created Timestamp") AS "Product.Created Timestamp__8"
+		,COUNT(*) - COUNT("Sales Product Type") AS "Sales Product Type__2"
+		,COUNT(*) - COUNT("Language") AS "Language__16"
+		,COUNT(*) - COUNT("Product Type") AS "Product Type__11"
+		,COUNT(*) - COUNT("Product Status Code") AS "Product Status Code__12"
+		,COUNT(*) - COUNT("Elligible to Sell (Flag)") AS "Elligible to Sell (Flag)__18"
+		,COUNT(*) - COUNT("Product Number") AS "Product Number__13"
+		,COUNT(*) - COUNT("Eligible for Service (Flag)") AS "Eligible for Service (Flag)__19"
+		,COUNT(*) - COUNT("Product.Sales Product Line") AS "Product.Sales Product Line__4"
+		,COUNT(*) - COUNT("PRODUCT_ID") AS "PRODUCT_ID__3"
+		,COUNT(*) - COUNT("Product.Last Updated Timestamp") AS "Product.Last Updated Timestamp__5"
+		,COUNT(*) - COUNT("Enable Customer Self-Service (Flag)") AS "Enable Customer Self-Service (Flag)__17"
+		,COUNT(*) - COUNT("Product.BL") AS "Product.BL__10"
+		,COUNT(*) - COUNT("Product.GZ") AS "Product.GZ__7"
+		,COUNT(*) - COUNT("Product Name") AS "Product Name__14"
+		,COUNT(*) - COUNT("Default UOM") AS "Default UOM__20"
+		,COUNT(*) - COUNT("ACCOUNT_ID (Competitor)") AS "ACCOUNT_ID (Competitor)__21"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_PRODUCT
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"Product Description__15"
+			,"Vendor__1"
+			,"Product.Last Updated By (GID) (PII)__6"
+			,"Product.Created By (GID) (PII)__9"
+			,"Product.Created Timestamp__8"
+			,"Sales Product Type__2"
+			,"Language__16"
+			,"Product Type__11"
+			,"Product Status Code__12"
+			,"Elligible to Sell (Flag)__18"
+			,"Product Number__13"
+			,"Eligible for Service (Flag)__19"
+			,"Product.Sales Product Line__4"
+			,"PRODUCT_ID__3"
+			,"Product.Last Updated Timestamp__5"
+			,"Enable Customer Self-Service (Flag)__17"
+			,"Product.BL__10"
+			,"Product.GZ__7"
+			,"Product Name__14"
+			,"Default UOM__20"
+			,"ACCOUNT_ID (Competitor)__21"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_ACCNT_CUST_OP' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("ACCOUNT_ID") AS "ACCOUNT_ID__10"
+		,COUNT(*) - COUNT("Siemens Budget (LC)") AS "Siemens Budget (LC)__2"
+		,COUNT(*) - COUNT("Siemens Wallet (LC)") AS "Siemens Wallet (LC)__1"
+		,COUNT(*) - COUNT("Competitor Wallet (LC)") AS "Competitor Wallet (LC)__3"
+		,COUNT(*) - COUNT("Competitor Budget (LC)") AS "Competitor Budget (LC)__4"
+		,COUNT(*) - COUNT("COB.Last Updated Timestamp") AS "COB.Last Updated Timestamp__5"
+		,COUNT(*) - COUNT("COB.Currency") AS "COB.Currency__7"
+		,COUNT(*) - COUNT("Budget/Wallet (LC)") AS "Budget/Wallet (LC)__9"
+		,COUNT(*) - COUNT("COB Business Area") AS "COB Business Area__8"
+		,COUNT(*) - COUNT("COB.Last Updated By (GID) (PII)") AS "COB.Last Updated By (GID) (PII)__6"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_ACCNT_CUST_OP
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"ACCOUNT_ID__10"
+			,"Siemens Budget (LC)__2"
+			,"Siemens Wallet (LC)__1"
+			,"Competitor Wallet (LC)__3"
+			,"Competitor Budget (LC)__4"
+			,"COB.Last Updated Timestamp__5"
+			,"COB.Currency__7"
+			,"Budget/Wallet (LC)__9"
+			,"COB Business Area__8"
+			,"COB.Last Updated By (GID) (PII)__6"
+			)) AS p
+
+UNION ALL
+
+SELECT TableName
+	,TotalRows
+	,SUBSTRING(Col, 1, CHARINDEX('__', Col) - 1) AS Col
+	,CAST(SUBSTRING(Col, CHARINDEX('__', Col) + 2) AS INTEGER) AS Pos
+	,NullCount
+	,CAST(CAST(NullCount AS DECIMAL(12, 2)) / NULLIF(CAST(TotalRows AS DECIMAL(12, 2)), 0) * 100.00 AS DECIMAL(12, 2)) AS NullPct
+FROM (
+	SELECT 'SV_OSC_P_T_ACCNT_ADDR' AS TableName
+		,COUNT(*) AS TotalRows
+		,COUNT(*) - COUNT("Account Prefecture Code") AS "Account Prefecture Code__8"
+		,COUNT(*) - COUNT("Account.Address Last Updated Timestamp") AS "Account.Address Last Updated Timestamp__4"
+		,COUNT(*) - COUNT("Account Address Line 4 (PII)") AS "Account Address Line 4 (PII)__14"
+		,COUNT(*) - COUNT("Account City") AS "Account City__13"
+		,COUNT(*) - COUNT("Account County") AS "Account County__10"
+		,COUNT(*) - COUNT("Account Province") AS "Account Province__7"
+		,COUNT(*) - COUNT("ACCOUNT_ID") AS "ACCOUNT_ID__1"
+		,COUNT(*) - COUNT("Account Address Line 1 (PII)") AS "Account Address Line 1 (PII)__17"
+		,COUNT(*) - COUNT("Account.Address Primary (Flag)") AS "Account.Address Primary (Flag)__3"
+		,COUNT(*) - COUNT("Account. Address Country") AS "Account. Address Country__5"
+		,COUNT(*) - COUNT("Account State") AS "Account State__6"
+		,COUNT(*) - COUNT("ACCOUNT_ADDRESS_ID") AS "ACCOUNT_ADDRESS_ID__2"
+		,COUNT(*) - COUNT("Account Address Line 3 (PII)") AS "Account Address Line 3 (PII)__15"
+		,COUNT(*) - COUNT("Account Address Line 2 (PII)") AS "Account Address Line 2 (PII)__16"
+		,COUNT(*) - COUNT("Account City Code") AS "Account City Code__11"
+		,COUNT(*) - COUNT("Account City Area") AS "Account City Area__12"
+		,COUNT(*) - COUNT("Account Postal Code") AS "Account Postal Code__9"
+	FROM OSC_DATA_EXTRACTS.SV_OSC_P_T_ACCNT_ADDR
+	) AS t
+UNPIVOT(NullCount FOR Col IN (
+			"Account Prefecture Code__8"
+			,"Account.Address Last Updated Timestamp__4"
+			,"Account Address Line 4 (PII)__14"
+			,"Account City__13"
+			,"Account County__10"
+			,"Account Province__7"
+			,"ACCOUNT_ID__1"
+			,"Account Address Line 1 (PII)__17"
+			,"Account.Address Primary (Flag)__3"
+			,"Account. Address Country__5"
+			,"Account State__6"
+			,"ACCOUNT_ADDRESS_ID__2"
+			,"Account Address Line 3 (PII)__15"
+			,"Account Address Line 2 (PII)__16"
+			,"Account City Code__11"
+			,"Account City Area__12"
+			,"Account Postal Code__9"
+			)) AS p
+ORDER BY TableName
+	,Pos;
