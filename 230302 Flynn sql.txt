@@ -1,0 +1,45 @@
+Remembered the calendar trick from Travelopia:
+
+1. You have a calendar cte that does the following, the date dependent column is aliased as DATE_DEPENDENT_VALUE:
+
+SELECT 'PRE', date_dependent_column1 AS DEPENDENT_VALUE, other_columns_you_want FROM calendar_table
+UNION ALL
+SELECT 'POST', date_dependent_column2,  AS DEPENDENT_VALUE, other_columns_you_want FROM calendar_table
+
+2. Then in your data cte(s) add a date dependent flag column containing either 'PRE' or 'POST'
+
+3. So you can then JOIN to the calendar CTE with the flag column ('PRE'/'POST') and any other join data to get DATE_DEPENDENT_VALUE, no need to multiple CASE to get the date dependent column value
+
+
+WITH original_calendar (calendar_date, def_1, def_2, other_data) AS (
+-- example_calendar data
+	SELECT CAST('2013-01-01' AS DATETIME), 'DEF_1', 'DEF_2', 'A'
+	UNION ALL
+	SELECT CAST('2013-12-31' AS DATETIME), 'DEF_1', 'DEF_2', 'B'
+),
+
+new_calendar AS (
+	SELECT calendar_date, 'PRE' AS prepost, def_1 AS date_dependent_value, other_data FROM original_calendar
+	UNION ALL
+	SELECT calendar_date, 'POST' AS prepost, def_2 AS date_dependent_value, other_data FROM original_calendar
+),
+
+source_data (report_date) AS (
+-- example_source data
+	SELECT CAST('2013-01-01' AS DATETIME)
+	UNION ALL
+	SELECT CAST('2013-12-31' AS DATETIME)
+),
+
+result_data AS (
+	SELECT s.*
+		,n.*
+	FROM source_data as s
+	LEFT OUTER JOIN new_calendar AS n
+	ON s.report_date = n.calendar_date
+	AND (CASE WHEN s.report_date < CAST('2013-04-01' AS DATETIME) THEN 'PRE' ELSE 'POST' END) = n.prepost
+)
+
+SELECT * 
+FROM result_data
+
