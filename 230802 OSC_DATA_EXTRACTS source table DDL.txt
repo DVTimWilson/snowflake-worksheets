@@ -1,0 +1,240 @@
+-- awk 'BEGIN{RS="\r\n"; ORS="\r\n"; } FNR == 1 { cor="CREATE OR REPLACE TABLE "; tablename=gensub(".csv","","g",FILENAME); columns=gensub(/\|/," VARCHAR, ", "g",$0); terminator1=" (\r\n"; terminator2=" VARCHAR\r\n)\r\n;\r\n"; print cor tablename terminator1 columns terminator2 ; nextfile }' *.csv > CREATE_script.txt
+
+-- awk -v q="'" 'BEGIN{RS="\r\n"; ORS="\r\n"; } FNR == 1 { tablename=gensub(".csv","","g",FILENAME); print "TRUNCATE TABLE " tablename "\r\n;\r\n" ; nextfile }' *.csv > TRUNCATE_script.txt
+
+-- awk -v q="'" -v qq="\"" 'BEGIN{RS="\r\n"; ORS="\r\n"; } FNR == 1 { tablename=gensub(".csv","","g",FILENAME); print "COPY INTO " tablename " FROM " q "@CSV_STAGE/" tablename ".csv.gz" q "\r\nFILE_FORMAT = (TYPE = CSV FIELD_DELIMITER = " q "|" q " SKIP_HEADER = 1 FIELD_OPTIONALLY_ENCLOSED_BY = " q qq q " ENCODING = " q "ISO-8859-15" q ")\r\n;\r\n" ; nextfile }' *.csv > COPY_INTO_script.txt
+
+
+CREATE SCHEMA OSC_DATA_EXTRACTS
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_ACT_OBJ (
+
+"OBJECTIVE_ID" VARCHAR, "Objective Code" VARCHAR, "Completed" VARCHAR, "ACTIVITY_ID" VARCHAR, "Activity.Objective Last Updated Timestamp" VARCHAR, "Activity.Objective Last Updated By (GID) (PII)" VARCHAR, "Activity.Objective Created Timestamp" VARCHAR, "Activity.Objective Created By (GID) (PII)" VARCHAR
+
+)
+;
+
+DROP TABLE SV_OSC_P_T_ACT_OBJ
+;
+
+DROP SCHEMA OSC_DATA_EXTRACTS
+;
+
+
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_ACT_OBJ (
+
+"OBJECTIVE_ID" VARCHAR, "Objective Code" VARCHAR, "Completed" VARCHAR, "ACTIVITY_ID" VARCHAR, "Activity.Objective Last Updated Timestamp" VARCHAR, "Activity.Objective Last Updated By (GID) (PII)" VARCHAR, "Activity.Objective Created Timestamp" VARCHAR, "Activity.Objective Created By (GID) (PII)" VARCHAR
+
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_SALES_PROGRAM (
+"SALES_PROGRAM_ID" VARCHAR, "Sales Prorgam Country" VARCHAR, "Sales Program Type" VARCHAR, "Sales Program Start Date" VARCHAR, "Sales Program Objective" VARCHAR, "Sales Program Name" VARCHAR, "Sales Program End Date" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_COMPETITOR (
+"Competitor.Validated (Flag)" VARCHAR, "Competitor.Unique Name" VARCHAR, "Competitor.Type" VARCHAR, "Competitor.Status Code" VARCHAR, "Competitor.OSC Number" VARCHAR, "Competitor.Name" VARCHAR, "Competitor.Last Updated By (GID) (PII)" VARCHAR, "Competitor.Last Update Date" VARCHAR, "Competitor.Created Timestamp" VARCHAR, "Competitor.Created By (GID) (PII)" VARCHAR, "ACCOUNT_ID (Competitor)" VARCHAR
+)
+;
+
+-- CREATE OR REPLACE TABLE SV_OSC_P_T_OPTY_PARTNER (
+-- )
+-- ;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_PTNR_INIT (
+"PARTNER_ID" VARCHAR, "Partner Name (PII)" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_OPTY_LEAD (
+"OPPORTUNITY_ID" VARCHAR, "LEAD_ID" VARCHAR, "Lead Opportunity Assignment Last Updated Timestamp" VARCHAR, "Lead Opportunity Assignment Last Updated By (GID) (PII)" VARCHAR, "Lead Opportunity Assignment Created Timestamp" VARCHAR, "Lead Opportunity Assignment Created By (GID) (PII)" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_TERRITORY (
+"TERRITORYVERSION_ID" VARCHAR, "TERRITORYRESOURCE_ID" VARCHAR, "TERRITORY_ID" VARCHAR, "Territory.PARTY_ID" VARCHAR, "Territory.OWNERRESOURCE_ID" VARCHAR, "Territory.Number" VARCHAR, "Territory.Name" VARCHAR, "Territory.Level" VARCHAR, "Territory.Latest Version (Flag)" VARCHAR, "Territory.Last Update Date" VARCHAR, "Territory.Last Update By" VARCHAR, "Territory.Grouping Territory (Flag)" VARCHAR, "Territory.Forecast By Parent (Flag)" VARCHAR, "Territory.Eligible for Quota (Flag)" VARCHAR, "Territory.Description" VARCHAR, "PARENTTERRITORY_ID" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_ACCNT_EMAIL (
+"ACCOUNT_ID" VARCHAR, "ACCOUNT_EMAIL_ID" VARCHAR, "Account.E-Mail Primary (Flag)" VARCHAR, "Account.E-Mail Last Updated Timestamp" VARCHAR, "Account E-Mail Adress (PII)" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_ACCNT_URL (
+"ACCOUNT_URL_ID" VARCHAR, "ACCOUNT_ID" VARCHAR, "Account.URL Primary (Flag)" VARCHAR, "Account.URL Last Updated Timestamp" VARCHAR, "Account URL" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_ACCNT_TREENODE (
+"ACCOUNT_ID (Parent)" VARCHAR, "ACCOUNT_ID (Child)" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_EMP_RESOURCE (
+"Role" VARCHAR, "Resource Profile ID" VARCHAR, "EMPLOYEE_ID (Manager)" VARCHAR, "EMPLOYEE_ID" VARCHAR, "Employee.User_Name (PII)" VARCHAR, "Employee.Primary E-Mail (PII)" VARCHAR, "Employee.Manager E-Mail (PII)" VARCHAR, "Employee.Last Updated Timestamp" VARCHAR, "Employee.Last Name (PII)" VARCHAR, "Employee.Job Title (PII)" VARCHAR, "Employee.Geography" VARCHAR, "Employee.First Name (PII)" VARCHAR, "Employee.Country" VARCHAR, "Employee Number" VARCHAR, "Employee (GID) (PII)" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_PRODUCT_INACTIVE (
+"Vendor" VARCHAR, "PRODUCT_ID" VARCHAR, "Product.Sales Product Line" VARCHAR, "Product.Last Updated Timestamp" VARCHAR, "Product.Last Updated By (GID) (PII)" VARCHAR, "Product.GZ" VARCHAR, "Product.Created Timestamp" VARCHAR, "Product.Created By (GID) (PII)" VARCHAR, "Product.BL" VARCHAR, "Product Type" VARCHAR, "Product Status Code" VARCHAR, "Product Name" VARCHAR, "Product Description" VARCHAR, "Elligible to Sell (Flag)" VARCHAR, "ACCOUNT_ID (Competitor)" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_ACCNT_CUST_OP (
+"Siemens Wallet (LC)" VARCHAR, "Siemens Budget (LC)" VARCHAR, "Competitor Wallet (LC)" VARCHAR, "Competitor Budget (LC)" VARCHAR, "COB.Last Updated Timestamp" VARCHAR, "COB.Last Updated By (GID) (PII)" VARCHAR, "COB.Currency" VARCHAR, "COB Business Area" VARCHAR, "Budget/Wallet (LC)" VARCHAR, "ACCOUNT_ID" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_ACCNT_MKT_ATT (
+"ACCOUNT_ID" VARCHAR, "Account.Mkt Att Last Updated By (GID) (PII)" VARCHAR, "Account.Mkt Att Created By (GID) (PII)" VARCHAR, "Account Mkt Att Value" VARCHAR, "Account Mkt Att Type" VARCHAR, "Account Mkt Att Count" VARCHAR, "Account Mkt Att Comments (PII)" VARCHAR, "Account Mkt Att AB/BL" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_ACCNT_FAX (
+"ACCOUNT_ID" VARCHAR, "ACCOUNT_FAX_ID" VARCHAR, "Account.Fax Primary (Flag)" VARCHAR, "Account.Fax Last Updated Timestamp" VARCHAR, "Account Fax Number (PII)" VARCHAR, "Account Fax Extension (PII)" VARCHAR, "Account Fax Country Code (PII)" VARCHAR, "Account Fax Area Code (PII)" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_PRODUCT (
+"Vendor" VARCHAR, "Sales Product Type" VARCHAR, "PRODUCT_ID" VARCHAR, "Product.Sales Product Line" VARCHAR, "Product.Last Updated Timestamp" VARCHAR, "Product.Last Updated By (GID) (PII)" VARCHAR, "Product.GZ" VARCHAR, "Product.Created Timestamp" VARCHAR, "Product.Created By (GID) (PII)" VARCHAR, "Product.BL" VARCHAR, "Product Type" VARCHAR, "Product Status Code" VARCHAR, "Product Number" VARCHAR, "Product Name" VARCHAR, "Product Description" VARCHAR, "Language" VARCHAR, "Enable Customer Self-Service (Flag)" VARCHAR, "Elligible to Sell (Flag)" VARCHAR, "Eligible for Service (Flag)" VARCHAR, "Default UOM" VARCHAR, "ACCOUNT_ID (Competitor)" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_TERR_RESOURCE (
+"TERRITORYVERSION_ID" VARCHAR, "TERRITORYRESOURCE_ID" VARCHAR, "EMPLOYEE_ID" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_CON_MKT_ATT (
+"CONTACT_ID" VARCHAR, "Contact.Mkt Attr Value" VARCHAR, "Contact.Mkt Attr Type" VARCHAR, "Contact.Mkt Attr Last Updated Timestamp" VARCHAR, "Contact.Mkt Attr Last Updated By (GID) (PII)" VARCHAR, "Contact.Mkt Attr Created Timestamp" VARCHAR, "Contact.Mkt Attr Created By (GID) (PII)" VARCHAR, "Contact.Mkt Attr Comments" VARCHAR, "Contact.Mkt Attr Category Count" VARCHAR, "Contact.Mkt Attr Category Content" VARCHAR, "Contact.Mkt Attr Category Code" VARCHAR, "Contact.Mkt Attr BA/BL" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_PROJECT_C (
+"Winning Vendor" VARCHAR, "Reasons" VARCHAR, "PROJECT_ID" VARCHAR, "Project.VAS Contract (LC)" VARCHAR, "Project.Strategic Priority" VARCHAR, "Project.Status" VARCHAR, "Project.Siemens Probability" VARCHAR, "Project.Project Progress" VARCHAR, "Project.Other (LC)" VARCHAR, "Project.Next Milestone" VARCHAR, "Project.Milestone Achieved" VARCHAR, "Project.Local Currency" VARCHAR, "Project.Local Attr LOV 3" VARCHAR, "Project.Local Attr LOV 2" VARCHAR, "Project.Local Attr LOV 1" VARCHAR, "Project.Local Attr 3" VARCHAR, "Project.Local Attr 2" VARCHAR, "Project.Local Attr 1" VARCHAR, "Project.Last Updated Timestamp" VARCHAR, "Project.Last Updated By (GID) (PII)" VARCHAR, "Project.Last Updated By (Full Name) (PII)" VARCHAR, "Project.FY+2 - Revenue (LC)" VARCHAR, "Project.FY+2 - Order Entry (LC)" VARCHAR, "Project.FY+1 - Revenue (LC)" VARCHAR, "Project.FY+1 - Order Entry (LC)" VARCHAR, "Project.FY - Revenue (LC)" VARCHAR, "Project.FY - Order Entry (LC)" VARCHAR, "Project.First Revenue Recognition Date" VARCHAR, "Project.ES Sale Type" VARCHAR, "Project.Equipment VAR (LC)" VARCHAR, "Project.Equipment US (LC)" VARCHAR, "Project.Equipment POC (LC)" VARCHAR, "Project.Equipment LD (LC)" VARCHAR, "Project.Equipment DI (LC)" VARCHAR, "Project.Equipment AT (LC)" VARCHAR, "Project.CS VAR (LC)" VARCHAR, "Project.CS US (LC)" VARCHAR, "Project.CS Reagents POC (LC)" VARCHAR, "Project.CS Reagents LD (LC)" VARCHAR, "Project.CS DI (LC)" VARCHAR, "Project.CS AT (LC)" VARCHAR, "Project.Created Timestamp" VARCHAR, "Project.Created By (GID) (PII)" VARCHAR, "Project.Created By (Full Name) (PII)" VARCHAR, "Project.Contract Value (LC)" VARCHAR, "Project.Contract Signature Date" VARCHAR, "Project.Contract Duration" VARCHAR, "Project Type" VARCHAR, "Project Number" VARCHAR, "Project Name" VARCHAR, "Project Attributes" VARCHAR, "Other Reasons" VARCHAR, "LINKEDPROJECT_ID" VARCHAR, "ES Project Type" VARCHAR, "ACCOUNT_ID" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_ACCNT_SALES_PROF (
+"SALESACCOUNT_ID" VARCHAR, "ACCOUNT_ID" VARCHAR, "EMPLOYEE_ID (Account Owner)" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_ACCNT_PHONE (
+"ACCOUNT_PHONE_ID" VARCHAR, "ACCOUNT_ID" VARCHAR, "Account.Phone Primary (Flag)" VARCHAR, "Account.Phone Last Updated Timestamp" VARCHAR, "Account Phone Extension (PII)" VARCHAR, "Account Phone Country Code (PII)" VARCHAR, "Account Phone Area Code (PII)" VARCHAR, "Account Phone (PII)" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_WVP_OPTY_REL (
+"WVP_INFORMATION_ID" VARCHAR, "Winning Vendor Product Name" VARCHAR, "Winning Vendor Name" VARCHAR, "Record Number (Winning Vendor)" VARCHAR, "PRODUCT_ID (Winning Vendor)" VARCHAR, "Primary Winning Vendor (Flag)" VARCHAR, "Opportunity Number (Winning Vendor)" VARCHAR, "OLI Number (Winning Vendor)" VARCHAR, "Mark To Delete (Flag)" VARCHAR, "Last Update Date" VARCHAR, "Creation Date" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_CON_EMAIL (
+"CONTACT_ID" VARCHAR, "CONTACT_EMAIL_ID" VARCHAR, "Contact.E-Mail Primary (Flag)" VARCHAR, "Contact.E-Mail Last Updated Timestamp" VARCHAR, "Contact.E-Mail Last Updated By (GID) (PII)" VARCHAR, "Contact.E-Mail Created Timestamp" VARCHAR, "Contact.E-Mail Created By (GID) (PII)" VARCHAR, "Contact.E-Mail (PII)" VARCHAR, "Contact. Email Status" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_LEAD (
+"Submitter Last Name (PII)" VARCHAR, "Submitter First Name (PII)" VARCHAR, "Submitter Email Address (PII)" VARCHAR, "Siemens Tracking Code" VARCHAR, "Prospect Target Program Name" VARCHAR, "Prospect Lead Type Ext" VARCHAR, "Prospect Lead Type Business" VARCHAR, "PRODUCT_ID" VARCHAR, "Primary Interest" VARCHAR, "Postpone Until" VARCHAR, "LEAD_ID" VARCHAR, "Lead.Status Reason" VARCHAR, "Lead.Status Comment" VARCHAR, "Lead.Status" VARCHAR, "Lead.Salutation (PII)" VARCHAR, "Lead.Sales Product Line" VARCHAR, "Lead.Sale Type" VARCHAR, "Lead.Prospective Contact Email (PII)" VARCHAR, "Lead.Primary Contact Last Name (PII)" VARCHAR, "Lead.Primary Contact First Name (PII)" VARCHAR, "Lead.Opportunity Type" VARCHAR, "Lead.Last Updated Timestamp" VARCHAR, "Lead.Last Updated By (GID) (PII)" VARCHAR, "Lead.Last Updated By (Full Name) (PII)" VARCHAR, "Lead.IB Vendor Product" VARCHAR, "Lead.IB Vendor" VARCHAR, "Lead.GZ (Multi)" VARCHAR, "Lead.Graduate Title (PII)" VARCHAR, "Lead.FL Number" VARCHAR, "Lead.Department" VARCHAR, "Lead.Created Timestamp" VARCHAR, "Lead.Created By (GID) (PII)" VARCHAR, "Lead.Created By (Full Name) (PII)" VARCHAR, "Lead.Country" VARCHAR, "Lead.Contract Duration (months)" VARCHAR, "Lead.Contact State (PII)" VARCHAR, "Lead.Contact Postal Code (PII)" VARCHAR, "Lead.Contact Phone (PII)" VARCHAR, "Lead.Contact Last Name (PII)" VARCHAR, "Lead.Contact Job Title (PII)" VARCHAR, "Lead.Contact Job Role (PII)" VARCHAR, "Lead.Contact First Name (PII)" VARCHAR, "Lead.Contact Email (PII)" VARCHAR, "Lead.Contact Department (PII)" VARCHAR, "Lead.Contact County (PII)" VARCHAR, "Lead.Contact City (PII)" VARCHAR, "Lead.Contact Address Line 2 (PII)" VARCHAR, "Lead.Contact Address Line 1 (PII)" VARCHAR, "Lead.Close Date" VARCHAR, "Lead.City Area" VARCHAR, "Lead.BL (Multi)" VARCHAR, "Lead Submission Date" VARCHAR, "Lead Origin" VARCHAR, "Lead Number" VARCHAR, "Lead Nr From Source" VARCHAR, "Lead Name" VARCHAR, "Lead List/Campaign Name" VARCHAR, "Lead Comments" VARCHAR, "Last Automatic Assignment Date" VARCHAR, "Existing Primary Contact (PII)" VARCHAR, "EMPLOYEE_ID" VARCHAR, "Eloqua Lead Question 9" VARCHAR, "Eloqua Lead Question 8" VARCHAR, "Eloqua Lead Question 7" VARCHAR, "Eloqua Lead Question 6" VARCHAR, "Eloqua Lead Question 5" VARCHAR, "Eloqua Lead Question 4" VARCHAR, "Eloqua Lead Question 3" VARCHAR, "Eloqua Lead Question 2" VARCHAR, "Eloqua Lead Question 10" VARCHAR, "Eloqua Lead Question 1" VARCHAR, "Eloqua Lead Answer 9" VARCHAR, "Eloqua Lead Answer 8" VARCHAR, "Eloqua Lead Answer 7" VARCHAR, "Eloqua Lead Answer 6" VARCHAR, "Eloqua Lead Answer 5" VARCHAR, "Eloqua Lead Answer 4" VARCHAR, "Eloqua Lead Answer 3" VARCHAR, "Eloqua Lead Answer 2" VARCHAR, "Eloqua Lead Answer 10" VARCHAR, "Eloqua Lead Answer 1" VARCHAR, "CONTACT_ID" VARCHAR, "CAMPAIGN_ID" VARCHAR, "ASSET_ID" VARCHAR, "ACCOUNT_ID" VARCHAR, "Account Name (Available under Contact Details)" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_CON_PHONE (
+"CONTACT_PHONE_ID" VARCHAR, "CONTACT_ID" VARCHAR, "Contact.Phone Type" VARCHAR, "Contact.Phone Status" VARCHAR, "Contact.Phone Primary (Flag)" VARCHAR, "Contact.Phone Last Updated Timestamp" VARCHAR, "Contact.Phone Last Updated By (GID) (PII)" VARCHAR, "Contact.Phone Extension" VARCHAR, "Contact.Phone Created Timestamp" VARCHAR, "Contact.Phone Created By (GID) (PII)" VARCHAR, "Contact.Phone Country Code" VARCHAR, "Contact.Phone Area Code" VARCHAR, "Contact.Phone (PII)" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_CON_ADDR (
+"CONTACT_ID" VARCHAR, "Contact.State" VARCHAR, "Contact.Province" VARCHAR, "Contact.Postal Code Ext" VARCHAR, "Contact.Postal Code" VARCHAR, "Contact.Currency" VARCHAR, "Contact.County" VARCHAR, "Contact.Contact Number" VARCHAR, "Contact.City" VARCHAR, "Contact.Adress Comment" VARCHAR, "Contact.Address_ID" VARCHAR, "Contact.Address.Last Updated Timestamp" VARCHAR, "Contact.Address Site Number" VARCHAR, "Contact.Address Primary (Flag)" VARCHAR, "Contact.Address Preference (Flag)" VARCHAR, "Contact.Address Location Directions" VARCHAR, "Contact.Address Line 4 (PII)" VARCHAR, "Contact.Address Line 3 (PII)" VARCHAR, "Contact.Address Line 2 (PII)" VARCHAR, "Contact.Address Line 1 (PII)" VARCHAR, "Contact.Address Last Updated By (GID) (PII)" VARCHAR, "Contact.Address House Type" VARCHAR, "Contact.Address Description" VARCHAR, "Contact.Address Created Timestamp" VARCHAR, "Contact.Address Created By (GID) (PII)" VARCHAR, "Contact.Address Country" VARCHAR, "Contact.Addr Line Phonetic (PII)" VARCHAR, "Contact.Additional Addr Element 3 (PII)" VARCHAR, "Contact.Additional Addr Element 2 (PII)" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_ACT_CONTACT (
+"RELATIONSHIP_ID" VARCHAR, "CONTACT_ID" VARCHAR, "ACTIVITY_ID" VARCHAR, "Activity.Contact User Last Updated Timestamp" VARCHAR, "Activity.Contact Last Updated Date" VARCHAR, "Activity.Contact Last Updated By (GID) (PII)" VARCHAR, "Activity.Contact Created Timestamp" VARCHAR, "Activity.Contact Created By (GID) (PII)" VARCHAR, "Activity.Contact Attendee (Flag)" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_ASS_OPTY_REL (
+"Sale Type" VARCHAR, "Relationship Type" VARCHAR, "OPPORTUNITY_ID" VARCHAR, "OLI Number" VARCHAR, "ASSET_ID" VARCHAR, "Asset.Oppty Relation Last Updated By (GID) (PII)" VARCHAR, "Asset.Oppty Relation Created By (GID) (PII)" VARCHAR, "Asset Oppty Relation Created Timestamp" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_ASSAY (
+"System Number" VARCHAR, "System Name" VARCHAR, "OWNER_ID (Assay)" VARCHAR, "ASSAY_ID" VARCHAR, "Assay Record Number" VARCHAR, "Assay Record Name" VARCHAR, "Assay Number" VARCHAR, "Assay Name" VARCHAR, "Assay Last Updated By (PII)" VARCHAR, "Assay Last Update Date" VARCHAR, "Assay Creation Date" VARCHAR, "Assay Created By (PII)" VARCHAR, "Assay Country Release" VARCHAR, "Assay Availability" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_ACCNT_RESOURCE (
+"Access" VARCHAR, "SALESACCOUNT_ID" VARCHAR, "Function (Position Type)" VARCHAR, "EMPLOYEE_ID" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_ACCNT_REL (
+"SUBJECT_ID" VARCHAR, "Relationship Account Job Title (PII)" VARCHAR, "Relationship Account Job Role (PII)" VARCHAR, "Relationship Account Department" VARCHAR, "OBJECT_ID" VARCHAR, "Account Relationship Type" VARCHAR, "Account Relationship Status" VARCHAR, "Account Relationship Detail" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_NOTE (
+"Note Text" VARCHAR, "Note ID" VARCHAR, "Entity Type" VARCHAR, "ACCOUNT_ID" VARCHAR, "Account Note.Last Update Date" VARCHAR, "Account Note.Created Date" VARCHAR, "Account Note.Created By (PII)" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_ACCNT_CLASS (
+"ACCOUNT_ID" VARCHAR, "Account Classification.Status" VARCHAR, "Account Classification.Primary (Flag)" VARCHAR, "Account Classification.Classification Category" VARCHAR, "Account Classification.Assignment Criteria" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_CON_PROF (
+"EMPLOYEE_ID (Owner)" VARCHAR, "CONTACT_ID" VARCHAR, "Contact.Status" VARCHAR, "Contact.Last Updated Timestamp" VARCHAR, "Contact.Last Updated By (GID) (PII)" VARCHAR, "Contact.Last Updated By (Full Name) (PII)" VARCHAR, "Contact.Do Not Mail (Flag)" VARCHAR, "Contact.Created Timestamp" VARCHAR, "Contact.Created By (GID) (PII)" VARCHAR, "Contact.Created By (Full Name) (PII)" VARCHAR, "Contact Title (PII)" VARCHAR, "Contact Salutation" VARCHAR, "Contact Print Address 3 (PII)" VARCHAR, "Contact Print Address 2 (PII)" VARCHAR, "Contact Print Address 1 (PII)" VARCHAR, "Contact Preferred Language" VARCHAR, "Contact Postbox" VARCHAR, "Contact Post Office" VARCHAR, "Contact Number" VARCHAR, "Contact Never Email" VARCHAR, "Contact Never Call" VARCHAR, "Contact Name Suffix (PII)" VARCHAR, "Contact Local Attr LOV 3" VARCHAR, "Contact Local Attr LOV 2" VARCHAR, "Contact Local Attr LOV 1" VARCHAR, "Contact Local Attr 3" VARCHAR, "Contact Local Attr 2" VARCHAR, "Contact Local Attr 1" VARCHAR, "Contact Last Name (PII)" VARCHAR, "Contact Job Title (PII)" VARCHAR, "Contact Job Role (PII)" VARCHAR, "Contact Influence Level" VARCHAR, "Contact Graduate Title" VARCHAR, "Contact GDPR (Flag)" VARCHAR, "Contact First Name (PII)" VARCHAR, "Contact Department of Correspondence" VARCHAR, "Contact Department" VARCHAR, "Contact Buying Role" VARCHAR, "Contact Buying Behavior" VARCHAR, "Affinity" VARCHAR, "ACCOUNT_ID (Contact)" VARCHAR, "Account Name For Correspondence" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_OPTY_RESOURCE (
+"Oppty Number" VARCHAR, "OPPORTUNITY_ID" VARCHAR, "Function (Position Type)" VARCHAR, "EMPLOYEE_ID" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_TERR_ACCOUNT (
+"TERRITORYVERSION_ID" VARCHAR, "SALESACCOUNT_ID" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_ACCNT_ADDR (
+"ACCOUNT_ID" VARCHAR, "ACCOUNT_ADDRESS_ID" VARCHAR, "Account.Address Primary (Flag)" VARCHAR, "Account.Address Last Updated Timestamp" VARCHAR, "Account. Address Country" VARCHAR, "Account State" VARCHAR, "Account Province" VARCHAR, "Account Prefecture Code" VARCHAR, "Account Postal Code" VARCHAR, "Account County" VARCHAR, "Account City Code" VARCHAR, "Account City Area" VARCHAR, "Account City" VARCHAR, "Account Address Line 4 (PII)" VARCHAR, "Account Address Line 3 (PII)" VARCHAR, "Account Address Line 2 (PII)" VARCHAR, "Account Address Line 1 (PII)" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_ACCNT_ORG_PROF (
+"Varian Equivalent Account ID" VARCHAR, "Type of Account" VARCHAR, "Trusted Customer" VARCHAR, "Third Party ID" VARCHAR, "Sub Provider Type" VARCHAR, "SISIC Description" VARCHAR, "SISIC" VARCHAR, "SAP-ID In Vitro" VARCHAR, "SAP-ID" VARCHAR, "SAP Account Group" VARCHAR, "Sales Activity Target" VARCHAR, "Reference Customer (Flag)" VARCHAR, "Provider Type" VARCHAR, "OSC Account Number" VARCHAR, "Organization Size" VARCHAR, "Old SAP ID" VARCHAR, "Marked for Deletion" VARCHAR, "Legal Structure" VARCHAR, "International Account Name 4" VARCHAR, "International Account Name 3" VARCHAR, "International Account Name 2" VARCHAR, "International Account Name" VARCHAR, "In Vivo Sales Area 2" VARCHAR, "In Vivo Sales Area" VARCHAR, "In Vitro SAP Partner Role Code" VARCHAR, "In Vitro Sales Rep Code" VARCHAR, "In Vitro Sales Area" VARCHAR, "IFA Number" VARCHAR, "Home Page" VARCHAR, "Global Account Type" VARCHAR, "EMPLOYEE_ID (Business Partner In Vivo)" VARCHAR, "EMPLOYEE_ID (Business Partner In Vitro)" VARCHAR, "EMPLOYEE_ID (Account Secondary Sales Rep In-Vivo)" VARCHAR, "EMPLOYEE_ID (Account Secondary Sales Rep In-Vitro)" VARCHAR, "EMPLOYEE_ID (Account Primary SSE)" VARCHAR, "EMPLOYEE_ID (Account Primary Sales Rep Ultrasound)" VARCHAR, "EMPLOYEE_ID (Account Primary Sales Rep POC)" VARCHAR, "EMPLOYEE_ID (Account Primary Sales Rep In-Vivo)" VARCHAR, "EMPLOYEE_ID (Account Primary Sales Rep In-Vitro)" VARCHAR, "Department Type" VARCHAR, "Customer Sanctioned Party" VARCHAR, "Currency" VARCHAR, "Coverage Type" VARCHAR, "Channel Indicator" VARCHAR, "CCL Ambition Score" VARCHAR, "CCL Actual Score" VARCHAR, "Business Partner Number" VARCHAR, "Blocking Status Reason" VARCHAR, "Blocking Status" VARCHAR, "Bed Size" VARCHAR, "ACCOUNT_ID" VARCHAR, "Account.Last Updated Timestamp" VARCHAR, "Account.Last Updated By (GID) (PII)" VARCHAR, "Account.Last Updated By (Full Name) (PII)" VARCHAR, "Account.Do Not Mail (Flag)" VARCHAR, "Account.Do Not E-Mail (Flag)" VARCHAR, "Account.Do Not Call (Flag)" VARCHAR, "Account.Created Timestamp" VARCHAR, "Account.Created By (GID) (PII)" VARCHAR, "Account.Created By (Full Name) (PII)" VARCHAR, "Account Zone" VARCHAR, "Account Segment In Vitro" VARCHAR, "Account Search Term" VARCHAR, "Account Name for Corr. 4" VARCHAR, "Account Name for Corr. 3" VARCHAR, "Account Name for Corr. 2" VARCHAR, "Account Name for Corr." VARCHAR, "Account Name 4" VARCHAR, "Account Name 3" VARCHAR, "Account Name 2" VARCHAR, "Account Name" VARCHAR, "Account Local Attr LOV 5" VARCHAR, "Account Local Attr LOV 4" VARCHAR, "Account Local Attr LOV 3" VARCHAR, "Account Local Attr LOV 2" VARCHAR, "Account Local Attr LOV 1" VARCHAR, "Account Local Attr 3" VARCHAR, "Account Local Attr 2" VARCHAR, "Account Local Attr 1" VARCHAR, "Account Country" VARCHAR, "Account Class In Vivo (EQ)" VARCHAR, "Account Class In Vitro (DX)" VARCHAR, "Account Buying Group ID" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_ACT_ASS (
+"Show Time As" VARCHAR, "EMPLOYEE_ID" VARCHAR, "ACTIVITY_ID" VARCHAR, "Activity.Assignee.Response" VARCHAR, "Activity.Assignee User Last Updated Timestamp" VARCHAR, "Activity.Assignee Last Updated Timestamp" VARCHAR, "Activity.Assignee Last Updated By (GID) (PII)" VARCHAR, "Activity.Assignee Created Timestamp" VARCHAR, "Activity.Assignee Created By (GID) (PII)" VARCHAR, "Activity.Assignee Attendee (Flag)" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_OPTY (
+"Service Opportunity" VARCHAR, "PROJECT_ID" VARCHAR, "PARTNER_ID" VARCHAR, "Oppty.Tender RFP Type" VARCHAR, "Oppty.Tender RFP Due Date" VARCHAR, "Oppty.Tender or RFP Number" VARCHAR, "Oppty.Quote Number" VARCHAR, "Oppty.Project Progress" VARCHAR, "Oppty.Owner Name" VARCHAR, "Oppty.Lessor" VARCHAR, "Oppty.Lease End Date" VARCHAR, "Oppty.Last Updated Timestamp" VARCHAR, "Oppty.Last Updated By (GID) (PII)" VARCHAR, "Oppty.Last Updated By (Full Name) (PII)" VARCHAR, "Oppty.Department" VARCHAR, "Oppty.Created Timestamp" VARCHAR, "Oppty.Created By (GID) (PII)" VARCHAR, "Oppty.Created By (Full Name) (PII)" VARCHAR, "Oppty.CPQ Run Assignment" VARCHAR, "Oppty.Close Date" VARCHAR, "Oppty Type" VARCHAR, "Oppty Number" VARCHAR, "Oppty Name" VARCHAR, "Oppty Local Attr LOV 3" VARCHAR, "Oppty Local Attr LOV 2" VARCHAR, "Oppty Local Attr LOV 1" VARCHAR, "Oppty Local Attr 3" VARCHAR, "Oppty Local Attr 2" VARCHAR, "Oppty Local Attr 1" VARCHAR, "OPPORTUNITY_ID (Linked Service Opportunity)" VARCHAR, "OPPORTUNITY_ID (Linked Opportunity)" VARCHAR, "OPPORTUNITY_ID (Alternate Opportunity)" VARCHAR, "OPPORTUNITY_ID" VARCHAR, "Must Win (Flag)" VARCHAR, "Key Portfolio Element" VARCHAR, "EMPLOYEE_ID (Opportunity Owner)" VARCHAR, "Current Sales Stage" VARCHAR, "Cross-Collaboration" VARCHAR, "CONTACT_ID" VARCHAR, "Business Type" VARCHAR, "AR Group" VARCHAR, "ACCOUNT_ID" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_ASSET (
+"Service Partner Type" VARCHAR, "Service Contract Type" VARCHAR, "Service Contract Total Price" VARCHAR, "Service Contract Number" VARCHAR, "Service Contract Description" VARCHAR, "Service Contract Annual Price" VARCHAR, "Serial Number" VARCHAR, "Sales Contract End Date (In Vitro only)" VARCHAR, "Sales Contract Annual Price (LC) (In Vitro only)" VARCHAR, "Reason to Inactivate Asset" VARCHAR, "PRODUCT_ID" VARCHAR, "MTDA (Flag)" VARCHAR, "Location/Room" VARCHAR, "Local System Identifier" VARCHAR, "Local Currency" VARCHAR, "Legal Form of the Authorization Owner ID" VARCHAR, "Legal Form of the Authorization Owner" VARCHAR, "IPB Country" VARCHAR, "Importance" VARCHAR, "IBR - Replacement Strategy" VARCHAR, "IBR - Expected Replacement Date" VARCHAR, "IBR - Comments" VARCHAR, "IB Vendor Name" VARCHAR, "IB Local Attribute LOV 3" VARCHAR, "IB Local Attribute LOV 2" VARCHAR, "IB Local Attribute LOV 1" VARCHAR, "IB Local Attribute 3" VARCHAR, "IB Local Attribute 2" VARCHAR, "IB Local Attribute 1" VARCHAR, "Finance Type (In Vitro only)" VARCHAR, "Evolve Capable (Flag)" VARCHAR, "Equipment Number" VARCHAR, "Dealer (Asset)" VARCHAR, "Contract Cancelled" VARCHAR, "Competitor Asset (Flag)" VARCHAR, "Authorization required (Flag)" VARCHAR, "ASSET_ID" VARCHAR, "Asset.Status" VARCHAR, "Asset.Sales Product Line" VARCHAR, "Asset.Last Updated Timestamp" VARCHAR, "Asset.Last Updated By (Full Name) (PII)" VARCHAR, "Asset.Created Timestamp" VARCHAR, "Asset.Created By (GID) (PII)" VARCHAR, "Asset.Created By (Full Name) (PII)" VARCHAR, "Asset.BL" VARCHAR, "Asset Waranty End Date" VARCHAR, "Asset Unique Device Identifier" VARCHAR, "Asset Software Version" VARCHAR, "Asset Ship-to Account (SAP)" VARCHAR, "Asset Shipped Date" VARCHAR, "Asset Service Contract Start Date" VARCHAR, "Asset Service Contract End Date" VARCHAR, "Asset Secondary SSE (PII)" VARCHAR, "Asset Sales Document" VARCHAR, "Asset Recurring Revenue (LC) (In Vitro only)" VARCHAR, "Asset Purchase Order Number" VARCHAR, "Asset Primary SSE (PII)" VARCHAR, "Asset Number" VARCHAR, "Asset Material Number" VARCHAR, "Asset LIS Connection" VARCHAR, "Asset Last Service Activity Date" VARCHAR, "Asset Installation Date" VARCHAR, "Asset FL Number" VARCHAR, "Asset Equipment EoS Date" VARCHAR, "Asset Active OLI Count" VARCHAR, "ACCOUNT_ID (End User)" VARCHAR, "ACCOUNT_ID" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_OPTY_REVENUE (
+"UOM" VARCHAR, "Siemens Probability" VARCHAR, "SALES_PROGRAM_ID" VARCHAR, "Sales Document Number RC" VARCHAR, "Sales Channel" VARCHAR, "Sale Type" VARCHAR, "Recurring Revenue Funnel (LC)" VARCHAR, "Reason Comments" VARCHAR, "Reason" VARCHAR, "Quote Item Id" VARCHAR, "Purchasing Agreement" VARCHAR, "PSE Commitment (USA) (Flag)" VARCHAR, "PRODUCT_ID (Primary Winning Vendor)" VARCHAR, "PRODUCT_ID" VARCHAR, "Product Rep Probability" VARCHAR, "Prior Year Revenue Run Rate (LC)" VARCHAR, "OPPORTUNITY_ID" VARCHAR, "OLI_ID (Linked OLI)" VARCHAR, "OLI_ID" VARCHAR, "OLI.Status" VARCHAR, "OLI.Sales Product Line" VARCHAR, "OLI.Quantity" VARCHAR, "OLI.Local Currency" VARCHAR, "OLI.Local Attr LOV 3" VARCHAR, "OLI.Local Attr LOV 2" VARCHAR, "OLI.Local Attr LOV 1" VARCHAR, "OLI.Local Attr 3" VARCHAR, "OLI.Local Attr 2" VARCHAR, "OLI.Local Attr 1" VARCHAR, "OLI.Last Updated Timestamp" VARCHAR, "OLI.Department" VARCHAR, "OLI.Created Timestamp" VARCHAR, "OLI.Created By (GID) (PII)" VARCHAR, "OLI.Close Date" VARCHAR, "OLI.BL" VARCHAR, "OLI Number" VARCHAR, "No Bid (Flag)" VARCHAR, "Lessor" VARCHAR, "Lease End Date" VARCHAR, "Include in Forecast (Flag)" VARCHAR, "IBD O&U" VARCHAR, "GZ" VARCHAR, "Funnel Value (LC)" VARCHAR, "Finance Type" VARCHAR, "Expected Turnover Date" VARCHAR, "Expected Shipment Date" VARCHAR, "Expected Installation Date" VARCHAR, "Expected Delivery Date" VARCHAR, "EMPLOYEE_ID (OLI Owner)" VARCHAR, "Demo System (Flag)" VARCHAR, "Decision Date" VARCHAR, "Count As Unit (Flag)" VARCHAR, "Contract Duration (Months)" VARCHAR, "COMPETITOR_ID (Primary Incumbent Vendor)" VARCHAR, "COMPETITOR_ID" VARCHAR, "Competitor" VARCHAR, "Comments" VARCHAR, "Capital Funnel Value (LC)" VARCHAR, "Atellica Grouping" VARCHAR, "ASSET_ID" VARCHAR, "ASSAY_ID" VARCHAR, "Alternate Exists (Flag)" VARCHAR, "Alternate (Flag)" VARCHAR, "ACCOUNT_ID (End User)" VARCHAR
+)
+;
+
+CREATE OR REPLACE TABLE SV_OSC_P_T_ACTIVITY (
+"System Name" VARCHAR, "System Link" VARCHAR, "Sales Product Line" VARCHAR, "Purpose" VARCHAR, "PROJECT_ID" VARCHAR, "Private (Flag)" VARCHAR, "Priority" VARCHAR, "PARTNERPARTY_ID" VARCHAR, "OPPORTUNITY_ID" VARCHAR, "Meeting Location" VARCHAR, "Mandatory" VARCHAR, "LEAD_ID" VARCHAR, "EMPLOYEE_ID" VARCHAR, "CONTACT_ID" VARCHAR, "ASSET_ID" VARCHAR, "Appointment Success Importance" VARCHAR, "All Day" VARCHAR, "ACTIVITY_ID" VARCHAR, "Activity.Type" VARCHAR, "Activity.Subtype" VARCHAR, "Activity.Status" VARCHAR, "Activity.Start Date" VARCHAR, "Activity.Primary Contact (PII)" VARCHAR, "Activity.Name" VARCHAR, "Activity.Meeting Minutes" VARCHAR, "Activity.Last Updated Timestamp" VARCHAR, "Activity.Last Updated By (GID) (PII)" VARCHAR, "Activity.Last Updated By (Full Name) (PII)" VARCHAR, "Activity.Function" VARCHAR, "Activity.End Date" VARCHAR, "Activity.Due Date" VARCHAR, "Activity.Description" VARCHAR, "Activity.Department" VARCHAR, "Activity.Created Timestamp" VARCHAR, "Activity.Created By (GID) (PII)" VARCHAR, "Activity.Created By (Full Name) (PII)" VARCHAR, "Activity.Country" VARCHAR, "Activity.BL (Multi)" VARCHAR, "Activity Owner Name (PII)" VARCHAR, "Activity Number" VARCHAR, "Activity Local Attr LOV 3" VARCHAR, "Activity Local Attr LOV 2" VARCHAR, "Activity Local Attr LOV 1" VARCHAR, "Activity Local Attr 3" VARCHAR, "Activity Local Attr 2" VARCHAR, "Activity Local Attr 1" VARCHAR, "ACCOUNT_ID" VARCHAR
+)
+;

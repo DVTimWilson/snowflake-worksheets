@@ -1,0 +1,216 @@
+--------------------------------------------------------------------------------
+-- Adjust the last day of the month by the MODded difference against a known Sunday date
+--------------------------------------------------------------------------------
+
+--2023-09-24
+SELECT DATEADD(day, -(DATEDIFF(day, '1900-01-07'::DATE, LAST_DAY('2023-09-22'::DATE)) %7), LAST_DAY('2023-09-22'::DATE) ) AS last_sunday
+;
+
+--2023-08-27
+SELECT DATEADD(day, -(DATEDIFF(day, '1900-01-07'::DATE, LAST_DAY('2023-08-22'::DATE)) %7), LAST_DAY('2023-08-22'::DATE) ) AS last_sunday
+;
+
+--2023-04-30
+SELECT DATEADD(day, -(DATEDIFF(day, '1900-01-07'::DATE, LAST_DAY('2023-04-22'::DATE)) %7), LAST_DAY('2023-04-22'::DATE) ) AS last_sunday
+;
+
+--2023-04-30
+SELECT DATEADD(day, -(DATEDIFF(day, '1800-01-05'::DATE, LAST_DAY('2023-04-22'::DATE)) %7), LAST_DAY('2023-04-22'::DATE) ) AS last_sunday
+;
+
+--2023-10-29
+SELECT DATEADD(day, -(DATEDIFF(day, '1800-01-05'::DATE, LAST_DAY('2023-10-22'::DATE)) %7), LAST_DAY('2023-10-22'::DATE) ) AS last_sunday
+;
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+SELECT
+ DATEADD(day
+	,(DATEDIFF(day
+		,'19000107'
+		,DATEADD(month
+			,DATEDIFF(MONTH,0::TIMESTAMP,CURRENT_TIMESTAMP )
+			,30::TIMESTAMP
+		)
+	)/7)*7
+	,'19000107'
+)
+;
+
+--645
+SELECT DATEDIFF(MONTH,0::TIMESTAMP,CURRENT_TIMESTAMP )
+;
+
+--2023-10-01 00:00:30.000
+SELECT DATEADD(month
+			,DATEDIFF(MONTH,0::TIMESTAMP,CURRENT_TIMESTAMP )
+			,30::TIMESTAMP
+		)
+;
+
+--19,411.999999
+SELECT (DATEDIFF(day
+		,'19000107'
+		,DATEADD(month
+			,DATEDIFF(MONTH,0::TIMESTAMP,CURRENT_TIMESTAMP )
+			,30::TIMESTAMP
+		)
+	)/7)*7
+;
+
+--19,412
+SELECT DATEDIFF(day
+		,'19000107'
+		,DATEADD(month
+			,DATEDIFF(MONTH,0::TIMESTAMP,CURRENT_TIMESTAMP )
+			,30::TIMESTAMP
+		)
+	)
+;
+
+SELECT LAST_DAY(CURRENT_TIMESTAMP)
+;
+
+SELECT dateadd(d,19435,'19000107')
+;
+
+--19442
+SELECT datediff(dd,'19000107',LAST_DAY(CURRENT_TIMESTAMP))
+;
+
+SELECT DATEADD(Month, DATEDIFF(Month, 0, GETDATE()) + 0, 0) +
+6 - (DATEPART(Weekday,DATEADD(Month,DATEDIFF(Month,0, GETDATE()) + 0, 0))
++ @@DateFirst + 5) % 7
+;
+
+SELECT LAST_DAY(CURRENT_TIMESTAMP)
+;
+
+--2
+SELECT DATE_PART(dw, LAST_DAY(CURRENT_TIMESTAMP))
+;
+
+--0 Sunday
+SELECT DATE_PART(dw, '20231008'::DATE)
+;
+
+--2023-10-29
+SELECT DATEADD(day, -(SELECT DATE_PART(dw, LAST_DAY(CURRENT_TIMESTAMP))), LAST_DAY(CURRENT_TIMESTAMP))
+;
+
+--2023-09-24
+SELECT DATEADD(day, -(SELECT DATE_PART(dw, LAST_DAY('2023-09-22'::DATE))), LAST_DAY('2023-09-22'::DATE))
+;
+
+--2023-08-27
+SELECT DATEADD(day, -(SELECT DATE_PART(dw, LAST_DAY('2023-08-22'::DATE))), LAST_DAY('2023-08-22'::DATE))
+;
+
+--2023-04-30
+SELECT DATEADD(day, -(SELECT DATE_PART(dw, LAST_DAY('2023-04-22'::DATE))), LAST_DAY('2023-04-22'::DATE))
+;
+
+--3 --> 2
+SELECT ((DATEDIFF(day, '19000107', LAST_DAY('2023-10-22'::DATE)) %7 -1) + 7) % 7
+;
+--0 --> 6
+SELECT ((DATEDIFF(day, '19000107', LAST_DAY('2023-09-22'::DATE)) %7 -1) + 7) % 7
+;
+--5 --> 4
+SELECT ((DATEDIFF(day, '19000107', LAST_DAY('2023-08-22'::DATE)) %7 -1) + 7) % 7
+;
+--1 --> 0
+SELECT ((DATEDIFF(day, '19000107', LAST_DAY('2023-04-22'::DATE)) %7 -1) + 7) % 7
+;
+
+--------------------------------------------------------------------------------
+-- Adjust the last day of the month by the MODded difference against a known Sunday date
+--------------------------------------------------------------------------------
+
+--2023-09-24
+SELECT DATEADD(day, -(DATEDIFF(day, '1900-01-07'::DATE, LAST_DAY('2023-09-22'::DATE)) %7), LAST_DAY('2023-09-22'::DATE) ) AS last_sunday
+;
+
+--2023-08-27
+SELECT DATEADD(day, -(DATEDIFF(day, '1900-01-07'::DATE, LAST_DAY('2023-08-22'::DATE)) %7), LAST_DAY('2023-08-22'::DATE) ) AS last_sunday
+;
+
+--2023-04-30
+SELECT DATEADD(day, -(DATEDIFF(day, '1900-01-07'::DATE, LAST_DAY('2023-04-22'::DATE)) %7), LAST_DAY('2023-04-22'::DATE) ) AS last_sunday
+;
+
+--2023-04-30
+SELECT DATEADD(day, -(DATEDIFF(day, '1800-01-05'::DATE, LAST_DAY('2023-04-22'::DATE)) %7), LAST_DAY('2023-04-22'::DATE) ) AS last_sunday
+;
+
+--2023-10-29
+SELECT DATEADD(day, -(DATEDIFF(day, '1800-01-05'::DATE, LAST_DAY('2023-10-22'::DATE)) %7), LAST_DAY('2023-10-22'::DATE) ) AS last_sunday
+;
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+--5
+SELECT DATEDIFF(day, '1800-01-05'::DATE, LAST_DAY('2023-04-22'::DATE)) %7
+;
+--1
+SELECT DATEDIFF(day, '1900-01-07'::DATE, LAST_DAY('2023-04-22'::DATE)) %7
+;
+--0
+SELECT DATEDIFF(day, '20230101', LAST_DAY('2023-04-22'::DATE)) %7
+;
+--0
+SELECT DATEDIFF(day, '20220102', LAST_DAY('2023-04-22'::DATE)) %7
+;
+--1
+SELECT DATEDIFF(day, '2021-01-03'::DATE, LAST_DAY('2023-04-22'::DATE)) %7
+;
+--1
+SELECT DATEDIFF(day, '20200105', LAST_DAY('2023-04-22'::DATE)) %7
+;
+--1
+SELECT DATEDIFF(day, '20190106', LAST_DAY('2023-04-22'::DATE)) %7
+;
+--1
+SELECT DATEDIFF(day, '20180107', LAST_DAY('2023-04-22'::DATE)) %7
+;
+--1
+SELECT DATEDIFF(day, '20170101', LAST_DAY('2023-04-22'::DATE)) %7
+;
+--1
+SELECT DATEDIFF(day, '20160103', LAST_DAY('2023-04-22'::DATE)) %7
+;
+--1
+SELECT DATEDIFF(day, '20150104', LAST_DAY('2023-04-22'::DATE)) %7
+;
+--1
+SELECT DATEDIFF(day, '20140105', LAST_DAY('2023-04-22'::DATE)) %7
+;
+--1
+SELECT DATEDIFF(day, '20140302', LAST_DAY('2023-04-22'::DATE)) %7
+;
+--1
+SELECT DATEDIFF(day, '20141123', LAST_DAY('2023-04-22'::DATE)) %7
+;
+--3
+SELECT DATEDIFF(day, '20000102', LAST_DAY('2023-04-22'::DATE)) %7
+;
+--4
+SELECT LAST_DAY('2000-01-22'::DATE), DATEDIFF(day, '2000-01-02'::DATE, LAST_DAY('2000-01-22'::DATE)) %7
+;
+--2023-04-30
+SELECT DATEADD(day, -((DATEDIFF(day, '20230101', LAST_DAY('2023-04-22'::DATE)) %7 -0) + 7) % 7, LAST_DAY('2023-04-22'::DATE) )
+;
+--2023-04-30
+SELECT DATEADD(day, -((DATEDIFF(day, '19000107', LAST_DAY('2023-04-22'::DATE)) %7 -(DATEDIFF(day, '19000107', LAST_DAY('2023-04-22'::DATE)) %7)) + 7) % 7, LAST_DAY('2023-04-22'::DATE) ) AS last_sunday
+;
+
+--2024-03-31
+SELECT DATEADD(day, -((DATEDIFF(day, '20230101', LAST_DAY('2024-03-22'::DATE)) %7 -0) + 7) % 7, LAST_DAY('2024-03-22'::DATE) ) AS last_sunday
+;
+
+--2024-06-26
+SELECT DATEADD(day, -((DATEDIFF(day, '20140105', LAST_DAY('2022-06-22'::DATE)) %7 -1) + 7) % 7, LAST_DAY('2022-06-22'::DATE) ) AS last_sunday
+;
+
