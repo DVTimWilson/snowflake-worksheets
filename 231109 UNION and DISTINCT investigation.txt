@@ -1,0 +1,43 @@
+EXPLAIN
+WITH table1(login_date, login_name) AS (
+    SELECT '2022-03-14' :: DATE, 'Andy'
+    UNION ALL
+    SELECT '2022-03-15' :: DATE, 'Bob'
+    UNION ALL
+    SELECT '2022-03-16' :: DATE, 'Cedric'
+),
+
+table2(login_date, login_name) AS (
+    SELECT '2022-03-17' :: DATE, 'Dan'
+    UNION ALL
+    SELECT '2022-03-18' :: DATE, 'Earl'
+    UNION ALL
+    SELECT '2022-03-19' :: DATE, 'Fred'
+),
+
+table3(login_date, login_name) AS (
+    SELECT '2022-03-14' :: DATE, 'Andy'
+),
+
+table4(login_date, login_name) AS (
+    SELECT '2022-03-14' :: DATE, 'Andy'
+    UNION ALL
+    SELECT '2022-03-15' :: DATE, 'Bob'
+    UNION ALL
+    SELECT '2022-03-15' :: DATE, 'Bob'
+    UNION ALL
+    SELECT '2022-03-16' :: DATE, 'Cedric'
+)
+
+-- SELECT *
+-- FROM table3
+-- UNION
+-- SELECT DISTINCT *
+-- FROM table4
+
+SELECT *
+FROM table3
+UNION
+SELECT *
+FROM table4
+;
