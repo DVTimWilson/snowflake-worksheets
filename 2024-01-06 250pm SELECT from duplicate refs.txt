@@ -1,0 +1,55 @@
+-- [05/01/2024 11:23] Amy Rymer
+-- Hey Tim, got a fun one for you. We have two rows in hsl_delegatedauthority that have the same hsl_reference. Tony has had a look -- and it is also in live. Apparently it has been like this since 2018 
+
+-- he has said:
+
+-- how do you want to handle these? Ordinarily we'd look at statuscodename and take the Active one (that column can be active/inactive), or we take the earliest "createdon" date row when loading into our conform tables/data marts in the existing one. Suspect this is where we report a warning alert of the data error duplication (this will also happen on the incremental feed on the Contact entity where they change the hsl_reference (they swap them around, so given two rows with contactid (guid), they will swap the hsl_reference - don't even go there why they do it, it's a nightmare, has caused us no end of issues in the past when the process that does it fails in the middle and we end up with two rows with the same hsl_reference.
+
+-- both rows are marked active in live so option 1 isn't possible
+
+WITH sample_data(ref, active, createdon, comments) AS (
+    SELECT 111, 1, '2022-03-18' :: DATE, 'Not a duplicate ref (SELECT this one)'
+    UNION ALL
+    SELECT 222, 0, '2022-03-18' :: DATE, 'Duplicate ref, one record active'
+    UNION ALL
+    SELECT 222, 1, '2023-04-29' :: DATE, 'Duplicate ref, one record active (SELECT this one)'
+    UNION ALL
+    SELECT 333, 0, '2022-03-18' :: DATE, 'Duplicate ref, multiple records active (SELECT this one)'
+    UNION ALL
+    SELECT 333, 1, '2023-05-05' :: DATE, 'Duplicate ref, multiple records active'
+    UNION ALL
+    SELECT 333, 1, '2023-07-05' :: DATE, 'Duplicate ref, multiple records active'
+    UNION ALL
+    SELECT 444, 0, '2022-03-18' :: DATE, 'Duplicate ref, no records active (SELECT this one)'
+    UNION ALL
+    SELECT 444, 0, '2023-05-11' :: DATE, 'Duplicate ref, no records active'
+),
+
+calculated_data AS (
+SELECT
+      ref
+    , active
+    , createdon
+    , comments
+
+    , COUNT(ref) OVER (PARTITION BY ref) AS how_many_copies_of_ref  -- without ORDER BY will count records over the whole partition
+    , SUM(active) OVER (PARTITION BY ref) AS how_many_active_for_ref  -- without ORDER BY will sum active values over the whole partition
+    , ROW_NUMBER() OVER (PARTITION BY ref ORDER BY createdon ASC) AS createdon_index  -- earliest createdon will have row number 1
+FROM sample_data
+)
+
+SELECT *
+FROM calculated_data
+WHERE how_many_copies_of_ref = 1
+OR
+(
+    -- how_many_copies_of_ref > 1
+    -- AND
+    -- (
+    how_many_active_for_ref = 1 AND active = 1
+    OR
+    (NOT (how_many_active_for_ref = 1 AND active = 0) AND how_many_active_for_ref != 1 AND createdon_index = 1)
+    -- )
+)
+ORDER BY ref
+;
