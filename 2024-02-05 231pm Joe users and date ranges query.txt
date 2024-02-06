@@ -1,0 +1,209 @@
+WITH source_data (hk_case, team_name, team_category, user_id, assigned, removed) AS (
+    SELECT *
+    FROM VALUES
+         ('x', 'case owner', 'casework', 4, TO_DATE('2022-04-13'), TO_DATE('2022-04-13'))
+        ,('x', 'case supervisor', 'casework', 5, TO_DATE('2022-04-13'), TO_DATE('2023-04-06'))
+        ,('x', 'case owner', 'casework', 3, TO_DATE('2022-04-14'), TO_DATE('2022-04-25'))
+        ,('x', 'case owner', 'casework', 1, TO_DATE('2022-04-25'), TO_DATE('2022-10-28'))
+        ,('x', 'case supervisor', 'casework', 2, TO_DATE('2023-04-06'), TO_DATE('9999-12-31'))
+),
+
+cte_dates (dim_date) AS (
+  SELECT TO_DATE('2022-04-01')
+  UNION ALL
+  SELECT TO_DATE(DATEADD(day, 1, dim_date)) --or week, month, week, hour, minute instead of day
+  FROM  cte_dates
+  WHERE dim_date < TO_DATE('2023-04-30')
+)
+
+SELECT *
+FROM cte_dates AS d
+INNER JOIN source_data AS s
+ON d.dim_date BETWEEN s.assigned AND s.removed
+ORDER BY d.dim_date, user_id
+;
+
+WITH source_data (hk_case, team_name, team_category, user_id, assigned, removed) AS (
+    SELECT *
+    FROM VALUES
+         ('x', 'case owner', 'casework', 4, TO_DATE('2022-04-13'), TO_DATE('2022-04-13'))
+        ,('x', 'case supervisor', 'casework', 5, TO_DATE('2022-04-13'), TO_DATE('2023-04-06'))
+        ,('x', 'case owner', 'casework', 3, TO_DATE('2022-04-14'), TO_DATE('2022-04-25'))
+        ,('x', 'case owner', 'casework', 1, TO_DATE('2022-04-25'), TO_DATE('2022-10-28'))
+        ,('x', 'case supervisor', 'casework', 2, TO_DATE('2023-04-06'), TO_DATE('9999-12-31'))
+),
+
+cte_dates (dim_date) AS (
+  SELECT TO_DATE('2022-04-01')
+  UNION ALL
+  SELECT TO_DATE(DATEADD(day, 1, dim_date)) --or week, month, week, hour, minute instead of day
+  FROM  cte_dates
+  WHERE dim_date < TO_DATE('2023-04-30')
+),
+
+cte_group1 AS (
+SELECT d.dim_date, LISTAGG(user_id, ',') AS user_ids
+FROM cte_dates AS d
+INNER JOIN source_data AS s
+ON d.dim_date BETWEEN s.assigned AND s.removed
+GROUP BY d.dim_date
+ORDER BY d.dim_date
+),
+
+cte_group2 AS (
+SELECT dim_date, user_ids
+,DENSE_RANK() OVER (ORDER BY dim_date) - ROW_NUMBER() OVER (PARTITION BY user_ids ORDER BY dim_date) AS group_index
+FROM cte_group1
+)
+
+SELECT MIN(dim_date) AS min_date, MAX(dim_date) AS max_date, user_ids
+FROM cte_group2
+GROUP BY user_ids, group_index
+ORDER BY MIN(dim_date)
+;
+
+--06/02/2024  Copied to Joe
+WITH source_data (hk_case, team_name, team_category, user_id, assigned, removed) AS (
+    SELECT *
+    FROM VALUES
+         ('x', 'case owner', 'casework', 4, TO_DATE('2022-04-13'), TO_DATE('2022-04-13'))
+        ,('x', 'case supervisor', 'casework', 5, TO_DATE('2022-04-13'), TO_DATE('2023-04-06'))
+        ,('x', 'case owner', 'casework', 3, TO_DATE('2022-04-14'), TO_DATE('2022-04-25'))
+        ,('x', 'case owner', 'casework', 1, TO_DATE('2022-04-25'), TO_DATE('2022-10-28'))
+        ,('x', 'case supervisor', 'casework', 2, TO_DATE('2023-04-06'), TO_DATE('9999-12-31'))
+        ,('y', 'case owner', 'casework', 1, TO_DATE('2022-04-25'), TO_DATE('2022-10-28'))
+        ,('y', 'case supervisor', 'casework', 2, TO_DATE('2022-04-06'), TO_DATE('9999-12-31'))
+),
+
+cte_dates (dim_date) AS (
+  SELECT TO_DATE('2022-04-01')
+  UNION ALL
+  SELECT TO_DATE(DATEADD(day, 1, dim_date)) --or week, month, week, hour, minute instead of day
+  FROM  cte_dates
+  WHERE dim_date < TO_DATE('2023-04-30')
+),
+
+cte_group1 AS (
+SELECT s.hk_case, d.dim_date, LISTAGG(s.team_name || '|' || s.user_id, ',') AS user_details
+FROM cte_dates AS d
+INNER JOIN source_data AS s
+ON d.dim_date BETWEEN s.assigned AND s.removed
+GROUP BY hk_case, d.dim_date
+ORDER BY hk_case, d.dim_date
+),
+
+cte_group2 AS (
+SELECT hk_case, dim_date, user_details
+,DENSE_RANK() OVER (ORDER BY hk_case, dim_date) AS day_index
+,ROW_NUMBER() OVER (PARTITION BY hk_case, user_details ORDER BY dim_date) AS value_index
+,day_index - value_index AS group_index
+FROM cte_group1
+),
+
+ranges AS (
+SELECT hk_case, MIN(dim_date) AS min_date, MAX(dim_date) AS max_date, user_details
+FROM cte_group2
+GROUP BY hk_case, user_details, group_index
+)
+
+SELECT *
+FROM ranges
+ORDER BY hk_case, min_date
+;
+
+-- Experiment with de-aggregation and PIVOTing
+WITH source_data (hk_case, team_name, team_category, user_id, assigned, removed) AS (
+    SELECT *
+    FROM VALUES
+         ('x', 'case owner', 'casework', 4, TO_DATE('2022-04-13'), TO_DATE('2022-04-13'))
+        ,('x', 'case supervisor', 'casework', 5, TO_DATE('2022-04-13'), TO_DATE('2023-04-06'))
+        ,('x', 'case owner', 'casework', 3, TO_DATE('2022-04-14'), TO_DATE('2022-04-25'))
+        ,('x', 'case owner', 'casework', 1, TO_DATE('2022-04-25'), TO_DATE('2022-10-28'))
+        ,('x', 'case supervisor', 'casework', 2, TO_DATE('2023-04-06'), TO_DATE('9999-12-31'))
+        ,('y', 'case owner', 'casework', 1, TO_DATE('2022-04-25'), TO_DATE('2022-10-28'))
+        ,('y', 'case supervisor', 'casework', 2, TO_DATE('2023-04-06'), TO_DATE('9999-12-31'))
+),
+
+cte_dates (dim_date) AS (
+  SELECT TO_DATE('2022-04-01')
+  UNION ALL
+  SELECT TO_DATE(DATEADD(day, 1, dim_date)) --or week, month, week, hour, minute instead of day
+  FROM  cte_dates
+  WHERE dim_date < TO_DATE('2023-04-30')
+),
+
+cte_group1 AS (
+SELECT d.dim_date, hk_case, LISTAGG(team_name || '|' || user_id, ',') AS user_details
+FROM cte_dates AS d
+INNER JOIN source_data AS s
+ON d.dim_date BETWEEN s.assigned AND s.removed
+GROUP BY d.dim_date, hk_case
+ORDER BY d.dim_date, hk_case
+),
+
+cte_group2 AS (
+SELECT hk_case, dim_date, user_details
+,DENSE_RANK() OVER (ORDER BY hk_case, dim_date) - ROW_NUMBER() OVER (PARTITION BY hk_case, user_details ORDER BY dim_date) AS group_index
+FROM cte_group1
+),
+
+ranges AS (
+SELECT hk_case, MIN(dim_date) AS min_date, MAX(dim_date) AS max_date, user_details
+FROM cte_group2
+GROUP BY hk_case, user_details, group_index
+ORDER BY hk_case, MIN(dim_date)
+),
+
+ranges_deagg AS (
+SELECT hk_case, min_date, max_date, SPLIT_PART(split.value, '|', 1) AS team_name, SPLIT_PART(split.value, '|', 2) AS user_id
+,DENSE_RANK() OVER (ORDER BY hk_case, min_date) - ROW_NUMBER() OVER (PARTITION BY hk_case, team_name, user_id ORDER BY min_date) AS group_index
+,DENSE_RANK() OVER (ORDER BY hk_case, min_date) AS group_index1
+,ROW_NUMBER() OVER (PARTITION BY hk_case, team_name, user_id ORDER BY min_date) AS group_index2
+FROM ranges
+,LATERAL SPLIT_TO_TABLE(user_details, ',') AS split
+),
+
+--SELECT * FROM ranges ORDER BY hk_case, min_date
+--SELECT * FROM ranges_deagg ORDER BY hk_case, min_date, group_index1
+
+cte_group3 AS (
+SELECT hk_case, min(min_date) AS min_date, max(max_date) AS max_date, team_name, user_id
+FROM ranges_deagg
+GROUP BY hk_case, team_name, user_id, group_index
+)
+
+-- SELECT * from cte_group3 ORDER BY hk_case, min_date
+
+-- --SELECT * FROM ranges_deagg ORDER BY hk_case, min_date, team_name, user_id
+-- --SELECT * FROM cte_group3 ORDER by hk_case, min_date
+-- --SELECT * FROM cte_group2 ORDER by hk_case, dim_date
+-- SELECT * FROM ranges ORDER by hk_case, min_date
+
+SELECT * --hk_case, max_date, 'case owner', 'case supervisor'
+FROM cte_group3
+PIVOT (
+    MIN(user_id)
+    FOR team_name IN ('case owner', 'case supervisor')
+) AS p
+ORDER BY hk_case, min_date
+;
+
+-- Dates table without using recursion
+WITH
+E1(N) AS (SELECT 1 FROM VALUES (1),(1),(1),(1),(1),(1),(1),(1),(1),(1)),
+E2(N) AS (SELECT 1 FROM E1 a, E1 b), --10E+2 or 100 rows
+E3(N) AS (SELECT 1 FROM E1 a, E1 b, E1 c), --10E+3 or 1000 rows
+E4(N) AS (SELECT 1 FROM E1 a, E1 b, E1 c, E1 d), --10E+4 or 10000 rows
+E5(N) AS (SELECT 1 FROM E1 a, E1 b, E1 c, E1 d, E1 e), --10E+5 or 100000 rows about 273 years
+
+cte_numbers(N) AS
+(
+SELECT ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) FROM E5
+)
+
+SELECT N, DATEADD(day, N - 1, '2022-01-01') AS dim_date
+FROM cte_numbers
+WHERE N <= DATEDIFF(day, '2022-01-01', '2023-12-31') + 1
+ORDER BY dim_date
+;
+
