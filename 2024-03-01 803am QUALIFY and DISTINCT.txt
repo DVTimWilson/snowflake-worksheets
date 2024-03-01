@@ -1,0 +1,29 @@
+-- https://community.snowflake.com/s/question/0D53r0000BkabjfCQA/unexpected-data-with-window-functions
+
+WITH example_data AS (
+    SELECT
+         COLUMN1 AS STUDENT_ID
+        ,COLUMN2 AS FIRST_NAME
+        ,COLUMN3 AS LAST_NAME
+        ,COLUMN4 AS AGE
+        ,COLUMN5 AS ADDRESS
+        ,COLUMN6 AS PHONE_NUMBER
+        ,COLUMN7 AS GRADE
+        ,COLUMN8 AS LOAD_DATETIME
+    FROM (
+    VALUES
+    (1, 'John', 'Cena', 18, '123 Main St, City', '123-456-7890', 'A', '2024-02-01'),
+    (1, 'John', 'Cena', 18, '123 Main St, City', '123-456-7890', 'A', '2024-02-01'),
+    (2, 'Rock', 'Bottom', 17, '456 Second St, Town', '987-654-3210', 'B', '2024-02-01'),
+    (2, 'Rock', 'Bottom', 17, '456 Second St, Town', '987-654-3210', 'B', '2024-02-02'),
+    (2, 'Rock', 'Bottom', 17, '456 Second St, Town', '987-654-3210', 'B', '2024-02-02'),
+    (3, 'James', 'Johnson', 16, '789 Oak St, Village', '456-123-7890', 'C', '2024-02-01'),
+    (3, 'James', 'Johnson', 16, '789 Oak St, Village', '456-123-7890', 'C', '2024-02-01'),
+    (4, 'Sarah', 'Williams', 18, '321 Pine St, County', '789-123-4560', 'A', '2024-02-01')
+    )
+)
+
+SELECT DISTINCT *
+FROM example_data
+QUALIFY RANK() OVER (PARTITION BY STUDENT_ID ORDER BY LOAD_DATETIME DESC) = 1
+;

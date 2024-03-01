@@ -1,0 +1,41 @@
+WITH case_data(CASE_ID, CASE_TYPE, CASE_OTHER_DATA) as
+(
+    SELECT 'A', NULL, 'AA'
+    UNION ALL
+    SELECT 'A', NULL, 'AB'
+    UNION ALL
+    SELECT 'A', 'Comeback', 'AC'
+    UNION ALL
+    SELECT 'A', NULL, 'AD'
+    UNION ALL
+    SELECT 'B', NULL, 'BA'
+    UNION ALL
+    SELECT 'B', NULL, 'BB'
+    UNION ALL
+    SELECT 'B', NULL, 'BC'
+    UNION ALL
+    SELECT 'C', NULL, 'CA'
+    UNION ALL
+    SELECT 'C', 'Comeback', 'CB'
+    UNION ALL
+    SELECT 'D', NULL, 'DA'
+    UNION ALL
+    SELECT 'D', NULL, 'DB'
+    UNION ALL
+    SELECT 'D', NULL, 'DC'
+    UNION ALL
+    SELECT 'D', NULL, 'DD'
+),
+
+get_comeback_keys AS (
+    SELECT CASE_ID
+    FROM case_data
+    WHERE CASE_TYPE = 'Comeback'
+    GROUP BY CASE_ID
+)
+
+SELECT case_data.case_id, case_data.case_other_data, case_data.case_type
+FROM case_data
+INNER JOIN get_comeback_keys
+ON case_data.CASE_ID = get_comeback_keys.CASE_ID
+;

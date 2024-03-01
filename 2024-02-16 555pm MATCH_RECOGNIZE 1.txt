@@ -1,0 +1,20 @@
+-- https://stackoverflow.com/questions/75250633/how-can-i-write-a-sql-query-that-combines-versions-where-nothing-has-changed
+
+with data(Person, Elig_for_Disc_A, Elig_for_Disc_B, Version_Start, Version_End) as
+(
+    select 'Bob', 'Y', 'Y', to_date('2022-01-01', 'yyyy-mm-dd'), to_date('2022-01-04', 'yyyy-mm-dd') from dual union all
+    select 'Bob', 'Y', 'N', to_date('2022-01-05', 'yyyy-mm-dd'), to_date('2022-01-13', 'yyyy-mm-dd') from dual union all
+    select 'Bob', 'N', 'N', to_date('2022-01-14', 'yyyy-mm-dd'), to_date('2022-01-22', 'yyyy-mm-dd') from dual union all
+    select 'Bob', 'Y', 'N', to_date('2022-01-23', 'yyyy-mm-dd'), to_date('3000-12-31', 'yyyy-mm-dd') from dual -- union all
+)
+select Person, Elig_for_Disc_A, Version_Start, Version_End 
+from data
+match_recognize (
+    partition by person, Elig_for_Disc_A 
+    order by Version_Start, Version_End
+    measures first(Version_Start) as Version_Start, max(Version_End) as Version_End
+    pattern( merged* strt )
+    define
+        merged as max(Version_End)+1 >= next(Version_Start)
+)
+order by person, Version_Start;
