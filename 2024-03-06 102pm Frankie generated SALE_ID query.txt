@@ -1,0 +1,19 @@
+WITH existing_sales (SALE_ID, SALE_DATE, AMOUNT) AS (
+    SELECT 1, '2024-03-01', 10
+    UNION ALL
+    SELECT 2, '2024-03-02', 20
+),
+
+incoming_sales (SALE_DATE, AMOUNT) AS (
+    SELECT '2024-03-04', 30
+    UNION ALL
+    SELECT '2024-03-05', 40
+
+)
+
+SELECT
+    ROW_NUMBER() OVER(ORDER BY SALE_DATE) + (SELECT MAX(SALE_ID) FROM existing_sales) AS SALE_ID
+    ,SALE_DATE
+    ,AMOUNT
+FROM incoming_sales
+;
