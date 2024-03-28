@@ -1,0 +1,98 @@
+SELECT
+		a.TimesheetHourId,
+		a.TimesheetID,
+		a.ClientContactID,
+		a.ApplicantId,
+		a.JobID,
+		b.WorkedOn,
+		a.WorkedOnDay,
+		NULL AS PlacementOvertimeId,
+		a.HoursWorked,
+		a.CreatedOn,
+		a.UpdatedOn,
+		b.StartTime,
+		b.EndTime,
+		NULL AS Notes,
+		a.Description
+FROM
+
+(
+
+	SELECT
+		TimesheetHourId,
+		TimesheetID,
+		ClientContactID,
+		ApplicantId,
+		JobID,
+		REPLACE(HoursWorkedTimeCols, 'WorkedTime', '') AS WorkedOnDay,
+--		NULL AS PlacementOvertimeId,
+		HoursWorked,
+		CreatedOn,
+		UpdatedOn,
+--		NULL AS Notes,
+		Description,
+
+		SUBSTRING(HoursWorkedTimeCols, 1, 3) AS dayHoursWorked,
+		SUBSTRING(TimesheetHourIdCols, 1,3) AS dayTimesheetHourId
+		
+	FROM
+	(
+		SELECT
+			TimesheetID,
+--			PlacementID,
+			ApproverID AS ClientContactID,
+			CandidateID AS ApplicantId,
+			JobID,
+--			ClientID,
+--			Client,
+			TeacherPosition AS Description,
+
+			MondayWorkedTime,
+			MondayTimesheetHourID,
+			TuesdayWorkedTime,
+			TuesdayTimesheetHourID,
+			WednesdayWorkedTime,
+			WednesdayTimesheetHourID,
+			ThursdayWorkedTime,
+			ThursdayTimesheetHourID,
+			FridayWorkedTime,
+			FridayTimesheetHourID,
+			SaturdayWorkedTime,
+			SaturdayTimesheetHourID,
+			SundayWorkedTime,
+			SundayTimesheetHourID,
+
+--			ReadyForBilling,
+--			TimesheetStatus,
+			CreatedOn,
+			UpdatedOn
+--			PeriodStarting,
+--			PeriodEnding,
+--			PlacementStartDate,
+--			PlacementEndDate,
+--			DisplayDate,
+--			HASHDIFF
+		FROM dbo.v_Timesheets_Sync_Back_Insert
+	) AS unpivotsourcedata
+
+	UNPIVOT
+	(
+		HoursWorked FOR HoursWorkedTimeCols IN (MondayWorkedTime, TuesdayWorkedTime, WednesdayWorkedTime, ThursdayWorkedTime, FridayWorkedTime, SaturdayWorkedTime, SundayWorkedTime)
+	) AS wt
+
+
+	UNPIVOT
+	(
+		TimesheetHourId FOR TimesheetHourIdCols IN (MondayTimesheetHourID, TuesdayTimesheetHourID, WednesdayTimesheetHourID, ThursdayTimesheetHourID, FridayTimesheetHourID, SaturdayTimesheetHourID, SundayTimesheetHourID)
+	) AS thid
+
+) AS a
+
+LEFT OUTER JOIN dbo.v_TimesheetHours AS b
+ON a.TimesheetHourID = b.TimesheetHourId
+
+WHERE dayHoursWorked = dayTimesheetHourId
+;
+
+
+
