@@ -1,0 +1,20 @@
+WITH example_data AS (
+    SELECT datacolumn
+    FROM VALUES 
+    ('a')
+    ,('b')
+    ,(NULL)
+    ,('d')
+    ,('e')
+    ,(NULL)
+    ,('e')
+    AS x (datacolumn)
+)
+
+SELECT COUNT(*) AS record_count
+, COUNT(datacolumn) AS non_null_count
+, COUNT(*) - COUNT(datacolumn) AS null_count
+, COUNT(DISTINCT datacolumn) AS distinct_non_null_count
+, (SELECT COUNT(*) FROM (SELECT DISTINCT datacolumn FROM example_data)) - COUNT(DISTINCT datacolumn) AS distinct_null_count
+FROM example_data
+;

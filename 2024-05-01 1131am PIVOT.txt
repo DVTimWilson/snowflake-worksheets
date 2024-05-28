@@ -1,0 +1,262 @@
+-- https://www.databricks.com/blog/2018/11/01/sql-pivot-converting-rows-to-columns.html
+WITH high_temperature_data (date, temp) AS (
+    SELECT column1::DATE, column2::NUMBER(4,0) FROM VALUES
+    ('2018-07-22', 86)
+    , ('2018-07-23', 90)
+    , ('2018-07-24', 91)
+    , ('2018-07-25', 92)
+    , ('2018-07-26', 92)
+    , ('2018-07-27', 88)
+    , ('2018-07-28', 85)
+    , ('2018-07-29', 94)
+    , ('2018-07-30', 89)
+)
+
+SELECT *
+FROM
+(
+  SELECT year(date) AS year, month(date) AS month, temp
+  FROM high_temperature_data
+  WHERE date BETWEEN DATE '2015-01-01' AND DATE '2018-08-31'
+)
+PIVOT (
+  avg(temp)
+  FOR month in (
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+  )
+) AS pvt
+ORDER BY year DESC
+;
+
+-- TPCH_SF1 pivot orders SUM by month grouped by year
+SELECT *
+FROM
+(
+  SELECT YEAR(O_ORDERDATE) AS year, MONTHNAME(O_ORDERDATE) AS month, O_TOTALPRICE
+  FROM SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.ORDERS
+)
+PIVOT (
+  SUM(O_TOTALPRICE)
+  FOR month in (
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+  )
+)
+AS pvt (YEAR, JAN, FEB, MAR, APR, MAY, JUN, JUL, AUG, SEP, OCT, NOV, DEC)
+ORDER BY year DESC
+;
+
+-- TPCH_SF1 pivot orders MAX by month grouped by year
+SELECT *
+FROM
+(
+  SELECT YEAR(O_ORDERDATE) AS year, MONTH(O_ORDERDATE) AS month, O_TOTALPRICE
+  FROM SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.ORDERS
+)
+PIVOT (
+  MAX(O_TOTALPRICE)
+  FOR month in (
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+  )
+) AS pvt
+ORDER BY year DESC
+;
+
+-- TPCH_SF1 and TPCH_SF10 pivot orders SUM by  month grouped by year and dataset
+-- We have two rows for each year, one for TPCH_SF1 data and the other for TPCH_SF10 data.
+-- That’s because we have included one more column, dataset, in the pivot input,
+-- which in turn becomes another implicit grouping column in addition to the original column year.
+SELECT *
+FROM
+(
+  SELECT YEAR(O_ORDERDATE) AS year, MONTHNAME(O_ORDERDATE) AS month, O_TOTALPRICE, '1' AS dataset
+  FROM SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.ORDERS
+  UNION ALL
+  SELECT YEAR(O_ORDERDATE) AS year, MONTHNAME(O_ORDERDATE) AS month, O_TOTALPRICE, '10' AS dataset
+  FROM SNOWFLAKE_SAMPLE_DATA.TPCH_SF10.ORDERS
+)
+PIVOT (
+  SUM(O_TOTALPRICE)
+  FOR month in (
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+  )
+)
+AS pvt (YEAR, DATASET, JAN, FEB, MAR, APR, MAY, JUN, JUL, AUG, SEP, OCT, NOV, DEC)
+ORDER BY year DESC, dataset ASC
+;
+
+-- TPCH_SF1 and TPCH_SF10 pivot orders SUM and MAX by  month grouped by year and dataset
+-- with two aggregations for each year / dataset
+SELECT YEAR, DATASET, 'SUM' AS TYPE, JAN, FEB, MAR, APR, MAY, JUN, JUL, AUG, SEP, OCT, NOV, DEC
+FROM
+(
+  SELECT YEAR(O_ORDERDATE) AS year, MONTHNAME(O_ORDERDATE) AS month, O_TOTALPRICE, '1' AS dataset
+  FROM SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.ORDERS
+  UNION ALL
+  SELECT YEAR(O_ORDERDATE) AS year, MONTHNAME(O_ORDERDATE) AS month, O_TOTALPRICE, '10' AS dataset
+  FROM SNOWFLAKE_SAMPLE_DATA.TPCH_SF10.ORDERS
+)
+PIVOT (
+  SUM(O_TOTALPRICE)
+  FOR month in (
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+  )
+)
+AS pvt (YEAR, DATASET, JAN, FEB, MAR, APR, MAY, JUN, JUL, AUG, SEP, OCT, NOV, DEC)
+
+UNION ALL
+
+SELECT YEAR, DATASET, 'MAX' AS TYPE, JAN, FEB, MAR, APR, MAY, JUN, JUL, AUG, SEP, OCT, NOV, DEC
+FROM
+(
+  SELECT YEAR(O_ORDERDATE) AS year, MONTHNAME(O_ORDERDATE) AS month, O_TOTALPRICE, '1' AS dataset
+  FROM SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.ORDERS
+  UNION ALL
+  SELECT YEAR(O_ORDERDATE) AS year, MONTHNAME(O_ORDERDATE) AS month, O_TOTALPRICE, '10' AS dataset
+  FROM SNOWFLAKE_SAMPLE_DATA.TPCH_SF10.ORDERS
+)
+PIVOT (
+  MAX(O_TOTALPRICE)
+  FOR month in (
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+  )
+)
+AS pvt (YEAR, DATASET, JAN, FEB, MAR, APR, MAY, JUN, JUL, AUG, SEP, OCT, NOV, DEC)
+
+ORDER BY year DESC, dataset ASC, type ASC
+;
+
+-- TPCH_SF1 orders pivot SUM and MAX by month grouped by year
+-- https://stackoverflow.com/questions/69017226/how-to-pivot-multiple-aggregation-in-snowflake
+SELECT YEAR
+    , SUM(JAN) AS JAN_SUM, MAX(JAN2) AS JAN_MAX
+    , SUM(FEB) AS FEB_SUM, MAX(FEB2) AS FEB_MAX
+    , SUM(MAR) AS MAR_SUM, MAX(MAR2) AS MAR_MAX
+    , SUM(APR) AS APR_SUM, MAX(APR2) AS APR_MAX
+    , SUM(MAY) AS MAY_SUM, MAX(MAY2) AS MAY_MAX
+    , SUM(JUN) AS JUN_SUM, MAX(JUN2) AS JUN_MAX
+    , SUM(JUL) AS JUL_SUM, MAX(JUL2) AS JUL_MAX
+    , SUM(AUG) AS AUG_SUM, MAX(AUG2) AS AUG_MAX
+    , SUM(SEP) AS SEP_SUM, MAX(SEP2) AS SEP_MAX
+    , SUM(OCT) AS OCT_SUM, MAX(OCT2) AS OCT_MAX
+    , SUM(NOV) AS_NOV_SUM, MAX(NOV2) AS NOV_MAX
+    , SUM(DEC) AS DEC_SUM, MAX(DEC2) AS DEC_MAX
+FROM
+(
+  SELECT YEAR(O_ORDERDATE) AS year, MONTHNAME(O_ORDERDATE) AS month, O_TOTALPRICE, MONTHNAME(O_ORDERDATE) AS month2, O_TOTALPRICE AS O_TOTALPRICE2
+  FROM SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.ORDERS
+)
+PIVOT (
+  SUM(O_TOTALPRICE)
+  FOR month in (
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+  )
+)
+PIVOT (
+  MAX(O_TOTALPRICE2)
+  FOR month2 in (
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+  )
+)
+AS pvt (YEAR
+    , JAN, FEB, MAR, APR, MAY, JUN, JUL, AUG, SEP, OCT, NOV, DEC
+    , JAN2, FEB2, MAR2, APR2, MAY2, JUN2, JUL2, AUG2, SEP2, OCT2, NOV2, DEC2)
+GROUP BY YEAR
+ORDER BY YEAR DESC
+;
+
+-- TPCH_SF1 and TPCH_SF10 orders pivot SUM and MAX by month grouped by year and dataset
+-- https://stackoverflow.com/questions/69017226/how-to-pivot-multiple-aggregation-in-snowflake
+SELECT YEAR, DATASET
+    , SUM(JAN) AS JAN_SUM, MAX(JAN2) AS JAN_MAX
+    , SUM(FEB) AS FEB_SUM, MAX(FEB2) AS FEB_MAX
+    , SUM(MAR) AS MAR_SUM, MAX(MAR2) AS MAR_MAX
+    , SUM(APR) AS APR_SUM, MAX(APR2) AS APR_MAX
+    , SUM(MAY) AS MAY_SUM, MAX(MAY2) AS MAY_MAX
+    , SUM(JUN) AS JUN_SUM, MAX(JUN2) AS JUN_MAX
+    , SUM(JUL) AS JUL_SUM, MAX(JUL2) AS JUL_MAX
+    , SUM(AUG) AS AUG_SUM, MAX(AUG2) AS AUG_MAX
+    , SUM(SEP) AS SEP_SUM, MAX(SEP2) AS SEP_MAX
+    , SUM(OCT) AS OCT_SUM, MAX(OCT2) AS OCT_MAX
+    , SUM(NOV) AS_NOV_SUM, MAX(NOV2) AS NOV_MAX
+    , SUM(DEC) AS DEC_SUM, MAX(DEC2) AS DEC_MAX
+FROM
+(
+  SELECT YEAR(O_ORDERDATE) AS year, MONTHNAME(O_ORDERDATE) AS month, O_TOTALPRICE, MONTHNAME(O_ORDERDATE) AS month2, O_TOTALPRICE AS O_TOTALPRICE2, '1' AS dataset
+  FROM SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.ORDERS
+  UNION ALL
+  SELECT YEAR(O_ORDERDATE) AS year, MONTHNAME(O_ORDERDATE) AS month, O_TOTALPRICE, MONTHNAME(O_ORDERDATE) AS month2, O_TOTALPRICE AS O_TOTALPRICE2, '10' AS dataset
+  FROM SNOWFLAKE_SAMPLE_DATA.TPCH_SF10.ORDERS
+)
+PIVOT (
+  SUM(O_TOTALPRICE)
+  FOR month in (
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+  )
+)
+PIVOT (
+  MAX(O_TOTALPRICE2)
+  FOR month2 in (
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+  )
+)
+AS pvt (YEAR, DATASET
+    , JAN, FEB, MAR, APR, MAY, JUN, JUL, AUG, SEP, OCT, NOV, DEC
+    , JAN2, FEB2, MAR2, APR2, MAY2, JUN2, JUL2, AUG2, SEP2, OCT2, NOV2, DEC2)
+GROUP BY YEAR, DATASET
+ORDER BY YEAR DESC, DATASET ASC
+;
+
+-- Dynamic SQL query
+select
+    'select *
+    from pivot_test
+    pivot (
+        min(value_col)
+        for name_col in (
+            '||listagg (distinct ''''||name_col||'''', ',') ||'
+        )
+    ) order by id;'
+from pivot_test;
+
+-- Dynamic SQL query
+-- TPCH_SF1 pivot orders SUM by month grouped by year
+SELECT 
+
+    'SELECT *
+    FROM
+    (
+      SELECT YEAR(O_ORDERDATE) AS year, MONTHNAME(O_ORDERDATE) AS month, O_TOTALPRICE
+      FROM SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.ORDERS
+    )
+    PIVOT (
+      SUM(O_TOTALPRICE)
+      FOR month in (
+        '||LISTAGG(''''|| month ||'''', ', ') WITHIN GROUP (ORDER BY ''''|| monthno ||'''') ||'
+      )
+    )
+    AS pvt (YEAR, '||LISTAGG(''|| month ||'', ', ') WITHIN GROUP (ORDER BY ''|| monthno ||'') ||')
+    ORDER BY year DESC
+    ;' AS pivot_query
+
+FROM
+(
+  SELECT DISTINCT LPAD(MONTH(O_ORDERDATE), 2, '0') AS monthno, MONTHNAME(O_ORDERDATE) AS month
+  FROM SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.ORDERS
+)
+;
+
+SELECT *
+    FROM
+    (
+      SELECT YEAR(O_ORDERDATE) AS year, MONTHNAME(O_ORDERDATE) AS month, O_TOTALPRICE
+      FROM SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.ORDERS
+    )
+    PIVOT (
+      SUM(O_TOTALPRICE)
+      FOR month in (
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      )
+    )
+    AS pvt (YEAR, Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec)
+    ORDER BY year DESC
+    ;

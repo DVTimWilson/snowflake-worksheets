@@ -1,0 +1,42 @@
+WITH weekly_dates (n) AS
+(
+  SELECT 0
+    
+  UNION ALL
+  
+  SELECT n + 1
+  FROM weekly_dates
+  WHERE n < 12
+)
+
+SELECT * FROM weekly_dates
+;
+
+
+WITH weekly_dates (week_no, week_start, week_end) AS
+(
+  SELECT 0
+    , DATE_TRUNC(WEEK, CURRENT_DATE)
+    , CURRENT_DATE
+    
+  UNION ALL
+  
+  SELECT week_no + 1
+    , DATEADD(WEEK, -(week_no+1), DATE_TRUNC(WEEK, CURRENT_DATE))
+    , DATEADD(WEEK, -(week_no+1-1), DATE_TRUNC(WEEK, CURRENT_DATE))
+  FROM weekly_dates
+  WHERE week_no < 12
+)
+
+SELECT * FROM weekly_dates
+;
+
+
+SELECT DATE_TRUNC(WEEK, CURRENT_DATE)  -- 27/05
+;
+SELECT CURRENT_DATE  -- 28/05
+;
+SELECT DATEADD(WEEK, -1, DATE_TRUNC('WEEK', CURRENT_DATE))  -- 20/05
+;
+SELECT DATEADD(WEEK, -(0), DATE_TRUNC('WEEK', CURRENT_DATE))  -- 27/05
+;

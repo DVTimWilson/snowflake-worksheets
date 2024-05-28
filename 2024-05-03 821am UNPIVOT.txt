@@ -1,0 +1,26 @@
+WITH games_data (team, win, lose, draw) AS (
+    SELECT column1::VARCHAR(10), column2::NUMBER(4,0), column3::NUMBER(4,0), column4::NUMBER(4,0) FROM VALUES
+    ('red', 7, 6, 9)
+    , ('white', 12, 5, 0)
+    , ('blue', 3, 11, 1)
+)
+
+SELECT *
+FROM games_data
+;
+
+WITH games_data (team, win, lose, draw) AS (
+    SELECT column1::VARCHAR(10), column2::NUMBER(4,0), column3::NUMBER(4,0), column4::NUMBER(4,0) FROM VALUES
+    ('red', 7, 6, 9)
+    , ('white', 12, 5, 0)
+    , ('blue', 3, 11, 1)
+)
+
+SELECT team, games_count, game_type
+FROM games_data
+UNPIVOT (
+    games_count FOR game_type IN (
+        win, lose, draw
+    )
+) unpvt
+;

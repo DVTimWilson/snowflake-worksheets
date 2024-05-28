@@ -1,0 +1,35 @@
+WITH purchase_header_data (SALEDATE, PURCHASE_HK, LOYALTY_CARD_HK, CREDITCARDNUMBER) AS (
+    SELECT '2024-01-01', 'P1', 'L1', 'CC1'
+    UNION ALL
+    SELECT '2024-01-02', 'P2', 'L1', 'CC2'
+    UNION ALL
+    SELECT '2024-01-03', 'P3', 'L1', 'CC3'
+    UNION ALL
+    SELECT '2024-01-02', 'P4', 'L2', 'CC3'
+    UNION ALL
+    SELECT '2024-03-01', 'P5', 'L1', 'CC1'
+),
+
+purchase_header_history AS (
+    SELECT 
+        pd.SALEDATE
+        , pd.LOYALTY_CARD_HK
+        , pd.CREDITCARDNUMBER
+        , pd.PURCHASE_HK
+        , xpd.credit_card_count
+    FROM purchase_header_data AS pd
+    INNER JOIN LATERAL (
+        SELECT COUNT(DISTINCT CREDITCARDNUMBER) AS credit_card_count
+        FROM purchase_header_data AS xpd
+        WHERE xpd.LOYALTY_CARD_HK = pd.LOYALTY_CARD_HK
+            AND xpd.SALEDATE <= pd.SALEDATE
+            AND XPD.SALEDATE >= DATEADD(day, -30, pd.SALEDATE)
+        ) AS xpd
+-- WHERE pd.SALEDATE >= start_date
+--     AND pd.SALEDATE <= end_date
+)
+
+SELECT *
+FROM purchase_header_history
+ORDER BY SALEDATE
+;
