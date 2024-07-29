@@ -1,0 +1,63 @@
+https://mangalpardeshi.blogspot.com/2009/04/unpivot-multiple-columns.html
+
+https://www.sqlservercentral.com/forums/topic/unpivoting-multiple-columns
+
+-- Create sample table
+CREATE TABLE Suppliers
+(Id INT,
+Product VARCHAR(500),
+Supplier1 VARCHAR(500),
+Supplier2 VARCHAR(500),
+Supplier3 VARCHAR(500),
+City1 VARCHAR(500),
+City2 VARCHAR(500),
+City3 VARCHAR(500)
+)
+GO
+
+-- Load Sample data
+INSERT INTO Suppliers SELECT
+1, 'Car', 'Tata Motors', 'Bajaj', 'Mahindra', 'Jamshedpur','Pune','Mumbai'
+UNION ALL SELECT
+2, 'Bike', 'Bajaj', 'Hero Honda', 'Suzuki', 'Pune', 'New Delhi', 'Chandigarh'
+UNION ALL SELECT
+3, 'Cycle', 'Hercules', 'Hero', 'Atlas', 'Mumbai', 'Banglaore', 'Pune'
+GO
+
+-- Test sample data
+SELECT Id, Product, Supplier1, Supplier2, Supplier3, City1, City2, City3
+FROM Suppliers
+GO
+
+SELECT Id,
+    Product,
+    ROW_NUMBER()OVER(Partition By Id Order By Suppliers) as SuppId,
+    SupplierName,
+    CityName
+FROM
+(
+SELECT Id, Product, Supplier1, Supplier2, Supplier3, City1, City2, City3
+FROM Suppliers
+) Main
+
+UNPIVOT
+(
+SupplierName FOR Suppliers IN (Supplier1, Supplier2, Supplier3)
+) Sup
+
+UNPIVOT
+(
+CityName For Cities IN (City1, City2, City3)
+) Ct
+
+WHERE RIGHT(Suppliers,1) =  RIGHT(Cities,1)
+
+
+SELECT s.Product, d.Supplier, d.City
+ FROM dbo.Suppliers s
+ CROSS APPLY (
+ SELECT Supplier1, City1 UNION ALL
+ SELECT Supplier2, City2 UNION ALL
+ SELECT Supplier3, City3
+ ) d (Supplier, City)
+GO

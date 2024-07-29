@@ -1,0 +1,592 @@
+USE DATABASE DATAVAULT_SHARED
+;
+create or replace TABLE TRAINING_DATA.DIM_DATE (
+	DIM_TIMESTAMP TIMESTAMP_NTZ(9),
+	DAY_OF_YEAR NUMBER(4,0),
+	DAY_OF_MONTH NUMBER(2,0),
+	MONTH_NUMBER NUMBER(2,0),
+	MONTH_NAME VARCHAR(3),
+	WEEK_OF_YEAR NUMBER(2,0),
+	DIM_DATE DATE,
+	HOUR_OF_TIMESTAMP NUMBER(2,0),
+	DAY_OF_WEEK_AS_NUMBER NUMBER(2,0),
+	DAY_OF_WEEK VARCHAR(3),
+	BUSINESS_WEEK_START_DATE DATE,
+	BUSINESS_WEEK_END_DATE DATE,
+	MONTH_START_DATE DATE,
+	MONTH_END_DATE DATE,
+	MONTHLY_PERIOD NUMBER(38,0)
+)
+;
+CREATE OR REPLACE TABLE TRAINING_DATA.TEST AS
+SELECT *
+FROM TRAINING_DATA.DIM_DATE
+;
+DROP TABLE TRAINING_DATA.TEST
+;
+SELECT *
+FROM DATAVAULT_SHARED.TRAINING_DATA.DIM_DATE
+;
+SELECT *
+FROM DATAVAULT_SHARED.TRAINING_DATA.TEST
+;
+ALTER TABLE TRAINING_DATA.DIM_DATE 
+RENAME TO DIM_CALENDAR
+;
+ALTER TABLE TRAINING_DATA.DIM_CALENDAR
+RENAME TO DIM_DATE 
+;
+create or replace TABLE TRAINING_DATA.HUB_TRUCK (
+	TRUCK_HK BINARY(16),
+	TRUCK_BK VARCHAR(50),
+	LOAD_DATETIME TIMESTAMP_NTZ(9),
+	RECORD_SOURCE VARCHAR(22)
+)
+;
+SELECT *
+FROM TRAINING_DATA.HUB_TRUCK
+;
+create or replace TABLE TRAINING_DATA.SAT_SAP_HR_RP_ZHR_DP_TRUCK (
+	TRUCK_HK BINARY(16),
+	HASHDIFF BINARY(16),
+	MANDT VARCHAR(3),
+	ENDDA VARCHAR(8),
+	BEGDA VARCHAR(8),
+	COST_CENTRE VARCHAR(10),
+	PROFIT_CENTRE VARCHAR(10),
+	ZTEXT VARCHAR(20),
+	ZDB_TRAILER VARCHAR(1),
+	SF_UTC_LANDED_AT TIMESTAMP_TZ(0),
+	ZHR_DP_TRUCK_PK VARCHAR(32),
+	LOAD_DATETIME TIMESTAMP_NTZ(9),
+	RECORD_SOURCE VARCHAR(22)
+)
+;
+SELECT *
+FROM TRAINING_DATA.SAT_TRUCK_PROFIT_CENTRE
+;
+ALTER TABLE TRAINING_DATA.SAT_TRUCK_COST_CENTRE 
+RENAME TO SAT_TRUCK_PROFIT_CENTRE
+;
+ALTER TABLE TRAINING_DATA.SAT_TRUCK_PROFIT_CENTRE 
+RENAME TO SAT_SAP_HR_RP_ZHR_DP_TRUCK
+;
+TRUNCATE TABLE TRAINING_DATA.SAT_TRUCK_PROFIT_CENTRE
+;
+ALTER TABLE TRAINING_DATA.SAT_SAP_HR_RP_ZHR_DP_TRUCK 
+RENAME COLUMN COST_CENTRE TO COST_CENTER
+;
+ALTER TABLE TRAINING_DATA.SAT_SAP_HR_RP_ZHR_DP_TRUCK 
+RENAME COLUMN PROFIT_CENTRE TO PROFIT_CENTER
+;
+SELECT
+    ht.TRUCK_BK                                                                      AS ZTRUCK_NO
+    , st.PROFIT_CENTER
+    , d.MONTHLY_PERIOD                                                               AS PERIOD
+    , d.MONTH_START_DATE                                                             AS MONTH_START_DATE
+    , d.MONTH_END_DATE                                                               AS MONTH_END_DATE
+    , st.BEGDA
+    , st.ENDDA
+    , TO_DATE(st.BEGDA, 'YYYYMMDD')                                                  AS BEGDA_DATE
+    , TO_DATE(st.ENDDA, 'YYYYMMDD')                                                  AS ENDDA_DATE
+    , IFF((BEGDA_DATE <= d.MONTH_END_DATE AND ENDDA_DATE >= d.MONTH_START_DATE),TRUE, FALSE ) AS IN_PERIOD_FLAG
+FROM TRAINING_DATA.HUB_TRUCK AS ht
+LEFT OUTER JOIN TRAINING_DATA.SAT_SAP_HR_RP_ZHR_DP_TRUCK AS st
+ON ht.TRUCK_HK = st.TRUCK_HK
+INNER JOIN (
+    SELECT DISTINCT
+        MONTHLY_PERIOD
+        , MONTH_START_DATE
+        , MONTH_END_DATE
+
+    FROM TRAINING_DATA.DIM_DATE
+) AS d 
+ON 1=1
+   AND PROFIT_CENTER IS NOT NULL
+   AND PROFIT_CENTER != ''
+WHERE IN_PERIOD_FLAG 
+;
+create or replace TABLE TRAINING_DATA.SAT_BW_RP_Z_CV_FI_GEMINI (
+	GL_TB_HK BINARY(16),
+	HASHDIFF BINARY(16),
+	Z_CV_FI_GEMINI_PK VARCHAR(32),
+	TRIAL_BALANCE_REP_Y_N VARCHAR(1),
+	VERSION VARCHAR(3),
+	COMPANY_CODE VARCHAR(4),
+	COST_CENTRE VARCHAR(10),
+	CURRENCY_TYPE VARCHAR(2),
+	GL_ACCOUNT VARCHAR(10),
+	PROFIT_CENTRE VARCHAR(10),
+	FISCAL_YEAR_VARIANT VARCHAR(2),
+	UNIT_OF_MEASURE VARCHAR(3),
+	CONTROLLING_AREA VARCHAR(4),
+	RECORD_TYPE VARCHAR(1),
+	FISCAL_YEAR VARCHAR(4),
+	POSTING_PERIOD VARCHAR(3),
+	CALENDAR_YEAR_QUARTER VARCHAR(5),
+	VALID_FROM VARCHAR(8),
+	HOSPITAL_MATURITY_STATUS1_13MONTHS VARCHAR(1),
+	HOSPITALITY_MATURITY_STATUS4_13MONTHS_PRIOR VARCHAR(1),
+	CONCEPT_MATURITY_STATUS1 VARCHAR(1),
+	CONCEPT_MATURITY_STATUS3_15MONTH_PRIOR VARCHAR(1),
+	STORE_MATURITY_STATUS1_13MONTHS VARCHAR(1),
+	STORE_MATURITY_STATUS4_13MONTHS_PRIOR VARCHAR(1),
+	CONCEPT VARCHAR(10),
+	MUSKET_MATURITY_STATUS1 VARCHAR(1),
+	MUSKET_MATURITY_STATUS4 VARCHAR(1),
+	STATISTICAL_KEY_FIGURE VARCHAR(6),
+	CHART_OF_ACCOUNTS VARCHAR(4),
+	CONCEPT_MATURITY_STATUS2 VARCHAR(1),
+	G_A_REPORTING_CATEGORY VARCHAR(10),
+	STORE_MATURITY_STATUS2_24MONTHS VARCHAR(1),
+	PRODUCT_CONCEPT VARCHAR(10),
+	TAX_LOCATION VARCHAR(10),
+	STORE_MATURITY_STATUS3_24MONTHS_PRIOR VARCHAR(1),
+	QUARTER VARCHAR(1),
+	VALUATION_VIEW VARCHAR(1),
+	PARTNER_COMPANY_NUMBER VARCHAR(6),
+	CURRENCY_KEY_FOR_TRANSACTION_CURRENCY VARCHAR(5),
+	ASSET_TRANSACTION_TYPE VARCHAR(3),
+	CURRENCY_KEY VARCHAR(5),
+	VALUE_TYPE_FOR_REPORTING VARCHAR(3),
+	CONCEPT_MATURITY_STATUS4_13MONTH_PRIOR VARCHAR(1),
+	DISLPAYY_N VARCHAR(1),
+	DATA_SOURCE VARCHAR(20),
+	QUANTITY NUMBER(17,3),
+	STOCK_QUANTITY NUMBER(17,3),
+	SKF_QUANTITY NUMBER(17,3),
+	CUMULATIVE_BALANCE NUMBER(17,2),
+	TOTAL_CREDIT_POSTINGS NUMBER(17,2),
+	SALES_OF_THE_PERIOD NUMBER(17,2),
+	TOTAL_DEBIT_POSTINGS NUMBER(17,2),
+	I_STOP_COUNT NUMBER(17,3),
+	C_STORE_COUNT NUMBER(17,3),
+	I_STOP_COUNT_NODE NUMBER(17,3),
+	C_STORE_COUNT_NODE NUMBER(17,3),
+	STORE_MATURITY_DATE1 VARCHAR(8),
+	STORE_MATURITY_DATE2 VARCHAR(8),
+	STORE_MATURE_PERIOD1 VARCHAR(7),
+	STORE_MATURE_PERIOD2 VARCHAR(7),
+	CONCEPT_MATURITY_DATE1 VARCHAR(8),
+	CONCEPT_MATURITY_DATE2 VARCHAR(8),
+	MUSKET_MATURITY_P1 VARCHAR(7),
+	MUSKET_MATURITY_P2 VARCHAR(7),
+	LANDED_AT TIMESTAMP_TZ(0),
+	STAGED_AT TIMESTAMP_LTZ(9),
+	UPDATED_AT TIMESTAMP_LTZ(9),
+	SF_UTC_LANDED_AT TIMESTAMP_TZ(0),
+	LOAD_DATETIME TIMESTAMP_NTZ(9),
+	RECORD_SOURCE VARCHAR(20)
+)
+;
+ALTER TABLE TRAINING_DATA.SAT_BW_RP_Z_CV_FI_GEMINI 
+RENAME COLUMN COST_CENTRE TO COST_CENTER
+;
+ALTER TABLE TRAINING_DATA.SAT_BW_RP_Z_CV_FI_GEMINI 
+RENAME COLUMN PROFIT_CENTRE TO PROFIT_CENTER
+;
+
+create or replace TABLE TRAINING_DATA.SAT_BW_RP_CV_GL_ACCOUNT_HIERARCHY_FLAT_STRUCTURE (
+	GL_COA_HK BINARY(16),
+	HASHDIFF BINARY(16),
+	CHRT_ACCTS VARCHAR(4),
+	CV_GL_ACCOUNT_HIERARCHY_FLAT_STRUCTURE_PK VARCHAR(32),
+	GL_ACCOUNT___T VARCHAR(20),
+	H_HIENM VARCHAR(30),
+	H_PARENTID VARCHAR(8),
+	H_TLEVEL VARCHAR(2),
+	LANDED_AT TIMESTAMP_TZ(0),
+	SF_UTC_LANDED_AT TIMESTAMP_TZ(0),
+	STAGED_AT TIMESTAMP_LTZ(9),
+	UPDATED_AT TIMESTAMP_LTZ(9),
+	ZCOUNTER NUMBER(17,3),
+	ZHIEID VARCHAR(25),
+	ZNODENAME VARCHAR(32),
+	LOAD_DATETIME TIMESTAMP_NTZ(9),
+	RECORD_SOURCE VARCHAR(44)
+)
+;
+create or replace TABLE TRAINING_DATA.HUB_GL_TB (
+	GL_TB_HK BINARY(16),
+	GL_TB_BK VARCHAR(31),
+	LOAD_DATETIME TIMESTAMP_NTZ(9),
+	RECORD_SOURCE VARCHAR(20)
+)
+;
+create or replace TABLE TRAINING_DATA.HUB_GL_COA (
+	GL_COA_HK BINARY(16),
+	GL_COA_BK VARCHAR(44),
+	LOAD_DATETIME TIMESTAMP_NTZ(9),
+	RECORD_SOURCE VARCHAR(44)
+)
+;
+COPY INTO TRAINING_DATA.HUB_GL_TB FROM '@%HUB_GL_TB/hub_gl_tb.csv' file_format = (type=CSV SKIP_HEADER = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"')
+;
+SELECT COUNT(*)
+FROM TRAINING_DATA.HUB_GL_TB
+;
+REMOVE @%HUB_GL_TB
+;
+COPY INTO TRAINING_DATA.SAT_BW_RP_Z_CV_FI_GEMINI FROM '@%SAT_BW_RP_Z_CV_FI_GEMINI/sat_bw_rp_z_cv_fi_gemini.csv' file_format = (type=CSV SKIP_HEADER = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"')
+;
+SELECT COUNT(*)
+FROM TRAINING_DATA.SAT_BW_RP_Z_CV_FI_GEMINI
+;
+REMOVE @%SAT_BW_RP_Z_CV_FI_GEMINI
+;
+SELECT *
+FROM TRAINING_DATA.SAT_BW_RP_Z_CV_FI_GEMINI
+LIMIT 10
+;
+
+
+
+WITH
+
+latest_record_in_sat_zhr_dp_truck AS (
+
+SELECT
+    *
+FROM
+    TRAINING_DATA.sat_sap_hr_rp_zhr_dp_truck
+qualify
+row_number() over (partition by TRUCK_HK, PROFIT_CENTER, BEGDA  order by LOAD_DATETIME desc) = 1
+
+)
+
+,
+
+records_in_sat_gemini AS (
+
+SELECT
+*
+, SUM(SALES_OF_THE_PERIOD) OVER(PARTITION BY FISCAL_YEAR, POSTING_PERIOD, GL_ACCOUNT)  AS SALES_OF_THE_PERIOD_PER_GL_ACCOUNT
+FROM
+    TRAINING_DATA.sat_bw_rp_z_cv_fi_gemini
+
+)
+
+,
+
+latest_record_in_sat_hierarchy AS (
+
+SELECT
+*
+FROM
+    TRAINING_DATA.sat_bw_rp_cv_gl_account_hierarchy_flat_structure
+qualify
+    row_number() over (partition by GL_COA_HK order by LOAD_DATETIME desc) = 1
+
+)
+
+,
+
+step_1 AS (
+
+SELECT
+      ht.TRUCK_BK                                                                    AS ZTRUCK_NO
+    , st.PROFIT_CENTER                                                               AS PROFIT_CENTER
+    , d.MONTHLY_PERIOD                                                               AS PERIOD
+    , d.MONTH_START_DATE                                                             AS MONTH_START_DATE
+    , d.MONTH_END_DATE                                                               AS MONTH_END_DATE
+    , st.BEGDA
+    , st.ENDDA
+    , TO_DATE(st.BEGDA, 'YYYYMMDD')                                                  AS BEGDA_DATE
+    , TO_DATE(st.ENDDA, 'YYYYMMDD')                                                  AS ENDDA_DATE
+    , IFF((BEGDA_DATE <= d.MONTH_END_DATE AND ENDDA_DATE >= d.MONTH_START_DATE),TRUE, FALSE ) AS IN_PERIOD_FLAG
+
+FROM TRAINING_DATA.hub_truck AS ht
+LEFT OUTER JOIN latest_record_in_sat_zhr_dp_truck AS st
+ON ht.TRUCK_HK = st.TRUCK_HK
+INNER JOIN (
+    SELECT DISTINCT
+          MONTHLY_PERIOD
+        , MONTH_START_DATE
+        , MONTH_END_DATE
+
+    FROM TRAINING_DATA.DIM_DATE
+) AS d
+ON 1=1
+   AND PROFIT_CENTER IS NOT NULL
+WHERE IN_PERIOD_FLAG
+
+)
+
+,
+
+step_2 AS (
+
+SELECT
+    *
+    , IFF(s1.ENDDA_DATE >= s1.MONTH_END_DATE, s1.MONTH_END_DATE, s1. ENDDA_DATE) AS END_DATE_IN_PERIOD
+    , IFF(s1.BEGDA_DATE <= s1.MONTH_START_DATE, s1.MONTH_START_DATE, s1.BEGDA_DATE) AS BEG_DATE_IN_PERIOD
+    , DATEDIFF(DAY, BEG_DATE_IN_PERIOD , END_DATE_IN_PERIOD ) + 1 AS NO_OF_DAYS_INCLUDED
+
+FROM step_1 AS s1
+
+)
+
+,
+
+step_3 AS (
+
+SELECT
+*
+, SUM(s2.NO_OF_DAYS_INCLUDED) OVER (PARTITION BY s2.PROFIT_CENTER, s2.PERIOD ) AS TOTAL_DAYS_OF_ALL_TRUCKS_IN_PROFIT_CENTER_IN_PERIOD
+, s2.NO_OF_DAYS_INCLUDED / TOTAL_DAYS_OF_ALL_TRUCKS_IN_PROFIT_CENTER_IN_PERIOD AS ALLOCATION
+FROM step_2 AS s2
+
+)
+
+,
+
+step_4 AS (
+
+SELECT
+  s3.PERIOD
+, s3.PROFIT_CENTER
+, s3.ZTRUCK_NO
+, SPLIT_PART(hub_gl_tb.GL_TB_BK, '||', 3 ) AS GL_ACCOUNT
+, latest_sat_hierarchy.GL_ACCOUNT___T
+, s3.ALLOCATION
+, sat_gemini.SALES_OF_THE_PERIOD
+, (s3.ALLOCATION * sat_gemini.SALES_OF_THE_PERIOD * -1 )::NUMBER(17,2)  AS ALLOCATED_SALES_OF_THE_PERIOD
+, sat_gemini.SALES_OF_THE_PERIOD_PER_GL_ACCOUNT
+, SUM(s3.ALLOCATION * sat_gemini.SALES_OF_THE_PERIOD * -1 ) OVER(PARTITION BY s3.PERIOD, GL_ACCOUNT)  AS ALLOCATED_SALES_OF_THE_PERIOD_PER_GL_ACCOUNT
+FROM step_3 AS s3
+
+INNER JOIN TRAINING_DATA.hub_gl_tb AS hub_gl_tb
+    ON s3.PERIOD = SUBSTRING(SPLIT_PART(hub_gl_tb.GL_TB_BK, '||', 1 ), 1, 4) || SUBSTRING(SPLIT_PART(hub_gl_tb.GL_TB_BK, '||', 1 ), 6, 2)
+    AND s3.PROFIT_CENTER = SPLIT_PART(hub_gl_tb.GL_TB_BK, '||', 2 )
+    AND SUBSTRING(SPLIT_PART(GL_TB_BK, '||', 1 ), 6, 2 ) NOT IN ('13','14') --2660468
+
+INNER JOIN records_in_sat_gemini AS sat_gemini
+    ON hub_gl_tb.GL_TB_HK = sat_gemini.GL_TB_HK --2660468
+
+INNER JOIN TRAINING_DATA.hub_gl_coa AS hub_gl_coa
+    ON SPLIT_PART(hub_gl_tb.GL_TB_BK, '||', 3 ) = SPLIT_PART(hub_gl_coa.GL_COA_BK, '||', 1 )
+
+INNER JOIN latest_record_in_sat_hierarchy AS latest_sat_hierarchy
+    ON hub_gl_coa.GL_COA_HK = latest_sat_hierarchy.GL_COA_HK
+
+)
+
+,
+
+step_5 AS (
+
+SELECT
+  s4.PERIOD
+, s4.ZTRUCK_NO
+, s4.GL_ACCOUNT
+, ANY_VALUE(s4.GL_ACCOUNT___T) AS GL_ACCOUNT___T
+, SUM(s4.ALLOCATED_SALES_OF_THE_PERIOD) AS ALLOCATED_SALES_OF_THE_PERIOD_PER_GL_ACCOUNT_PER_TRUCK
+, ANY_VALUE(s4.SALES_OF_THE_PERIOD_PER_GL_ACCOUNT) AS SALES_OF_THE_PERIOD_PER_GL_ACCOUNT
+, ANY_VALUE(s4.ALLOCATED_SALES_OF_THE_PERIOD_PER_GL_ACCOUNT) AS ALLOCATED_SALES_OF_THE_PERIOD_PER_GL_ACCOUNT
+FROM step_4 AS s4
+GROUP BY PERIOD, ZTRUCK_NO, GL_ACCOUNT
+
+)
+
+,
+
+step_5_unallocated_trucks AS (
+
+SELECT
+  s5.PERIOD
+, 'UNALLOCATED'::VARCHAR(50) AS ZTRUCK_NO
+, s5.GL_ACCOUNT
+, ANY_VALUE(s5.GL_ACCOUNT___T) AS GL_ACCOUNT___T
+, (ANY_VALUE(s5.ALLOCATED_SALES_OF_THE_PERIOD_PER_GL_ACCOUNT) + ANY_VALUE(s5.SALES_OF_THE_PERIOD_PER_GL_ACCOUNT)) * -1 AS ALLOCATED_SALES_OF_THE_PERIOD_PER_GL_ACCOUNT_PER_TRUCK
+, (ANY_VALUE(s5.SALES_OF_THE_PERIOD_PER_GL_ACCOUNT))  AS SALES_OF_THE_PERIOD_PER_GL_ACCOUNT
+, (ANY_VALUE(s5.ALLOCATED_SALES_OF_THE_PERIOD_PER_GL_ACCOUNT)) AS ALLOCATED_SALES_OF_THE_PERIOD_PER_GL_ACCOUNT
+
+FROM step_5 AS s5
+GROUP BY PERIOD, GL_ACCOUNT
+
+)
+
+,
+
+step_6 AS (
+
+    SELECT * FROM step_5
+    UNION ALL
+    SELECT * FROM step_5_unallocated_trucks
+
+)
+
+SELECT *
+FROM step_6
+WHERE ALLOCATED_SALES_OF_THE_PERIOD_PER_GL_ACCOUNT_PER_TRUCK != 0
+;
+
+
+
+SET start_date = '2010-01-01';
+SET end_date = '2050-12-31';
+
+CREATE OR REPLACE TABLE TRAINING_DATA.DIM_CALENDAR AS
+(
+WITH cte_dates (dim_date) AS (
+  SELECT TO_DATE($start_date)
+  UNION ALL
+  SELECT TO_DATE(DATEADD(day, 1, dim_date)) --or week, month, week, hour, minute instead of day
+  FROM  cte_dates
+  WHERE dim_date < TO_DATE($end_date)
+),
+
+years AS (
+    SELECT DATE_PART(year, dim_date) AS cal_year
+    FROM cte_dates
+    GROUP BY cal_year
+),
+
+federal_holidays AS (
+SELECT
+        DATE_FROM_PARTS(cal_year, 1, 1) AS new_years_day
+        ,DATEADD(
+			day,
+			MOD( 7 + 1 - DATE_PART('dayofweek_iso', DATE_TRUNC('month', DATE_FROM_PARTS(cal_year, 1, 1)) ), 7) + 14,
+			DATE_TRUNC('month', DATE_FROM_PARTS(cal_year, 1, 1))
+			) AS birthday_of_martin_luther_king_jr
+        ,DATEADD(
+			day,
+			MOD( 7 + 1 - DATE_PART('dayofweek_iso', DATE_TRUNC('month', DATE_FROM_PARTS(cal_year, 2, 1)) ), 7) + 14,
+			DATE_TRUNC('month', DATE_FROM_PARTS(cal_year, 2, 1))
+			) AS washingtons_birthday
+        ,DATEADD(
+			day,
+			MOD( 7 + 1 - DATE_PART('dayofweek_iso', DATE_TRUNC('month', DATE_FROM_PARTS(cal_year, 6, 1)) ), 7) - 7,
+			DATE_TRUNC('month', DATE_FROM_PARTS(cal_year, 6, 1))
+			) AS memorial_day
+        ,CASE WHEN cal_year >= 2021 THEN
+            DATE_FROM_PARTS(cal_year, 6, 19)
+			ELSE NULL
+         END AS juneteenth
+        ,DATE_FROM_PARTS(cal_year, 7, 4) AS independence_day
+        ,DATEADD(
+			day,
+			MOD( 7 + 1 - DATE_PART('dayofweek_iso', DATE_TRUNC('month', DATE_FROM_PARTS(cal_year, 9, 1)) ), 7),
+			DATE_TRUNC('month', DATE_FROM_PARTS(cal_year, 9, 1))
+			) AS labor_day
+        ,DATEADD(
+			day,
+			MOD( 7 + 1 - DATE_PART('dayofweek_iso', DATE_TRUNC('month', DATE_FROM_PARTS(cal_year, 10, 1)) ), 7) + 7,
+			DATE_TRUNC('month', DATE_FROM_PARTS(cal_year, 10, 1))
+			) AS columbus_day
+        ,DATE_FROM_PARTS(cal_year, 11, 11) AS veterans_day
+        ,DATEADD(
+			day,
+			MOD( 7 + 4 - DATE_PART('dayofweek_iso', DATE_TRUNC('month', DATE_FROM_PARTS(cal_year, 11, 1)) ), 7) + 21,
+			DATE_TRUNC('month', DATE_FROM_PARTS(cal_year, 11, 1))
+			) AS thanksgiving_day
+        ,DATE_FROM_PARTS(cal_year, 12, 25) AS christmas_day
+    FROM years
+),
+
+federal_holidays_observed AS (
+    SELECT
+        CASE WHEN DAYNAME(new_years_day) = 'Sat' THEN DATEADD(day, -1, new_years_day) WHEN DAYNAME(new_years_day) = 'Sun' THEN DATEADD(day, 1, new_years_day) ELSE new_years_day END AS new_years_day
+        ,DAYNAME(CASE WHEN DAYNAME(new_years_day) = 'Sat' THEN DATEADD(day, -1, new_years_day) WHEN DAYNAME(new_years_day) = 'Sun' THEN DATEADD(day, 1, new_years_day) ELSE new_years_day END) AS new_years_day_test
+        ,birthday_of_martin_luther_king_jr
+        ,washingtons_birthday
+        ,memorial_day
+        ,CASE WHEN DAYNAME(juneteenth) = 'Sat' THEN DATEADD(day, -1, juneteenth) WHEN DAYNAME(juneteenth) = 'Sun' THEN DATEADD(day, 1, juneteenth) ELSE juneteenth END AS juneteenth
+        ,DAYNAME(CASE WHEN DAYNAME(juneteenth) = 'Sat' THEN DATEADD(day, -1, juneteenth) WHEN DAYNAME(juneteenth) = 'Sun' THEN DATEADD(day, 1, juneteenth) ELSE juneteenth END) AS juneteenth_test
+        ,CASE WHEN DAYNAME(independence_day) = 'Sat' THEN DATEADD(day, -1, independence_day) WHEN DAYNAME(independence_day) = 'Sun' THEN DATEADD(day, 1, independence_day) ELSE independence_day END AS independence_day
+        ,DAYNAME(CASE WHEN DAYNAME(independence_day) = 'Sat' THEN DATEADD(day, -1, independence_day) WHEN DAYNAME(independence_day) = 'Sun' THEN DATEADD(day, 1, independence_day) ELSE independence_day END) AS independence_day_test
+        ,labor_day
+        ,columbus_day
+        ,CASE WHEN DAYNAME(veterans_day) = 'Sat' THEN DATEADD(day, -1, veterans_day) WHEN DAYNAME(veterans_day) = 'Sun' THEN DATEADD(day, 1, veterans_day) ELSE veterans_day END AS veterans_day
+        ,DAYNAME(CASE WHEN DAYNAME(veterans_day) = 'Sat' THEN DATEADD(day, -1, veterans_day) WHEN DAYNAME(veterans_day) = 'Sun' THEN DATEADD(day, 1, veterans_day) ELSE veterans_day END) AS veterans_day_test
+        ,thanksgiving_day
+        ,CASE WHEN DAYNAME(christmas_day) = 'Sat' THEN DATEADD(day, -1, christmas_day) WHEN DAYNAME(christmas_day) = 'Sun' THEN DATEADD(day, 1, christmas_day) ELSE christmas_day END AS christmas_day
+        ,DAYNAME(CASE WHEN DAYNAME(christmas_day) = 'Sat' THEN DATEADD(day, -1, christmas_day) WHEN DAYNAME(christmas_day) = 'Sun' THEN DATEADD(day, 1, christmas_day) ELSE christmas_day END) AS christmas_day_test
+    FROM federal_holidays
+),
+
+federal_holidays_unpivot AS (
+    SELECT holiday_date, holiday_dates AS holiday_name
+    FROM
+    (
+    SELECT
+        new_years_day
+        ,birthday_of_martin_luther_king_jr
+        ,washingtons_birthday
+        ,memorial_day
+        ,juneteenth
+        ,independence_day
+        ,labor_day
+        ,columbus_day
+        ,veterans_day
+        ,thanksgiving_day
+        ,christmas_day
+    FROM federal_holidays_observed
+    ) AS unpivot_source
+    UNPIVOT
+    (
+        holiday_date FOR holiday_dates IN
+            (
+                new_years_day
+                ,birthday_of_martin_luther_king_jr
+                ,washingtons_birthday
+                ,memorial_day
+                ,juneteenth
+                ,independence_day
+                ,labor_day
+                ,columbus_day
+                ,veterans_day
+                ,thanksgiving_day
+                ,christmas_day
+            )
+    ) AS unpivot
+),
+
+calendar_dim AS (
+    SELECT 
+        dim_date
+        ,DATE_TRUNC(week, dim_date) AS week_commencing_date
+        ,TO_VARCHAR(dim_date, 'YYYYMM') AS year_month
+        ,CASE WHEN DAYNAME(dim_date) IN ('Sat', 'Sun') THEN 0
+            WHEN holiday_date IS NOT NULL THEN 0
+            ELSE 1
+        END AS working_day_flag
+--        ,ROW_NUMBER() OVER(ORDER BY dim_date) AS working_day_index
+        ,SUM(working_day_flag) OVER(ORDER BY dim_date) AS working_day_index
+        ,holiday_name
+        ,DECODE(DAYNAME(dim_date),
+                     'Mon', 'Monday', 
+                     'Tue', 'Tuesday', 
+                     'Wed', 'Wednesday', 
+                     'Thu', 'Thursday',
+                     'Fri', 'Friday', 
+                     'Sat', 'Saturday', 
+                     'Sun', 'Sunday')  AS day_name
+        ,DAYNAME(dim_date) AS day_name_abv
+        ,DAYOFWEEK(dim_date) AS day_of_week
+        ,MONTH(dim_date) AS month_num
+        ,CONCAT(YEAR(dim_date),TO_CHAR(dim_date,'MM')) AS month_id
+        ,TO_CHAR(dim_date,'MMMM') AS month_name
+        ,MONTHNAME(dim_date) AS month_name_abv
+        ,DATEADD(day, 1,LAST_DAY( DATEADD(MONTH,-1,dim_date),MONTH)) as first_day_month
+        ,LAST_DAY(dim_date, MONTH) AS last_day_month
+        ,QUARTER(dim_date) AS quarter_num
+        ,CONCAT(YEAR(dim_date),'Q',QUARTER(dim_date)) AS quarter_id
+        ,DATEADD(day, 1,LAST_DAY( DATEADD(quarter,-1,dim_date),QUARTER)) as first_day_quarter
+        ,LAST_DAY(dim_date,QUARTER) AS last_day_quarter
+        ,YEAR(dim_date) AS year
+    FROM cte_dates
+    LEFT OUTER JOIN federal_holidays_unpivot
+    ON dim_date = holiday_date
+)
+
+SELECT *
+FROM calendar_dim
+ORDER BY dim_date
+)
+;
+
+SELECT *
+FROM TRAINING_DATA.DIM_CALENDAR
+;

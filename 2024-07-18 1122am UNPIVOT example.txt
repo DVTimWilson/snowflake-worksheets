@@ -1,0 +1,115 @@
+WITH suppliers (id, product, supplier1, supplier2, supplier3, city1, city2, city3) AS (
+    SELECT column1::VARCHAR(50), column2::VARCHAR(50), column3::VARCHAR(50), column4::VARCHAR(50), column5::VARCHAR(50), column6::VARCHAR(50), column7::VARCHAR(50), column8::VARCHAR(50) FROM VALUES
+    (1, 'Car', 'Tata Motors', 'Bajaj', 'Mahindra', 'Jamshedpur','Pune','Mumbai')
+    , (2, 'Bike', 'Bajaj', 'Hero Honda', 'Suzuki', 'Pune', 'New Delhi', 'Chandigarh')
+    , (3, 'Cycle', 'Hercules', 'Hero', 'Atlas', 'Mumbai', 'Bangalore', 'Pune')
+)
+
+SELECT * FROM suppliers
+;
+
+WITH suppliers (id, product, supplier1, supplier2, supplier3, city1, city2, city3) AS (
+    SELECT column1::VARCHAR(50), column2::VARCHAR(50), column3::VARCHAR(50), column4::VARCHAR(50), column5::VARCHAR(50), column6::VARCHAR(50), column7::VARCHAR(50), column8::VARCHAR(50) FROM VALUES
+    (1, 'Car', 'Tata Motors', 'Bajaj', 'Mahindra', 'Jamshedpur','Pune','Mumbai')
+    , (2, 'Bike', 'Bajaj', 'Hero Honda', 'Suzuki', 'Pune', 'New Delhi', 'Chandigarh')
+    , (3, 'Cycle', 'Hercules', 'Hero', 'Atlas', 'Mumbai', 'Bangalore', 'Pune')
+)
+
+SELECT id, product, RIGHT(suppliers,1) AS groupid, suppliername, cityname
+FROM
+(
+SELECT id, product, supplier1, supplier2, supplier3, city1, city2, city3
+FROM suppliers
+) main
+
+UNPIVOT
+(
+suppliername FOR suppliers IN (supplier1, supplier2, Supplier3)
+) supplierunpivot
+
+UNPIVOT
+(
+cityname For cities IN (city1, city2, city3)
+) cityunpivot
+
+WHERE RIGHT(suppliers,1) = RIGHT(cities,1)
+ORDER BY id, groupid
+;
+
+WITH suppliers (id, product, supplier1, supplier2, supplier3, city1, city2, city3) AS (
+    SELECT column1::VARCHAR(50), column2::VARCHAR(50), column3::VARCHAR(50), column4::VARCHAR(50), column5::VARCHAR(50), column6::VARCHAR(50), column7::VARCHAR(50), column8::VARCHAR(50) FROM VALUES
+    (1, 'Car', 'Tata Motors', 'Bajaj', 'Mahindra', 'Jamshedpur','Pune','Mumbai')
+    , (2, 'Bike', 'Bajaj', 'Hero Honda', 'Suzuki', 'Pune', 'New Delhi', 'Chandigarh')
+    , (3, 'Cycle', 'Hercules', 'Hero', 'Atlas', 'Mumbai', 'Bangalore', 'Pune')
+)
+
+SELECT s.id
+    , s.product
+    , d.id AS groupid
+    , CASE WHEN d.id = 1 THEN s.supplier1
+        WHEN d.id = 2 THEN s.supplier2
+        WHEN d.id = 3 THEN s.supplier3
+    END AS suppliername
+    , CASE WHEN d.id = 1 THEN s.city1
+        WHEN d.id = 2 THEN s.city2
+        WHEN d.id = 3 THEN s.city3
+    END AS cityname
+FROM suppliers s
+CROSS JOIN (
+    VALUES
+        (1)
+        , (2)
+        , (3)
+     ) d (id)
+ORDER BY s.id, d.id
+;
+
+WITH suppliers (id, product, supplier1, supplier2, supplier3, city1, city2, city3) AS (
+    SELECT column1::VARCHAR(50), column2::VARCHAR(50), column3::VARCHAR(50), column4::VARCHAR(50), column5::VARCHAR(50), column6::VARCHAR(50), column7::VARCHAR(50), column8::VARCHAR(50) FROM VALUES
+    (1, 'Car', 'Tata Motors', 'Bajaj', 'Mahindra', 'Jamshedpur','Pune','Mumbai')
+    , (2, 'Bike', 'Bajaj', 'Hero Honda', 'Suzuki', 'Pune', 'New Delhi', 'Chandigarh')
+    , (3, 'Cycle', 'Hercules', 'Hero', 'Atlas', 'Mumbai', 'Bangalore', 'Pune')
+)
+
+SELECT s.id
+, s.product
+, d.groupid
+, d.suppliername
+, d.cityname
+FROM suppliers s
+CROSS JOIN (
+    SELECT id, 1, supplier1, city1 FROM suppliers
+    UNION ALL
+    SELECT id, 2, supplier2, city2 FROM suppliers
+    UNION ALL
+    SELECT id, 3, supplier3, city3 FROM suppliers
+) d (id, groupid, suppliername, cityname)
+WHERE s.id = d.id
+ORDER BY s.id, d.groupid
+;
+
+WITH suppliers (id, product, supplier1, supplier2, supplier3, city1, city2, city3) AS (
+    SELECT column1::VARCHAR(50), column2::VARCHAR(50), column3::VARCHAR(50), column4::VARCHAR(50), column5::VARCHAR(50), column6::VARCHAR(50), column7::VARCHAR(50), column8::VARCHAR(50) FROM VALUES
+    (1, 'Car', 'Tata Motors', 'Bajaj', 'Mahindra', 'Jamshedpur','Pune','Mumbai')
+    , (2, 'Bike', 'Bajaj', 'Hero Honda', 'Suzuki', 'Pune', 'New Delhi', 'Chandigarh')
+    , (3, 'Cycle', 'Hercules', 'Hero', 'Atlas', 'Mumbai', 'Bangalore', 'Pune')
+)
+
+SELECT s.id
+, s.product
+, d.groupid
+, d.suppliername
+, d.cityname
+FROM suppliers s
+INNER JOIN (
+    SELECT id, 1, supplier1, city1 FROM suppliers
+    UNION ALL
+    SELECT id, 2, supplier2, city2 FROM suppliers
+    UNION ALL
+    SELECT id, 3, supplier3, city3 FROM suppliers
+) d (id, groupid, suppliername, cityname)
+ON s.id = d.id
+ORDER BY s.id, d.groupid
+;
+
+

@@ -1,0 +1,229 @@
+WITH cte_timestamps (dim_timestamp) AS (
+  SELECT TO_TIMESTAMP(TO_TIMESTAMP('2018-01-01 00:00:00.000000'))
+  UNION ALL
+  SELECT TO_TIMESTAMP(DATEADD(hour, 1, dim_timestamp)) --or week, month, week, hour, minute, second instead of day
+  FROM  cte_timestamps
+  WHERE dim_timestamp < TO_TIMESTAMP(TO_TIMESTAMP('2034-01-01 00:00:00.000000'))
+),
+   CALENDAR AS (
+        SELECT
+          a.dim_timestamp AS DATE_DIMENSION_TIMESTAMP
+        , DAYOFYEAR(a.dim_timestamp) AS DAY_OF_YEAR
+        , DAYOFMONTH(a.dim_timestamp) AS DAY_OF_MONTH
+        , MONTH(a.dim_timestamp) AS MONTH_NUMBER
+        , MONTHNAME(a.dim_timestamp) AS MONTH_NAME
+        , WEEKOFYEAR(a.dim_timestamp)  AS WEEK_OF_YEAR
+        , TO_DATE(a.dim_timestamp) AS DATE
+        , HOUR(TO_TIME(a.dim_timestamp)) AS HOUR
+        , DAYOFWEEK(a.dim_timestamp) AS DAY_OF_WEEK_AS_NUMBER
+        , DAYNAME(a.dim_timestamp) AS DAY_OF_WEEK
+        , DATE_TRUNC('WEEK', a.dim_timestamp::date) AS BUSINESS_WEEK_START_DATE
+        , LAST_DAY(a.dim_timestamp, 'WEEK') AS BUSINESS_WEEK_END_DATE
+        , DATE_TRUNC('MONTH', a.dim_timestamp::date) AS MONTH_START_DATE
+        , LAST_DAY(a.dim_timestamp, 'MONTH') AS MONTH_END_DATE
+        FROM
+            cte_timestamps AS a ORDER BY a.dim_timestamp ASC
+    )
+SELECT
+          DATE_DIMENSION_TIMESTAMP
+        , DAY_OF_YEAR
+        , DAY_OF_MONTH
+        , MONTH_NUMBER
+        , MONTH_NAME
+        , WEEK_OF_YEAR
+        , "DATE"
+        , "HOUR"
+        , DAY_OF_WEEK_AS_NUMBER
+        , DAY_OF_WEEK
+        , BUSINESS_WEEK_START_DATE
+        , BUSINESS_WEEK_END_DATE
+        , MONTH_START_DATE
+        , MONTH_END_DATE
+        , CONCAT(TO_CHAR(date, 'YYYY'),TO_CHAR(date, 'MM'))::number AS MONTHLY_PERIOD
+FROM CALENDAR
+ORDER BY DATE_DIMENSION_TIMESTAMP
+;
+
+
+
+WITH
+
+latest_record_in_sat_zhr_dp_truck AS (
+
+SELECT
+    *
+FROM
+    TRAINING_DATA.sat_sap_hr_rp_zhr_dp_truck
+qualify
+row_number() over (partition by TRUCK_HK, PROFIT_CENTER, BEGDA  order by LOAD_DATETIME desc) = 1
+
+)
+
+,
+
+records_in_sat_gemini AS (
+
+SELECT
+*
+, SUM(SALES_OF_THE_PERIOD) OVER(PARTITION BY FISCAL_YEAR, POSTING_PERIOD, GL_ACCOUNT)  AS SALES_OF_THE_PERIOD_PER_GL_ACCOUNT
+FROM
+    TRAINING_DATA.sat_bw_rp_z_cv_fi_gemini
+
+)
+
+,
+
+latest_record_in_sat_hierarchy AS (
+
+SELECT
+*
+FROM
+    TRAINING_DATA.sat_bw_rp_cv_gl_account_hierarchy_flat_structure
+qualify
+    row_number() over (partition by GL_COA_HK order by LOAD_DATETIME desc) = 1
+
+)
+
+,
+
+step_1 AS (
+
+SELECT
+      ht.TRUCK_BK                                                                    AS ZTRUCK_NO
+    , st.PROFIT_CENTER                                                               AS PROFIT_CENTER
+    , d.MONTHLY_PERIOD                                                               AS PERIOD
+    , d.MONTH_START_DATE                                                             AS MONTH_START_DATE
+    , d.MONTH_END_DATE                                                               AS MONTH_END_DATE
+    , st.BEGDA
+    , st.ENDDA
+    , TO_DATE(st.BEGDA, 'YYYYMMDD')                                                  AS BEGDA_DATE
+    , TO_DATE(st.ENDDA, 'YYYYMMDD')                                                  AS ENDDA_DATE
+    , IFF((BEGDA_DATE <= d.MONTH_END_DATE AND ENDDA_DATE >= d.MONTH_START_DATE),TRUE, FALSE ) AS IN_PERIOD_FLAG
+
+FROM TRAINING_DATA.hub_truck AS ht
+LEFT OUTER JOIN latest_record_in_sat_zhr_dp_truck AS st
+ON ht.TRUCK_HK = st.TRUCK_HK
+INNER JOIN (
+    SELECT DISTINCT
+          MONTHLY_PERIOD
+        , MONTH_START_DATE
+        , MONTH_END_DATE
+
+    FROM TRAINING_DATA.DIM_DATE
+) AS d
+ON 1=1
+   AND PROFIT_CENTER IS NOT NULL
+WHERE IN_PERIOD_FLAG
+
+)
+
+,
+
+step_2 AS (
+
+SELECT
+    *
+    , IFF(s1.ENDDA_DATE >= s1.MONTH_END_DATE, s1.MONTH_END_DATE, s1. ENDDA_DATE) AS END_DATE_IN_PERIOD
+    , IFF(s1.BEGDA_DATE <= s1.MONTH_START_DATE, s1.MONTH_START_DATE, s1.BEGDA_DATE) AS BEG_DATE_IN_PERIOD
+    , DATEDIFF(DAY, BEG_DATE_IN_PERIOD , END_DATE_IN_PERIOD ) + 1 AS NO_OF_DAYS_INCLUDED
+
+FROM step_1 AS s1
+
+)
+
+,
+
+step_3 AS (
+
+SELECT
+*
+, SUM(s2.NO_OF_DAYS_INCLUDED) OVER (PARTITION BY s2.PROFIT_CENTER, s2.PERIOD ) AS TOTAL_DAYS_OF_ALL_TRUCKS_IN_PROFIT_CENTER_IN_PERIOD
+, s2.NO_OF_DAYS_INCLUDED / TOTAL_DAYS_OF_ALL_TRUCKS_IN_PROFIT_CENTER_IN_PERIOD AS ALLOCATION
+FROM step_2 AS s2
+
+)
+
+,
+
+step_4 AS (
+
+SELECT
+  s3.PERIOD
+, s3.PROFIT_CENTER
+, s3.ZTRUCK_NO
+, SPLIT_PART(hub_gl_tb.GL_TB_BK, '||', 3 ) AS GL_ACCOUNT
+, latest_sat_hierarchy.GL_ACCOUNT___T
+, s3.ALLOCATION
+, sat_gemini.SALES_OF_THE_PERIOD
+, (s3.ALLOCATION * sat_gemini.SALES_OF_THE_PERIOD * -1 )::NUMBER(17,2)  AS ALLOCATED_SALES_OF_THE_PERIOD
+, sat_gemini.SALES_OF_THE_PERIOD_PER_GL_ACCOUNT
+, SUM(s3.ALLOCATION * sat_gemini.SALES_OF_THE_PERIOD * -1 ) OVER(PARTITION BY s3.PERIOD, GL_ACCOUNT)  AS ALLOCATED_SALES_OF_THE_PERIOD_PER_GL_ACCOUNT
+FROM step_3 AS s3
+
+INNER JOIN TRAINING_DATA.hub_gl_tb AS hub_gl_tb
+    ON s3.PERIOD = SUBSTRING(SPLIT_PART(hub_gl_tb.GL_TB_BK, '||', 1 ), 1, 4) || SUBSTRING(SPLIT_PART(hub_gl_tb.GL_TB_BK, '||', 1 ), 6, 2)
+    AND s3.PROFIT_CENTER = SPLIT_PART(hub_gl_tb.GL_TB_BK, '||', 2 )
+    AND SUBSTRING(SPLIT_PART(GL_TB_BK, '||', 1 ), 6, 2 ) NOT IN ('13','14') --2660468
+
+INNER JOIN records_in_sat_gemini AS sat_gemini
+    ON hub_gl_tb.GL_TB_HK = sat_gemini.GL_TB_HK --2660468
+
+INNER JOIN TRAINING_DATA.hub_gl_coa AS hub_gl_coa
+    ON SPLIT_PART(hub_gl_tb.GL_TB_BK, '||', 3 ) = SPLIT_PART(hub_gl_coa.GL_COA_BK, '||', 1 )
+
+INNER JOIN latest_record_in_sat_hierarchy AS latest_sat_hierarchy
+    ON hub_gl_coa.GL_COA_HK = latest_sat_hierarchy.GL_COA_HK
+
+)
+
+,
+
+step_5 AS (
+
+SELECT
+  s4.PERIOD
+, s4.ZTRUCK_NO
+, s4.GL_ACCOUNT
+, ANY_VALUE(s4.GL_ACCOUNT___T) AS GL_ACCOUNT___T
+, SUM(s4.ALLOCATED_SALES_OF_THE_PERIOD) AS ALLOCATED_SALES_OF_THE_PERIOD_PER_GL_ACCOUNT_PER_TRUCK
+, ANY_VALUE(s4.SALES_OF_THE_PERIOD_PER_GL_ACCOUNT) AS SALES_OF_THE_PERIOD_PER_GL_ACCOUNT
+, ANY_VALUE(s4.ALLOCATED_SALES_OF_THE_PERIOD_PER_GL_ACCOUNT) AS ALLOCATED_SALES_OF_THE_PERIOD_PER_GL_ACCOUNT
+FROM step_4 AS s4
+GROUP BY PERIOD, ZTRUCK_NO, GL_ACCOUNT
+
+)
+
+,
+
+step_5_unallocated_trucks AS (
+
+SELECT
+  s5.PERIOD
+, 'UNALLOCATED'::VARCHAR(50) AS ZTRUCK_NO
+, s5.GL_ACCOUNT
+, ANY_VALUE(s5.GL_ACCOUNT___T) AS GL_ACCOUNT___T
+, (ANY_VALUE(s5.ALLOCATED_SALES_OF_THE_PERIOD_PER_GL_ACCOUNT) + ANY_VALUE(s5.SALES_OF_THE_PERIOD_PER_GL_ACCOUNT)) * -1 AS ALLOCATED_SALES_OF_THE_PERIOD_PER_GL_ACCOUNT_PER_TRUCK
+, (ANY_VALUE(s5.SALES_OF_THE_PERIOD_PER_GL_ACCOUNT))  AS SALES_OF_THE_PERIOD_PER_GL_ACCOUNT
+, (ANY_VALUE(s5.ALLOCATED_SALES_OF_THE_PERIOD_PER_GL_ACCOUNT)) AS ALLOCATED_SALES_OF_THE_PERIOD_PER_GL_ACCOUNT
+
+FROM step_5 AS s5
+GROUP BY PERIOD, GL_ACCOUNT
+
+)
+
+,
+
+step_6 AS (
+
+    SELECT * FROM step_5
+    UNION ALL
+    SELECT * FROM step_5_unallocated_trucks
+
+)
+
+SELECT *
+FROM step_6
+WHERE ALLOCATED_SALES_OF_THE_PERIOD_PER_GL_ACCOUNT_PER_TRUCK != 0
+-- AND ZTRUCK_NO = 'UNALLOCATED'
+ORDER BY PERIOD, ZTRUCK_NO, GL_ACCOUNT
+;

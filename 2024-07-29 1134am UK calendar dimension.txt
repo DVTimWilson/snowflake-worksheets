@@ -1,0 +1,161 @@
+WITH cte_dates (dim_date) AS (
+  SELECT TO_DATE('1980-01-01')
+  UNION ALL
+  SELECT TO_DATE(DATEADD(day, 1, dim_date))
+  FROM  cte_dates
+  WHERE dim_date < TO_DATE('2039-12-31')
+),
+
+years AS (
+    SELECT DATE_PART(year, dim_date) AS cal_year
+    FROM cte_dates
+    GROUP BY cal_year
+),
+
+years_plus_easter AS (
+-- https://aa.usno.navy.mil/faq/easter
+    SELECT
+        cal_year
+        ,TRUNC(cal_year / 100) AS c
+        ,cal_year - 19 * TRUNC(cal_year / 19) AS n
+        ,TRUNC((c - 17) / 25) AS k
+        ,c - TRUNC(c / 4) - TRUNC((c - k) / 3) + 19 * n + 15 AS i
+        ,i - 30 * TRUNC((i / 30)) AS i2
+        ,i2 - TRUNC(i2 / 28) * (1 - TRUNC(i2 / 28) * TRUNC(29 / (i2 + 1)) * TRUNC((21 - n) / 11)) AS i3
+        ,cal_year + TRUNC(cal_year / 4) + i3 + 2 - c + TRUNC(c / 4) AS j
+        ,j - 7 * TRUNC(j / 7) AS j2
+        ,i3 - j2 AS l
+        ,3 + TRUNC((l + 40) / 44) AS m
+        ,l + 28 - 31 * TRUNC(m / 4) AS d
+        ,DATE_FROM_PARTS(cal_year, m, d) AS easter_sunday
+    FROM years
+),
+
+bank_holidays AS (
+SELECT
+        DATE_FROM_PARTS(cal_year, 1, 1) AS new_years_day
+        ,DATEADD(day, -2, easter_sunday) AS good_friday
+        ,DATEADD(day,  1, easter_sunday) AS easter_monday
+        ,DATEADD(
+			day,
+			MOD( 7 + 1 - DATE_PART('dayofweek_iso', DATE_TRUNC('month', DATE_FROM_PARTS(cal_year, 5, 1)) ), 7),
+			DATE_FROM_PARTS(cal_year, 5, 1)
+			) AS early_may_bank_holiday
+        ,DATEADD(
+			day,
+			MOD( 7 + 1 - DATE_PART('dayofweek_iso', DATE_TRUNC('month', DATE_FROM_PARTS(cal_year, 6, 1)) ), 7) - 7,
+			DATE_FROM_PARTS(cal_year, 6, 1)
+			) AS spring_bank_holiday
+        ,DATEADD(
+			day,
+			MOD( 7 + 1 - DATE_PART('dayofweek_iso', DATE_TRUNC('month', DATE_FROM_PARTS(cal_year, 9, 1)) ), 7) - 7,
+			DATE_FROM_PARTS(cal_year, 9, 1)
+			) AS summer_bank_holiday
+        ,DATE_FROM_PARTS(cal_year, 12, 25) AS christmas_day
+        ,DATE_FROM_PARTS(cal_year, 12, 26) AS boxing_day
+    FROM years_plus_easter
+),
+
+bank_holidays_observed AS (
+    SELECT
+        CASE WHEN DAYNAME(new_years_day) = 'Sat' THEN DATEADD(day, 2, new_years_day) WHEN DAYNAME(new_years_day) = 'Sun' THEN DATEADD(day, 1, new_years_day) ELSE new_years_day END AS new_years_day
+        ,good_friday
+        ,easter_monday
+        ,early_may_bank_holiday
+        ,spring_bank_holiday
+        ,summer_bank_holiday
+        ,CASE WHEN DAYNAME(christmas_day) = 'Sat' THEN DATEADD(day, 2, christmas_day) WHEN DAYNAME(christmas_day) = 'Sun' THEN DATEADD(day, 1, christmas_day) ELSE christmas_day END AS christmas_day
+        ,CASE WHEN DAYNAME(christmas_day) = 'Sat' THEN DATEADD(day, 2, boxing_day) WHEN DAYNAME(christmas_day) = 'Sun' THEN DATEADD(day, 1, boxing_day) WHEN DAYNAME(boxing_day) = 'Sat' THEN DATEADD(day, 2, boxing_day) ELSE boxing_day END AS boxing_day            FROM bank_holidays
+),
+
+bank_holidays_unpivot AS (
+    SELECT holiday_date, holiday_name
+    FROM
+    (
+    SELECT
+        new_years_day
+        ,good_friday
+        ,easter_monday
+        ,early_may_bank_holiday
+        ,spring_bank_holiday
+        ,summer_bank_holiday
+        ,christmas_day
+        ,boxing_day
+    FROM bank_holidays_observed
+    ) AS unpivot_source
+    UNPIVOT
+    (
+        holiday_date FOR holiday_name IN
+            (
+                new_years_day
+                ,good_friday
+                ,easter_monday
+                ,early_may_bank_holiday
+                ,spring_bank_holiday
+                ,summer_bank_holiday
+                ,christmas_day
+                ,boxing_day
+            )
+    ) AS unpivot
+),
+
+calendar_dim AS (
+    SELECT
+        dim_date
+        ,DATE_TRUNC(week, dim_date) AS week_commencing_date
+        ,TO_VARCHAR(dim_date, 'YYYYMM') AS year_month
+        ,CASE WHEN DAYNAME(dim_date) IN ('Sat', 'Sun') THEN 0
+            WHEN holiday_date IS NOT NULL THEN 0
+            ELSE 1
+        END AS working_day_flag
+        ,SUM(working_day_flag) OVER(ORDER BY dim_date) AS working_day_index
+        ,holiday_name
+        ,DECODE(DAYNAME(dim_date),
+                     'Mon', 'Monday',
+                     'Tue', 'Tuesday',
+                     'Wed', 'Wednesday',
+                     'Thu', 'Thursday',
+                     'Fri', 'Friday',
+                     'Sat', 'Saturday',
+                     'Sun', 'Sunday')  AS day_name
+        ,DAYNAME(dim_date) AS day_name_abv
+        ,DAYOFWEEK(dim_date) AS day_of_week
+        ,MONTH(dim_date) AS month_num
+        ,CONCAT(YEAR(dim_date),TO_CHAR(dim_date,'MM')) AS month_id
+        ,TO_CHAR(dim_date,'MMMM') AS month_name
+        ,MONTHNAME(dim_date) AS month_name_abv
+        ,DATEADD(day, 1,LAST_DAY( DATEADD(MONTH,-1,dim_date),MONTH)) as first_day_month
+        ,LAST_DAY(dim_date, MONTH) AS last_day_month
+        ,QUARTER(dim_date) AS quarter_num
+        ,CONCAT(YEAR(dim_date),'Q',QUARTER(dim_date)) AS quarter_id
+        ,DATEADD(day, 1,LAST_DAY( DATEADD(quarter,-1,dim_date),QUARTER)) as first_day_quarter
+        ,LAST_DAY(dim_date,QUARTER) AS last_day_quarter
+        ,YEAR(dim_date) AS dim_year
+    FROM cte_dates
+    LEFT OUTER JOIN bank_holidays_unpivot
+    ON dim_date = holiday_date
+)
+
+SELECT *
+FROM calendar_dim
+ORDER BY dim_date ASC
+;
+
+-- The following are dates of Easter from 1980 to 2039 (found in many Church hymnals):
+-- 1980 April 6 1995 April 16 2010 April 4 2025 April 20
+-- 1981 April 19 1996 April 7 2011 April 24 2026 April 5
+-- 1982 April 11 1997 March 30 2012 April 8 2027 March 28
+-- 1983 April 3 1998 April 12 2013 March 31 2028 April 16
+-- 1984 April 22 1999 April 4 2014 April 20 2029 April 1
+-- 1985 April 7 2000 April 23 2015 April 5 2030 April 21
+-- 1986 March 30 2001 April 15 2016 March 27 2031 April 13
+-- 1987 April 19 2002 March 31 2017 April 16 2032 March 28
+-- 1988 April 3 2003 April 20 2018 April 1 2033 April 17
+-- 1989 March 26 2004 April 11 2019 April 21 2034 April 9
+-- 1990 April 15 2005 March 27 2020 April 12 2035 March 25
+-- 1991 March 31 2006 April 16 2021 April 4 2036 April 13
+-- 1992 April 19 2007 April 8 2022 April 17 2037 April 5
+-- 1993 April 11 2008 March 23 2023 April 9 2038 April 25
+-- 1994 April 3 2009 April 12 2024 March 31 2039 April 10
+
+
