@@ -1,6 +1,6 @@
 USE DATABASE DATAVAULT_SHARED
 ;
-create or replace TABLE TRAINING_DATA.DIM_DATE (
+CREATE OR REPLACE TABLE TRAINING_DATA.DIM_DATE (
 	DIM_TIMESTAMP TIMESTAMP_NTZ(9),
 	DAY_OF_YEAR NUMBER(4,0),
 	DAY_OF_MONTH NUMBER(2,0),
@@ -16,6 +16,54 @@ create or replace TABLE TRAINING_DATA.DIM_DATE (
 	MONTH_START_DATE DATE,
 	MONTH_END_DATE DATE,
 	MONTHLY_PERIOD NUMBER(38,0)
+)
+;
+CREATE OR REPLACE TABLE TRAINING_DATA.DIM_DATE AS
+(
+WITH cte_timestamps (dim_timestamp) AS (
+  SELECT TO_TIMESTAMP(TO_TIMESTAMP('2018-01-01 00:00:00.000000'))
+  UNION ALL
+  SELECT TO_TIMESTAMP(DATEADD(hour, 1, dim_timestamp)) --or week, month, week, hour, minute, second instead of day
+  FROM  cte_timestamps
+  WHERE dim_timestamp < TO_TIMESTAMP(TO_TIMESTAMP('2034-01-01 00:00:00.000000'))
+),
+   CALENDAR AS (
+        SELECT
+          a.dim_timestamp AS DATE_DIMENSION_TIMESTAMP
+        , DAYOFYEAR(a.dim_timestamp) AS DAY_OF_YEAR
+        , DAYOFMONTH(a.dim_timestamp) AS DAY_OF_MONTH
+        , MONTH(a.dim_timestamp) AS MONTH_NUMBER
+        , MONTHNAME(a.dim_timestamp) AS MONTH_NAME
+        , WEEKOFYEAR(a.dim_timestamp)  AS WEEK_OF_YEAR
+        , TO_DATE(a.dim_timestamp) AS DATE
+        , HOUR(TO_TIME(a.dim_timestamp)) AS HOUR
+        , DAYOFWEEK(a.dim_timestamp) AS DAY_OF_WEEK_AS_NUMBER
+        , DAYNAME(a.dim_timestamp) AS DAY_OF_WEEK
+        , DATE_TRUNC('WEEK', a.dim_timestamp::date) AS BUSINESS_WEEK_START_DATE
+        , LAST_DAY(a.dim_timestamp, 'WEEK') AS BUSINESS_WEEK_END_DATE
+        , DATE_TRUNC('MONTH', a.dim_timestamp::date) AS MONTH_START_DATE
+        , LAST_DAY(a.dim_timestamp, 'MONTH') AS MONTH_END_DATE
+        FROM
+            cte_timestamps AS a ORDER BY a.dim_timestamp ASC
+    )
+SELECT
+          DATE_DIMENSION_TIMESTAMP
+        , DAY_OF_YEAR
+        , DAY_OF_MONTH
+        , MONTH_NUMBER
+        , MONTH_NAME
+        , WEEK_OF_YEAR
+        , "DATE"
+        , "HOUR"
+        , DAY_OF_WEEK_AS_NUMBER
+        , DAY_OF_WEEK
+        , BUSINESS_WEEK_START_DATE
+        , BUSINESS_WEEK_END_DATE
+        , MONTH_START_DATE
+        , MONTH_END_DATE
+        , CONCAT(TO_CHAR(date, 'YYYY'),TO_CHAR(date, 'MM'))::number AS MONTHLY_PERIOD
+FROM CALENDAR
+ORDER BY DATE_DIMENSION_TIMESTAMP
 )
 ;
 CREATE OR REPLACE TABLE TRAINING_DATA.TEST AS
@@ -419,6 +467,7 @@ step_6 AS (
 SELECT *
 FROM step_6
 WHERE ALLOCATED_SALES_OF_THE_PERIOD_PER_GL_ACCOUNT_PER_TRUCK != 0
+ORDER BY PERIOD, ZTRUCK_NO, GL_ACCOUNT
 ;
 
 

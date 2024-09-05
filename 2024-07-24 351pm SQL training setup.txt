@@ -103,6 +103,7 @@ SELECT
 FROM TRAINING_DATA.hub_truck AS ht
 LEFT OUTER JOIN latest_record_in_sat_zhr_dp_truck AS st
 ON ht.TRUCK_HK = st.TRUCK_HK
+-- JOIN monthly data from date dimension table
 INNER JOIN (
     SELECT DISTINCT
           MONTHLY_PERIOD
@@ -111,12 +112,13 @@ INNER JOIN (
 
     FROM TRAINING_DATA.DIM_DATE
 ) AS d
+-- JOIN all trucks to all months...
 ON 1=1
    AND PROFIT_CENTER IS NOT NULL
+-- ... then filter for the 'truck months' that are required for analysis and reporting
 WHERE IN_PERIOD_FLAG
-
 )
-
+SELECT * FROM step_1;
 ,
 
 step_2 AS (

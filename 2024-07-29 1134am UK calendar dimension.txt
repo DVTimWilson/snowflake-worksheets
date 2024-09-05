@@ -1,3 +1,5 @@
+-- CREATE OR REPLACE TABLE DATAVAULT_SHARED.TRAINING_DATA.DIM_CALENDAR_UK_ENG_AND_WAL AS
+-- (
 WITH cte_dates (dim_date) AS (
   SELECT TO_DATE('1980-01-01')
   UNION ALL
@@ -31,7 +33,7 @@ years_plus_easter AS (
     FROM years
 ),
 
-bank_holidays AS (
+holidays AS (
 SELECT
         DATE_FROM_PARTS(cal_year, 1, 1) AS new_years_day
         ,DATEADD(day, -2, easter_sunday) AS good_friday
@@ -56,7 +58,7 @@ SELECT
     FROM years_plus_easter
 ),
 
-bank_holidays_observed AS (
+holidays_observed AS (
     SELECT
         CASE WHEN DAYNAME(new_years_day) = 'Sat' THEN DATEADD(day, 2, new_years_day) WHEN DAYNAME(new_years_day) = 'Sun' THEN DATEADD(day, 1, new_years_day) ELSE new_years_day END AS new_years_day
         ,good_friday
@@ -65,10 +67,10 @@ bank_holidays_observed AS (
         ,spring_bank_holiday
         ,summer_bank_holiday
         ,CASE WHEN DAYNAME(christmas_day) = 'Sat' THEN DATEADD(day, 2, christmas_day) WHEN DAYNAME(christmas_day) = 'Sun' THEN DATEADD(day, 1, christmas_day) ELSE christmas_day END AS christmas_day
-        ,CASE WHEN DAYNAME(christmas_day) = 'Sat' THEN DATEADD(day, 2, boxing_day) WHEN DAYNAME(christmas_day) = 'Sun' THEN DATEADD(day, 1, boxing_day) WHEN DAYNAME(boxing_day) = 'Sat' THEN DATEADD(day, 2, boxing_day) ELSE boxing_day END AS boxing_day            FROM bank_holidays
+        ,CASE WHEN DAYNAME(christmas_day) = 'Sat' THEN DATEADD(day, 2, boxing_day) WHEN DAYNAME(christmas_day) = 'Sun' THEN DATEADD(day, 1, boxing_day) WHEN DAYNAME(boxing_day) = 'Sat' THEN DATEADD(day, 2, boxing_day) ELSE boxing_day END AS boxing_day            FROM holidays
 ),
 
-bank_holidays_unpivot AS (
+holidays_unpivot AS (
     SELECT holiday_date, holiday_name
     FROM
     (
@@ -81,7 +83,7 @@ bank_holidays_unpivot AS (
         ,summer_bank_holiday
         ,christmas_day
         ,boxing_day
-    FROM bank_holidays_observed
+    FROM holidays_observed
     ) AS unpivot_source
     UNPIVOT
     (
@@ -132,16 +134,17 @@ calendar_dim AS (
         ,LAST_DAY(dim_date,QUARTER) AS last_day_quarter
         ,YEAR(dim_date) AS dim_year
     FROM cte_dates
-    LEFT OUTER JOIN bank_holidays_unpivot
+    LEFT OUTER JOIN holidays_unpivot
     ON dim_date = holiday_date
 )
 
 SELECT *
 FROM calendar_dim
 ORDER BY dim_date ASC
+-- )
 ;
 
--- The following are dates of Easter from 1980 to 2039 (found in many Church hymnals):
+-- The following are dates of Easter from 1980 to 2039
 -- 1980 April 6 1995 April 16 2010 April 4 2025 April 20
 -- 1981 April 19 1996 April 7 2011 April 24 2026 April 5
 -- 1982 April 11 1997 March 30 2012 April 8 2027 March 28
@@ -157,5 +160,13 @@ ORDER BY dim_date ASC
 -- 1992 April 19 2007 April 8 2022 April 17 2037 April 5
 -- 1993 April 11 2008 March 23 2023 April 9 2038 April 25
 -- 1994 April 3 2009 April 12 2024 March 31 2039 April 10
+
+ALTER TABLE TRAINING_DATA.DIM_CALENDAR
+RENAME TO DIM_CALENDAR_US
+;
+
+ALTER TABLE TRAINING_DATA.DIM_CALENDAR
+RENAME TO DIM_CALENDAR_UK_ENG_AND_WAL
+;
 
 
