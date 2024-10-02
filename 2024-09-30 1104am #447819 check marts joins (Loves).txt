@@ -1,0 +1,774 @@
+-- MART_PURCHASE_HEADER
+SELECT
+--    COUNT(*)
+f_ph.purchase_hk
+, f_ph.transaction_timestamp
+-- 113001066
+FROM SBX_TIM_WILSON.DATA_PRODUCTS.fct_purchase_header f_ph
+
+-- 113001066
+LEFT OUTER JOIN SBX_TIM_WILSON.DATA_PRODUCTS.dim_date d_d
+    ON f_ph.TRANSACTION_TIMESTAMP_HOUR = d_d.DATE_DIMENSION_TIMESTAMP
+
+-- 113095034
+LEFT OUTER JOIN SBX_TIM_WILSON.DATA_PRODUCTS.fct_card_combination f_cc
+    ON f_ph.PURCHASE_HK = f_cc.PURCHASE_HK
+
+-- 113095171
+LEFT OUTER JOIN SBX_TIM_WILSON.DATA_PRODUCTS.dim_loyalty_card d_l
+    ON f_cc.LOYALTY_CARD_HK = d_l.LOYALTY_CARD_HK
+
+-- 116236108
+LEFT OUTER JOIN SBX_TIM_WILSON.DATA_PRODUCTS.dim_payment_mechanism d_pm
+    ON f_cc.PURCHASE_HK = d_pm.PURCHASE_HK
+
+-- 116236108
+LEFT OUTER JOIN SBX_TIM_WILSON.DATA_PRODUCTS.dim_wallet d_w
+    ON f_cc.CARD_COMBINATION_HK = d_w.CARD_COMBINATION_HK
+
+-- 116236108
+LEFT OUTER JOIN SBX_TIM_WILSON.DATA_PRODUCTS.dim_pos_customer d_pc
+    ON COALESCE(d_l.BUYINGUNITINTERNALKEY, d_w.BUYINGUNITINTERNALKEY)::VARCHAR(128) = d_pc.CUSTOMER_ID
+
+-- 116236108
+LEFT OUTER JOIN SBX_TIM_WILSON.DATA_PRODUCTS.dim_pos_customer d_pc2
+    ON d_w.CREDITCARDNUMBER_BR = d_pc2.CUSTOMER_ID
+
+-- 116236108
+LEFT OUTER JOIN SBX_TIM_WILSON.DATA_PRODUCTS.dim_facility d_f
+    ON f_ph.FACILITY_HK = d_f.FACILITY_HK
+
+-- 113,001,048
+QUALIFY ROW_NUMBER() OVER (PARTITION BY f_ph.purchase_hk ORDER BY f_ph.transaction_timestamp) = 1
+-- ORDER BY f_ph.TRANSACTION_TIMESTAMP
+;
+
+-- 113001066
+SELECT COUNT(PURCHASE_HK)
+FROM SBX_TIM_WILSON.DATA_PRODUCTS.fct_purchase_header
+;
+
+-- 113001048
+SELECT COUNT(DISTINCT PURCHASE_HK)
+FROM SBX_TIM_WILSON.DATA_PRODUCTS.fct_purchase_header
+;
+
+-- 113,001,066
+SELECT DISTINCT *
+FROM SBX_TIM_WILSON.DATA_PRODUCTS.fct_purchase_header
+;
+
+-- 215611349
+SELECT COUNT(PURCHASE_HK)
+FROM SBX_TIM_WILSON.BUSINESS_VAULT.brg_purchase_header
+;
+
+-- 113001048
+SELECT COUNT(DISTINCT PURCHASE_HK)
+FROM SBX_TIM_WILSON.BUSINESS_VAULT.brg_purchase_header
+;
+
+-- 215,611,349
+SELECT DISTINCT *
+FROM SBX_TIM_WILSON.BUSINESS_VAULT.brg_purchase_header
+;
+
+-- 113095016
+SELECT COUNT(PURCHASE_HK)
+FROM SBX_TIM_WILSON.DATA_PRODUCTS.fct_card_combination
+;
+
+-- 113001049
+SELECT COUNT(DISTINCT PURCHASE_HK)
+FROM SBX_TIM_WILSON.DATA_PRODUCTS.fct_card_combination
+;
+
+-- 113,095,016
+SELECT DISTINCT *
+FROM SBX_TIM_WILSON.DATA_PRODUCTS.fct_card_combination
+;
+
+-- 92,416
+SELECT PURCHASE_HK, COUNT(*) AS reccount
+FROM SBX_TIM_WILSON.DATA_PRODUCTS.fct_card_combination
+GROUP BY PURCHASE_HK
+HAVING reccount > 1
+;
+
+-- 186,383
+SELECT DISTINCT *
+FROM SBX_TIM_WILSON.DATA_PRODUCTS.fct_card_combination AS x
+INNER JOIN
+(
+SELECT PURCHASE_HK, COUNT(*) AS reccount
+FROM SBX_TIM_WILSON.DATA_PRODUCTS.fct_card_combination
+GROUP BY PURCHASE_HK
+HAVING reccount > 1
+) AS y
+ON x.PURCHASE_HK = y.PURCHASE_HK
+ORDER BY x.PURCHASE_HK
+;
+
+-- 92,416
+SELECT PURCHASE_HK, COUNT(*) AS reccount
+FROM SBX_TIM_WILSON.BUSINESS_VAULT.stg_card_combination
+GROUP BY PURCHASE_HK
+HAVING reccount > 1
+;
+
+-- 1,328
+SELECT PURCHASE_HK, COUNT(*) AS reccount
+FROM SBX_TIM_WILSON.BUSINESS_VAULT.stg_card_combination
+GROUP BY PURCHASE_HK
+HAVING reccount > 2
+;
+
+-- 112,908,633
+-- CARD_TOKEN that looks like CREDITCARDNUMBER?
+SELECT *, JAROWINKLER_SIMILARITY(LEFT(REPLACE(REPLACE(CREDITCARDNUMBER, '*', ''), 'X', ''), 16), LEFT(CARD_TOKEN, 16)) AS test
+FROM SBX_TIM_WILSON.BUSINESS_VAULT.stg_card_combination
+WHERE PURCHASE_HK IN
+(
+SELECT PURCHASE_HK
+FROM SBX_TIM_WILSON.BUSINESS_VAULT.stg_card_combination
+GROUP BY PURCHASE_HK
+HAVING COUNT(*) = 1
+)
+ORDER BY PURCHASE_HK
+;
+
+-- 112,908,633
+-- CARD_TOKEN that looks like CREDITCARDNUMBER?
+SELECT *, JAROWINKLER_SIMILARITY(LEFT(CREDITCARDNUMBER, 16), LEFT(CARD_TOKEN, 16)) AS test
+FROM SBX_TIM_WILSON.BUSINESS_VAULT.stg_card_combination
+WHERE PURCHASE_HK IN
+(
+SELECT PURCHASE_HK
+FROM SBX_TIM_WILSON.BUSINESS_VAULT.stg_card_combination
+GROUP BY PURCHASE_HK
+HAVING COUNT(*) = 1
+)
+ORDER BY PURCHASE_HK
+;
+
+-- 112,908,633
+-- CARD_TOKEN that looks like CREDITCARDNUMBER?
+SELECT *, LEFT(CREDITCARDNUMBER, 4) = LEFT(CARD_TOKEN, 4) AS test1, RIGHT(CREDITCARDNUMBER, 1) = RIGHT(LEFT(CARD_TOKEN, 16), 1) AS test2
+FROM SBX_TIM_WILSON.BUSINESS_VAULT.stg_card_combination
+WHERE PURCHASE_HK IN
+(
+SELECT PURCHASE_HK
+FROM SBX_TIM_WILSON.BUSINESS_VAULT.stg_card_combination
+GROUP BY PURCHASE_HK
+HAVING COUNT(*) = 1
+)
+ORDER BY PURCHASE_HK
+;
+
+-- 65
+-- Find 'bad' card tokens DEV
+SELECT *
+FROM (
+SELECT *
+, CASE WHEN LEFT(CREDITCARDNUMBER, 1) = '0' THEN SUBSTR(CREDITCARDNUMBER, 2) ELSE CREDITCARDNUMBER END AS CREDITCARDNUMBER_TEST
+, CASE WHEN LEFT(CREDITCARDNUMBER, 1) = '0' THEN '0' || CARD_TOKEN ELSE CARD_TOKEN END AS CARD_TOKEN_TEST
+, LEFT(CREDITCARDNUMBER, 4) = LEFT(CARD_TOKEN_TEST, 4) AS test1, RIGHT(CREDITCARDNUMBER, 1) = RIGHT(LEFT(CARD_TOKEN_TEST, 16), 1) AS test2
+FROM SBX_TIM_WILSON.BUSINESS_VAULT.stg_card_combination
+WHERE PURCHASE_HK IN
+(
+SELECT PURCHASE_HK
+FROM SBX_TIM_WILSON.BUSINESS_VAULT.stg_card_combination
+GROUP BY PURCHASE_HK
+HAVING COUNT(*) = 1
+)
+)
+WHERE test1 != test2
+ORDER BY PURCHASE_HK
+;
+
+-- 5,714
+-- Find 'bad' card tokens UAT
+SELECT *
+FROM (
+SELECT *
+, CASE WHEN LEFT(CREDITCARDNUMBER, 1) = '0' THEN SUBSTR(CREDITCARDNUMBER, 2) ELSE CREDITCARDNUMBER END AS CREDITCARDNUMBER_TEST
+, CASE WHEN LEFT(CREDITCARDNUMBER, 1) = '0' THEN '0' || CARD_TOKEN ELSE CARD_TOKEN END AS CARD_TOKEN_TEST
+, LEFT(CREDITCARDNUMBER, 4) = LEFT(CARD_TOKEN_TEST, 4) AS test1, RIGHT(CREDITCARDNUMBER, 1) = RIGHT(LEFT(CARD_TOKEN_TEST, 16), 1) AS test2
+FROM LOVES_VAULT_UAT.BUSINESS_VAULT.stg_card_combination
+WHERE PURCHASE_HK IN
+(
+SELECT PURCHASE_HK
+FROM LOVES_VAULT_UAT.BUSINESS_VAULT.stg_card_combination
+GROUP BY PURCHASE_HK
+HAVING COUNT(*) = 1
+)
+)
+WHERE test1 != test2
+ORDER BY PURCHASE_HK
+;
+
+-- 13,510
+-- Find 'bad' card tokens DEV
+SELECT *
+FROM (
+SELECT *
+, CASE WHEN LEFT(CREDITCARDNUMBER, 1) = '0' THEN SUBSTR(CREDITCARDNUMBER, 2) ELSE CREDITCARDNUMBER END AS CREDITCARDNUMBER_TEST
+, CASE WHEN LEFT(CREDITCARDNUMBER, 1) = '0' THEN '0' || CARD_TOKEN ELSE CARD_TOKEN END AS CARD_TOKEN_TEST
+, LEFT(CREDITCARDNUMBER, 4) = LEFT(CARD_TOKEN_TEST, 4) AS test1, RIGHT(CREDITCARDNUMBER, 1) = RIGHT(LEFT(CARD_TOKEN_TEST, 16), 1) AS test2
+FROM SBX_TIM_WILSON.BUSINESS_VAULT.stg_card_combination
+)
+WHERE test1 != test2
+ORDER BY PURCHASE_HK
+;
+
+-- 13,510
+-- Find 'bad' card tokens DEV
+-- Not working well
+SELECT *
+FROM (
+SELECT *
+, CASE WHEN LEFT(CREDITCARDNUMBER, 1) = '0' THEN SUBSTR(CREDITCARDNUMBER, 2) ELSE CREDITCARDNUMBER END AS CREDITCARDNUMBER_TEST
+, CASE WHEN LEFT(CREDITCARDNUMBER, 1) = '0' THEN '0' || CARD_TOKEN ELSE CARD_TOKEN END AS CARD_TOKEN_TEST
+, LEFT(CREDITCARDNUMBER, 4) = LEFT(CARD_TOKEN_TEST, 4) AS test1, RIGHT(CREDITCARDNUMBER, 1) = RIGHT(LEFT(CARD_TOKEN_TEST, 16), 1) AS test2
+, JAROWINKLER_SIMILARITY(REPLACE(REPLACE(CREDITCARDNUMBER, '*', '0'), 'X', 0), CARD_TOKEN_TEST) AS test3
+FROM SBX_TIM_WILSON.BUSINESS_VAULT.stg_card_combination
+)
+WHERE test1 != test2 
+-- AND test3 > 85
+ORDER BY PURCHASE_HK
+;
+
+-- 231
+-- Find 'bad' card tokens DEV
+SELECT PURCHASE_HK, COUNT(*) AS reccount
+FROM (
+SELECT *
+, CASE WHEN LEFT(CREDITCARDNUMBER, 1) = '0' THEN SUBSTR(CREDITCARDNUMBER, 2) ELSE CREDITCARDNUMBER END AS CREDITCARDNUMBER_TEST
+, CASE WHEN LEFT(CREDITCARDNUMBER, 1) = '0' THEN '0' || CARD_TOKEN ELSE CARD_TOKEN END AS CARD_TOKEN_TEST
+, LEFT(CREDITCARDNUMBER, 4) = LEFT(CARD_TOKEN_TEST, 4) AS test1, RIGHT(CREDITCARDNUMBER, 1) = RIGHT(LEFT(CARD_TOKEN_TEST, 16), 1) AS test2
+FROM SBX_TIM_WILSON.BUSINESS_VAULT.stg_card_combination
+)
+WHERE test1 != test2
+GROUP BY PURCHASE_HK
+HAVING COUNT(*) > 1
+ORDER BY PURCHASE_HK
+;
+
+-- 2,677
+-- Find 'bad' card tokens UAT
+SELECT PURCHASE_HK, COUNT(*) AS reccount
+FROM (
+SELECT *
+, CASE WHEN LEFT(CREDITCARDNUMBER, 1) = '0' THEN '0' || CARD_TOKEN ELSE CARD_TOKEN END AS CARD_TOKEN_TEST
+, LEFT(CREDITCARDNUMBER, 4) = LEFT(CARD_TOKEN_TEST, 4) AS test1, RIGHT(CREDITCARDNUMBER, 1) = RIGHT(LEFT(CARD_TOKEN_TEST, 16), 1) AS test2
+FROM LOVES_VAULT_UAT.BUSINESS_VAULT.stg_card_combination
+)
+WHERE test1 != test2
+GROUP BY PURCHASE_HK
+HAVING COUNT(*) > 1
+ORDER BY PURCHASE_HK
+;
+
+-- 188,609
+-- Find 'bad' card tokens UAT
+SELECT PURCHASE_HK
+FROM (
+SELECT *
+, CASE WHEN LEFT(CREDITCARDNUMBER, 1) = '0' THEN '0' || CARD_TOKEN ELSE CARD_TOKEN END AS CARD_TOKEN_TEST
+, LEFT(CREDITCARDNUMBER, 4) = LEFT(CARD_TOKEN_TEST, 4) AS test1, RIGHT(CREDITCARDNUMBER, 1) = RIGHT(LEFT(CARD_TOKEN_TEST, 16), 1) AS test2
+FROM LOVES_VAULT_UAT.BUSINESS_VAULT.stg_card_combination
+)
+WHERE test1 != test2
+ORDER BY PURCHASE_HK
+;
+
+-- 2537429933
+SELECT COUNT(*)
+FROM LOVES_VAULT_UAT.BUSINESS_VAULT.stg_card_combination
+;
+
+-- 2,536,027,508
+-- Find 'bad' card tokens UAT
+SELECT COUNT(*)
+FROM (
+SELECT test1, test2
+FROM (
+SELECT *
+, CASE WHEN LEFT(CREDITCARDNUMBER, 1) = '0' THEN '0' || CARD_TOKEN ELSE CARD_TOKEN END AS CARD_TOKEN_TEST
+, IFNULL(LEFT(CREDITCARDNUMBER, 4) = LEFT(CARD_TOKEN_TEST, 4), true) AS test1, IFNULL(RIGHT(CREDITCARDNUMBER, 1) = RIGHT(LEFT(CARD_TOKEN_TEST, 16), 1), true) AS test2
+FROM LOVES_VAULT_UAT.BUSINESS_VAULT.stg_card_combination
+)
+WHERE test1 AND test2
+)
+;
+
+-- 1,402,425
+-- Find 'bad' card tokens UAT, a small percentage
+SELECT COUNT(*)
+FROM (
+SELECT test1, test2
+FROM (
+SELECT *
+, CASE WHEN LEFT(CREDITCARDNUMBER, 1) = '0' THEN '0' || CARD_TOKEN ELSE CARD_TOKEN END AS CARD_TOKEN_TEST
+, IFNULL(LEFT(CREDITCARDNUMBER, 4) = LEFT(CARD_TOKEN_TEST, 4), true) AS test1, IFNULL(RIGHT(CREDITCARDNUMBER, 1) = RIGHT(LEFT(CARD_TOKEN_TEST, 16), 1), true) AS test2
+FROM LOVES_VAULT_UAT.BUSINESS_VAULT.stg_card_combination
+)
+WHERE NOT(test1 AND test2)
+)
+;
+
+-- 113095016
+SELECT COUNT(*)
+FROM SBX_TIM_WILSON.BUSINESS_VAULT.stg_card_combination
+;
+
+-- 113001294
+-- Find 'bad' card tokens DEV
+SELECT COUNT(*)
+FROM (
+SELECT test1, test2
+FROM (
+SELECT *
+, CASE WHEN LEFT(CREDITCARDNUMBER, 1) = '0' THEN '0' || CARD_TOKEN ELSE CARD_TOKEN END AS CARD_TOKEN_TEST
+, IFNULL(LEFT(CREDITCARDNUMBER, 4) = LEFT(CARD_TOKEN_TEST, 4), true) AS test1, IFNULL(RIGHT(CREDITCARDNUMBER, 1) = RIGHT(LEFT(CARD_TOKEN_TEST, 16), 1), true) AS test2
+FROM SBX_TIM_WILSON.BUSINESS_VAULT.stg_card_combination
+)
+WHERE test1 AND test2
+)
+;
+
+-- 93722
+-- Find 'bad' card tokens DEV, a small percentage
+SELECT COUNT(*)
+FROM (
+SELECT *, test1, test2
+FROM (
+SELECT *
+, CASE WHEN LEFT(CREDITCARDNUMBER, 1) = '0' THEN '0' || CARD_TOKEN ELSE CARD_TOKEN END AS CARD_TOKEN_TEST
+, IFNULL(LEFT(CREDITCARDNUMBER, 4) = LEFT(CARD_TOKEN_TEST, 4), true) AS test1, IFNULL(RIGHT(CREDITCARDNUMBER, 1) = RIGHT(LEFT(CARD_TOKEN_TEST, 16), 1), true) AS test2
+FROM SBX_TIM_WILSON.BUSINESS_VAULT.stg_card_combination
+)
+WHERE NOT(test1 AND test2)
+)
+;
+
+-- 0
+SELECT PURCHASE_HK
+FROM (
+    SELECT PURCHASE_HK, test1, test2
+    FROM (
+    SELECT *
+    , CASE WHEN LEFT(CREDITCARDNUMBER, 1) = '0' THEN '0' || CARD_TOKEN ELSE CARD_TOKEN END AS CARD_TOKEN_TEST
+    , IFNULL(LEFT(CREDITCARDNUMBER, 4) = LEFT(CARD_TOKEN_TEST, 4), true) AS test1, IFNULL(RIGHT(CREDITCARDNUMBER, 1) = RIGHT(LEFT(CARD_TOKEN_TEST, 16), 1), true) AS test2
+    FROM SBX_TIM_WILSON.BUSINESS_VAULT.stg_card_combination
+    )
+    WHERE test1 AND test2
+    AND PURCHASE_HK IN
+        (
+        SELECT PURCHASE_HK
+        FROM SBX_TIM_WILSON.BUSINESS_VAULT.stg_card_combination
+        GROUP BY PURCHASE_HK
+        HAVING COUNT(*) = 1
+        )
+)
+GROUP BY PURCHASE_HK
+HAVING COUNT(*) > 1
+ORDER BY PURCHASE_HK
+;
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- 30/09/2024
+
+-- DEV
+-- 112,908,208
+-- out of 113095016 so 99.83482207562533‬%
+-- difference 186,808‬
+SELECT PURCHASE_HK
+FROM (
+    SELECT PURCHASE_HK, test1, test2
+    FROM (
+    SELECT *
+    , CASE WHEN LEFT(CREDITCARDNUMBER, 1) = '0' THEN '0' || CARD_TOKEN ELSE CARD_TOKEN END AS CARD_TOKEN_TEST
+    , IFNULL(LEFT(CREDITCARDNUMBER, 4) = LEFT(CARD_TOKEN_TEST, 4), true) AS test1, IFNULL(RIGHT(CREDITCARDNUMBER, 1) = RIGHT(LEFT(CARD_TOKEN_TEST, 16), 1), true) AS test2
+    FROM SBX_TIM_WILSON.BUSINESS_VAULT.stg_card_combination
+    )
+    WHERE test1 AND test2
+    AND PURCHASE_HK IN
+        (
+        SELECT PURCHASE_HK
+        FROM SBX_TIM_WILSON.BUSINESS_VAULT.stg_card_combination
+        GROUP BY PURCHASE_HK
+        HAVING COUNT(*) = 1
+        )
+)
+GROUP BY PURCHASE_HK
+HAVING COUNT(*) = 1
+ORDER BY PURCHASE_HK
+;
+
+-- DEV
+-- 112,908,208
+SELECT COUNT(*)
+FROM (
+    SELECT PURCHASE_HK, test1, test2
+    FROM (
+    SELECT *
+    , CASE WHEN LEFT(CREDITCARDNUMBER, 1) = '0' THEN '0' || CARD_TOKEN ELSE CARD_TOKEN END AS CARD_TOKEN_TEST
+    , IFNULL(LEFT(CREDITCARDNUMBER, 4) = LEFT(CARD_TOKEN_TEST, 4), true) AS test1, IFNULL(RIGHT(CREDITCARDNUMBER, 1) = RIGHT(LEFT(CARD_TOKEN_TEST, 16), 1), true) AS test2
+    FROM SBX_TIM_WILSON.BUSINESS_VAULT.stg_card_combination
+    )
+    WHERE test1 AND test2
+    AND PURCHASE_HK IN
+        (
+        SELECT PURCHASE_HK
+        FROM SBX_TIM_WILSON.BUSINESS_VAULT.stg_card_combination
+        GROUP BY PURCHASE_HK
+        HAVING COUNT(*) = 1
+        )
+)
+ORDER BY PURCHASE_HK
+;
+
+-- UAT
+-- 2,534,543,600
+-- out of 2,537,429,933
+SELECT COUNT(*)
+FROM (
+    SELECT PURCHASE_HK, test1, test2
+    FROM (
+    SELECT *
+    , CASE WHEN LEFT(CREDITCARDNUMBER, 1) = '0' THEN '0' || CARD_TOKEN ELSE CARD_TOKEN END AS CARD_TOKEN_TEST
+    , IFNULL(LEFT(CREDITCARDNUMBER, 4) = LEFT(CARD_TOKEN_TEST, 4), true) AS test1, IFNULL(RIGHT(CREDITCARDNUMBER, 1) = RIGHT(LEFT(CARD_TOKEN_TEST, 16), 1), true) AS test2
+    FROM LOVES_VAULT_UAT.BUSINESS_VAULT.stg_card_combination
+    )
+    WHERE test1 AND test2
+    AND PURCHASE_HK IN
+        (
+        SELECT PURCHASE_HK
+        FROM LOVES_VAULT_UAT.BUSINESS_VAULT.stg_card_combination
+        GROUP BY PURCHASE_HK
+        HAVING COUNT(*) = 1
+        )
+)
+-- ORDER BY PURCHASE_HK
+;
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+-- 2
+SELECT *
+FROM SBX_TIM_WILSON.BUSINESS_VAULT.stg_card_combination
+WHERE PURCHASE_HK = '0003056BC8A7F0AA8447E57D80C765D7' ::BINARY(16)
+;
+
+-- 186,383
+-- CARD_TOKEN that looks like CREDITCARDNUMBER?
+SELECT *
+FROM SBX_TIM_WILSON.BUSINESS_VAULT.stg_card_combination
+WHERE PURCHASE_HK IN
+(
+SELECT PURCHASE_HK
+FROM SBX_TIM_WILSON.BUSINESS_VAULT.stg_card_combination
+GROUP BY PURCHASE_HK
+HAVING COUNT(*) > 1
+)
+ORDER BY PURCHASE_HK
+;
+
+-- 9
+SELECT *
+FROM SBX_TIM_WILSON.BUSINESS_VAULT.stg_card_combination
+WHERE PURCHASE_HK IN
+(
+SELECT PURCHASE_HK
+FROM SBX_TIM_WILSON.BUSINESS_VAULT.stg_card_combination
+GROUP BY PURCHASE_HK
+HAVING COUNT(*) = 9
+)
+ORDER BY PURCHASE_HK
+;
+
+SELECT LEN(CARD_TOKEN) AS ctl, COUNT(*) AS reccount
+FROM SBX_TIM_WILSON.BUSINESS_VAULT.stg_card_combination
+GROUP BY ctl
+;
+
+-- PURCHASE_HK with multiple records in STG_CARD_COMBINATION
+-- 0000A322A25F742E5E5E53F2127FE4A7
+WITH
+latest_sat_ticketheader AS (
+    SELECT
+        PURCHASE_HK
+        ,NULLIF(CUSTOMERMAGNETICCARDLOYALTY, '') AS CUSTOMERMAGNETICCARDLOYALTY  -- Either populated or empty string
+        , SALEDATE
+        , TIMESTAMP_FROM_PARTS(SALEDATE, OPENTIME) AS SALETIMESTAMP
+        , LOAD_DATETIME
+    FROM
+        SBX_TIM_WILSON.RAW_VAULT.sat_dt_pos_ticketheadertransactionrecord
+    QUALIFY
+        ROW_NUMBER() OVER (
+            PARTITION BY purchase_hk
+            ORDER BY load_datetime DESC
+        ) = 1
+),
+
+latest_sat_ticketcreditcard AS (
+    SELECT
+        PURCHASE_HK
+        , NULLIF(CREDITCARDNUMBERENCRYPTED, '') AS CREDITCARDNUMBERENCRYPTED  -- Either populated or empty string
+        , NULLIF(CREDITCARDNUMBER, '') AS CREDITCARDNUMBER  -- Either populated or empty string
+        , CARDEXPIRATIONDATE  -- Either populated or NULL
+    FROM
+        SBX_TIM_WILSON.RAW_VAULT.sat_dt_pos_ticketcreditcardlinetransactionrecord
+    QUALIFY
+        ROW_NUMBER() OVER (
+            PARTITION BY purchase_hk
+            ORDER BY load_datetime DESC
+        ) = 1
+),
+
+sat_ajb AS (
+    SELECT
+        PURCHASE_HK
+        , STORE
+        , RESPONSEDT::DATE AS RESPONSEDT_DATE
+        , POS_RECEIPT
+        , nullif(to_char(try_cast(
+    		regexp_replace
+    		(
+    			regexp_substr
+    			(
+    				COMMENTS1
+    				, 'orginvoice ([[:alnum:]]){1,12}'
+    			)
+    			, '[^0-9]'
+    			, ''
+    		) as int)), '')									    as ORG_INVOICE
+    	, nullif(to_char(INVOICENUMBER), '')					as INVOICE_NUMBER
+        , AMOUNT
+        , CARD_TOKEN::varchar                                   as CARD_TOKEN
+    FROM
+        SBX_TIM_WILSON.RAW_VAULT.sat_ajb_v_trandetailtwo
+    WHERE
+    	TRANSACTIONTYPE in ('Sale', 'Preauthcomp')
+    	and TRANSACTIONACTIONCODE = 0              /* 0=success */
+    	and POS_RECEIPT is not null                /* filters out ~2k invalid rows */
+),
+
+sat_rt_pos_store_1 as (
+    select
+        h.purchase_hk
+        , h.loyalty_card_number
+        , a.card_token
+    from
+        SBX_TIM_WILSON.RAW_VAULT.sat_rt_pos_realtimepos_store_header h
+    inner join
+        SBX_TIM_WILSON.RAW_VAULT.sat_rt_pos_realtimepos_store_tenders t
+			on h.transaction_date = t.transaction_date
+			and h.store_id = t.store_id
+			and h.transaction_id = t.transaction_id
+			and h.transaction_guid = t.transaction_guid
+	inner join
+		sat_ajb a
+            on h.site_number = a.store
+			and h.transaction_date = a.responsedt_date
+			and h.transaction_id = a.pos_receipt
+			and t.tender_amount = a.amount
+),
+
+sat_rt_pos_store_2 as (
+    select
+        h.purchase_hk
+        , h.loyalty_card_number
+        , a.card_token
+    from
+        SBX_TIM_WILSON.RAW_VAULT.sat_rt_pos_realtimepos_store_header h
+    inner join
+        SBX_TIM_WILSON.RAW_VAULT.sat_rt_pos_realtimepos_store_tenders t
+			on h.transaction_date = t.transaction_date
+			and h.store_id = t.store_id
+			and h.transaction_id = t.transaction_id
+			and h.transaction_guid = t.transaction_guid
+	inner join
+		sat_ajb a
+            on h.site_number = a.store
+			and h.transaction_date = a.responsedt_date
+			and t.reference in (a.invoice_number, a.org_invoice)
+			and t.tender_amount = a.amount
+),
+
+sat_rt_pos_pump as (
+    select
+        h.purchase_hk
+        , h.loyalty_card_number
+        , a.card_token
+    from
+        SBX_TIM_WILSON.RAW_VAULT.sat_rt_pos_realtimepos_pump_header h
+    inner join
+        SBX_TIM_WILSON.RAW_VAULT.sat_rt_pos_realtimepos_pump_tenders t
+			on h.transaction_date = t.transaction_date
+			and h.store_id = t.store_id
+			and h.transaction_id = t.transaction_id
+			and h.transaction_guid = t.transaction_guid
+	inner join
+		sat_ajb a
+			on h.transaction_date = a.responsedt_date
+			and h.site_number = a.store
+            and h.pump_trans_nbr = a.pos_receipt
+),
+
+rt_pos_union as (
+    select *
+    from
+    (
+        select * from sat_rt_pos_store_1
+        union
+        select * from sat_rt_pos_store_2
+    )
+    union all
+    select distinct * from sat_rt_pos_pump
+),
+
+card_combination_data AS (
+    SELECT
+        h_purchase.PURCHASE_HK
+        , lc.LOYALTY_CARD_HK
+        , sat_credit_card.CREDITCARDNUMBERENCRYPTED
+        , sat_credit_card.CREDITCARDNUMBER
+        , sat_credit_card.CARDEXPIRATIONDATE
+        , rt_pos.CARD_TOKEN
+        , CASE
+            WHEN rt_pos.CARD_TOKEN IS NOT NULL
+                THEN rt_pos.CARD_TOKEN
+            WHEN rt_pos.CARD_TOKEN IS NULL AND sat_credit_card.CREDITCARDNUMBER IS NOT NULL
+                THEN 'NO_TOKEN'
+            ELSE NULL
+          END AS CARD_TOKEN_BR
+        , COALESCE(CARD_TOKEN_BR
+            ,CONCAT(sat_credit_card.CREDITCARDNUMBER, '|', sat_credit_card.CARDEXPIRATIONDATE),'Cash') AS CREDITCARDNUMBER_BR
+        , COALESCE(lc.LOYALTY_CARD_NUMBER, sat_ticket_header.CUSTOMERMAGNETICCARDLOYALTY, rt_pos.LOYALTY_CARD_NUMBER) AS LOYALTY_CARD_NUMBER_COALESCE
+        , CASE
+            WHEN LOYALTY_CARD_NUMBER_COALESCE IS NULL
+                AND (CREDITCARDNUMBER_BR = 'Cash' OR CREDITCARDNUMBER_BR = 'NO_TOKEN')
+                THEN CREDITCARDNUMBER_BR
+            ELSE LOYALTY_CARD_NUMBER_COALESCE  -- either a loyalty card number or NULL
+          END AS CUSTOMERMAGNETICCARDLOYALTY
+        , sat_ticket_header.SALEDATE
+        , sat_ticket_header.SALETIMESTAMP
+        , sat_ticket_header.LOAD_DATETIME
+    FROM SBX_TIM_WILSON.RAW_VAULT.hub_purchase AS h_purchase
+    LEFT OUTER JOIN latest_sat_ticketheader AS sat_ticket_header
+    ON h_purchase.purchase_hk = sat_ticket_header.purchase_hk
+    LEFT OUTER JOIN latest_sat_ticketcreditcard AS sat_credit_card
+    ON h_purchase.PURCHASE_HK = sat_credit_card.purchase_hk
+    LEFT OUTER JOIN rt_pos_union AS rt_pos
+    ON h_purchase.purchase_hk = rt_pos.purchase_hk
+    LEFT OUTER JOIN SBX_TIM_WILSON.BUSINESS_VAULT.lnk_purchase_loyalty_card AS lc  -- LOYALTY_CARD_NUMBER  no NULL data and no empty string data
+    ON h_purchase.PURCHASE_HK = lc.PURCHASE_HK
+    INNER JOIN SBX_TIM_WILSON.RAW_VAULT.lnk_purchase_containing_item AS l_purchase_item
+    ON h_purchase.PURCHASE_HK = l_purchase_item.PURCHASE_HK
+)
+
+SELECT DISTINCT
+    PURCHASE_HK
+    , LOYALTY_CARD_HK
+    , LOYALTY_CARD_NUMBER_COALESCE
+    , CREDITCARDNUMBERENCRYPTED
+    , CREDITCARDNUMBER
+    , CARDEXPIRATIONDATE
+    , CARD_TOKEN
+    , CARD_TOKEN_BR
+    , CREDITCARDNUMBER_BR
+    , CUSTOMERMAGNETICCARDLOYALTY
+    , SALEDATE
+    , CONCAT(
+    COALESCE (CUSTOMERMAGNETICCARDLOYALTY,'-1'),
+    '|',
+    COALESCE (CREDITCARDNUMBER_BR, '-1')
+    ) AS CARD_COMBINATION
+    , SALETIMESTAMP
+    , LOAD_DATETIME
+FROM card_combination_data
+;
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- 01/10/2024
+
+SELECT *
+FROM (
+SELECT
+  PURCHASE_HK
+, REGEXP_SUBSTR_ALL(CREDITCARDNUMBER, '.{1}') AS array1
+, REGEXP_SUBSTR_ALL(LEFT(
+CASE WHEN LEFT(CREDITCARDNUMBER, 1) = '0' THEN '0' || CARD_TOKEN ELSE CARD_TOKEN END
+, LEN(CREDITCARDNUMBER)), '.{1}') AS array2
+
+, MIN(CREDITCARDNUMBER) AS CREDITCARDNUMBER
+, MIN(CARD_TOKEN) AS CARD_TOKEN
+
+-- , n.*
+-- , n2.*
+
+, ARRAY_AGG(
+(CASE WHEN array1[n.index] = array2[n.index] THEN 1 ELSE 0 END)::VARCHAR(20)
+) WITHIN GROUP(ORDER BY n.index) AS array_calc
+, SUM(CASE WHEN array1[n.index] = array2[n.index] THEN 1 ELSE 0 END) = ARRAY_SIZE(array_calc) AS match_result
+
+FROM (SELECT * FROM SBX_TIM_WILSON.BUSINESS_VAULT.stg_card_combination WHERE CREDITCARDNUMBER IS NOT NULL AND CARD_TOKEN IS NOT NULL LIMIT 1000000)
+INNER JOIN table(flatten(array1)) n
+INNER JOIN table(flatten(array2)) n2
+WHERE 1 = 1
+AND n.index = n2.index
+AND REGEXP_SUBSTR_ALL(CREDITCARDNUMBER, '.{1}')[n.index] NOT IN ('X', '*')
+-- AND LEFT(CREDITCARDNUMBER, 1) = '0'
+GROUP BY 1,3,2
+)
+WHERE 1 = 1
+AND match_result = FALSE
+ORDER BY PURCHASE_HK
+;
+
+SELECT *
+, a1 = a2 AS test_result
+FROM (
+SELECT
+  PURCHASE_HK
+, CREDITCARDNUMBER
+, CARD_TOKEN
+
+, REGEXP_SUBSTR_ALL(CREDITCARDNUMBER, '.{1}') AS array1
+, REGEXP_SUBSTR_ALL(LEFT(
+CASE WHEN LEFT(CREDITCARDNUMBER, 1) = '0' THEN '0' || CARD_TOKEN ELSE CARD_TOKEN END
+, LEN(CREDITCARDNUMBER)), '.{1}') AS array2
+
+-- , n.*
+-- , n2.*
+
+-- , ARRAY_AGG(
+-- (CASE WHEN array1[n.index] = array2[n.index] THEN 1 ELSE 0 END)::VARCHAR(20)
+-- ) WITHIN GROUP(ORDER BY n.index) AS array_calc
+-- , SUM(CASE WHEN array1[n.index] = array2[n.index] THEN 1 ELSE 0 END) = ARRAY_SIZE(array_calc) AS match_result
+, ARRAY_AGG(array1[n.index]) AS a1
+, ARRAY_AGG(array2[n.index]) AS a2
+
+FROM SBX_TIM_WILSON.BUSINESS_VAULT.stg_card_combination
+INNER JOIN table(flatten(array1)) n
+INNER JOIN table(flatten(array2)) n2
+WHERE 1 = 1
+-- AND (CREDITCARDNUMBER IS NULL OR CARD_TOKEN IS NULL)
+AND n.index = n2.index
+AND REGEXP_SUBSTR_ALL(CREDITCARDNUMBER, '.{1}')[n.index] NOT IN ('X', '*')
+GROUP BY 1,3,2
+)
+-- WHERE 1 = 1
+-- WHERE test_result = FALSE
+-- WHERE match_result != test_result
+-- ORDER BY PURCHASE_HK
+;
+
+
+
+
