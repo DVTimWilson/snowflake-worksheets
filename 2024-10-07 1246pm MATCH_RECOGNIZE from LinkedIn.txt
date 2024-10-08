@@ -1,0 +1,87 @@
+-- https://www.linkedin.com/posts/manaswi-ghosh_sql-windowfunction-cte-activity-7246530939835588608-im_j
+
+WITH data(id, status_date, status) AS
+(
+    SELECT '1', TO_DATE('2023-12-31'), 'Y' FROM DUAL UNION ALL
+    SELECT '1', TO_DATE('2024-01-01'), 'Y' FROM DUAL UNION ALL
+    SELECT '1', TO_DATE('2024-01-02'), 'Y' FROM DUAL UNION ALL
+    SELECT '1', TO_DATE('2024-01-03'), 'Y' FROM DUAL UNION ALL
+    SELECT '1', TO_DATE('2024-01-04'), 'N' FROM DUAL UNION ALL
+    SELECT '1', TO_DATE('2024-01-05'), 'Y' FROM DUAL UNION ALL
+    SELECT '1', TO_DATE('2024-01-06'), 'Y' FROM DUAL UNION ALL
+    SELECT '1', TO_DATE('2024-01-07'), 'Y' FROM DUAL UNION ALL
+    SELECT '1', TO_DATE('2024-01-08'), 'N' FROM DUAL UNION ALL
+    SELECT '1', TO_DATE('2024-01-09'), 'Y' FROM DUAL UNION ALL
+    SELECT '1', TO_DATE('2024-01-10'), 'Y' FROM DUAL UNION ALL
+    SELECT '2', TO_DATE('2024-01-06'), 'Y' FROM DUAL UNION ALL
+    SELECT '2', TO_DATE('2024-01-07'), 'Y' FROM DUAL UNION ALL
+    SELECT '2', TO_DATE('2024-01-08'), 'N' FROM DUAL UNION ALL
+    SELECT '2', TO_DATE('2024-01-09'), 'Y' FROM DUAL UNION ALL
+    SELECT '2', TO_DATE('2024-01-10'), 'N' FROM DUAL
+),
+
+cte1 AS (
+SELECT *
+    , ROW_NUMBER() OVER (PARTITION BY ID ORDER BY STATUS_DATE) AS rn
+    , CASE WHEN COALESCE(LAG(STATUS, 1) OVER (PARTITION BY ID ORDER BY STATUS_DATE), '') != STATUS THEN rn END AS first_status
+    , CASE WHEN COALESCE(LEAD(STATUS, 1) OVER (PARTITION BY ID ORDER BY STATUS_DATE), '') != STATUS THEN rn END AS last_status
+FROM data
+),
+
+cte2 AS (
+SELECT *
+    , LAST_VALUE(first_status) IGNORE NULLS OVER (PARTITION BY ID ORDER BY STATUS_DATE ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS first_statuses
+    , FIRST_VALUE(last_status) IGNORE NULLS OVER (PARTITION BY ID ORDER BY STATUS_DATE ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) AS last_statuses
+FROM cte1
+)
+
+SELECT
+      ID
+    , MIN(STATUS) AS status
+    , MIN(STATUS_DATE) AS start_date
+    , MAX(STATUS_DATE) AS end_date
+FROM cte2
+GROUP BY ID, FIRST_STATUSES, LAST_STATUSES
+ORDER BY ID, start_date
+;
+
+WITH data(id, status_date, status) AS
+(
+    SELECT '1', TO_DATE('2023-12-31'), 'Y' FROM DUAL UNION ALL
+    SELECT '1', TO_DATE('2024-01-01'), 'Y' FROM DUAL UNION ALL
+    SELECT '1', TO_DATE('2024-01-02'), 'Y' FROM DUAL UNION ALL
+    SELECT '1', TO_DATE('2024-01-03'), 'Y' FROM DUAL UNION ALL
+    SELECT '1', TO_DATE('2024-01-04'), 'N' FROM DUAL UNION ALL
+    SELECT '1', TO_DATE('2024-01-05'), 'Y' FROM DUAL UNION ALL
+    SELECT '1', TO_DATE('2024-01-06'), 'Y' FROM DUAL UNION ALL
+    SELECT '1', TO_DATE('2024-01-07'), 'Y' FROM DUAL UNION ALL
+    SELECT '1', TO_DATE('2024-01-08'), 'N' FROM DUAL UNION ALL
+    SELECT '1', TO_DATE('2024-01-09'), 'Y' FROM DUAL UNION ALL
+    SELECT '1', TO_DATE('2024-01-10'), 'Y' FROM DUAL UNION ALL
+    SELECT '2', TO_DATE('2024-01-06'), 'Y' FROM DUAL UNION ALL
+    SELECT '2', TO_DATE('2024-01-07'), 'Y' FROM DUAL UNION ALL
+    SELECT '2', TO_DATE('2024-01-08'), 'N' FROM DUAL UNION ALL
+    SELECT '2', TO_DATE('2024-01-09'), 'Y' FROM DUAL UNION ALL
+    SELECT '2', TO_DATE('2024-01-10'), 'N' FROM DUAL
+)
+
+SELECT id, status, start_date, end_date, "Match #", "Match Sequence #", "Symbol Matched" 
+FROM data
+MATCH_RECOGNIZE (
+    PARTITION BY id
+    ORDER BY status_date
+    MEASURES status AS status, FIRST(status_date) AS start_date, LAST(status_date) AS end_date, MATCH_NUMBER() AS "Match #",
+               MATCH_SEQUENCE_NUMBER() AS "Match Sequence #", CLASSIFIER AS "Symbol Matched"
+    --ONE ROW PER MATCH  -- default
+    --AFTER MATCH SKIP PAST LAST ROW  -- default
+    PATTERN( (start_record nochange* end_record) | both )
+    DEFINE
+        start_record AS status != COALESCE(LAG(status), '') AND status = COALESCE(LEAD(status), '')
+        , end_record AS status != COALESCE(LEAD(status), '') AND status = COALESCE(LAG(status), '')
+        , nochange AS status = COALESCE(LAG(status), '') -- OR status = COALESCE(LEAD(status), '')
+        , both AS status != COALESCE(LAG(status), '') AND status != COALESCE(LEAD(status), '')
+)
+ORDER BY id, start_date
+;
+
+
