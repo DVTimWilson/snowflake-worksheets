@@ -1,0 +1,46 @@
+WITH data(id, claim_hk) AS
+(
+    SELECT '1', 'A' FROM DUAL UNION ALL
+    SELECT '2', 'B' FROM DUAL UNION ALL
+    SELECT '4', 'C' FROM DUAL UNION ALL
+    SELECT '5', 'D' FROM DUAL
+),
+
+cte2 AS (
+SELECT *
+, LEAD(d1.id) OVER (ORDER BY d1.id) AS next_id
+FROM data AS d1
+LEFT OUTER JOIN data AS d2
+ON d2.id = d1.id + 1
+WHERE d2.id IS NULL
+)
+
+SELECT *
+FROM cte2
+WHERE next_id IS NOT NULL
+;
+
+WITH data(id, claim_hk) AS
+(
+    SELECT '1', 'A' FROM DUAL UNION ALL
+    SELECT '2', 'B' FROM DUAL UNION ALL
+    SELECT '4', 'C' FROM DUAL UNION ALL
+    SELECT '5', 'D' FROM DUAL
+)
+
+SELECT *
+FROM data
+MATCH_RECOGNIZE(
+    -- no PARTITION BY
+    ORDER BY id
+    MEASURES id AS id, claim_hk AS claim_hk
+        ,MATCH_NUMBER() AS "Match #", MATCH_SEQUENCE_NUMBER() AS "Match Sequence #", CLASSIFIER AS "Symbol Matched"
+    PATTERN ( gap_start | gap_end | dummy )
+    DEFINE
+        dummy AS true
+        , gap_start AS LEAD(id) > id + 1
+        , gap_end AS LAG(id) < id - 1
+)
+WHERE "Symbol Matched" = 'GAP_START'
+;
+
