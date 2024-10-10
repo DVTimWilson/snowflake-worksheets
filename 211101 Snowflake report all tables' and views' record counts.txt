@@ -1,0 +1,19 @@
+USE ROLE DVUK_FOR_SHARING_READ;
+
+USE DATABASE DATAVAULT_SANDPIT;
+
+USE SCHEMA DATAVAULT_SANDPIT.RAW_VAULT;
+
+select listagg(xx, ' union all ')
+from (
+    select 'select \'' || x || '\' v, count(*) c from ' || x as xx
+    from (
+        select TABLE_CATALOG ||'.'|| TABLE_SCHEMA ||'."'||TABLE_NAME||'"' x
+        from  DATAVAULT_SANDPIT.INFORMATION_SCHEMA.TABLES
+        UNION ALL
+        select TABLE_CATALOG ||'.'|| TABLE_SCHEMA ||'."'||TABLE_NAME||'"' x
+        from  DATAVAULT_SANDPIT.INFORMATION_SCHEMA.VIEWS
+    )
+)
+;
+

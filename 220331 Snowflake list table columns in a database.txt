@@ -1,0 +1,33 @@
+List table columns in Snowflake - Snowflake Data Dictionary Queries (dataedo.com)
+
+
+ 	List table columns in Snowflake - Snowflake Data Dictionary Queries - Dataedo - Single Source of Truth About Your Data
+Query below lists all table columns in a database. Query select t.table_schema, t.table_name, c.column_name, c.ordinal_position, c.data_type, case when c.numeric_precision is not null then c.numeric_precision when c.character_maximum_length is not null then c.character_maximum_length end as max_length, c.numeric_scale, c.is_identity, c.is_nullable from information_schema.tables t inner join ...
+dataedo.com
+
+USE DATABASE VAULT_FIVETRAN 
+;
+
+SELECT t.TABLE_SCHEMA,
+       t.TABLE_NAME,
+       c.COLUMN_NAME,
+       c.ORDINAL_POSITION,
+       c.DATA_TYPE,
+       CASE 
+            WHEN c.NUMERIC_PRECISION IS NOT NULL
+                then c.NUMERIC_PRECISION
+            WHEN c.CHARACTER_MAXIMUM_LENGTH IS NOT NULL
+                THEN c.CHARACTER_MAXIMUM_LENGTH
+       END AS MAX_LENGTH,
+       c.NUMERIC_SCALE, 
+       c.IS_IDENTITY,
+       c.IS_NULLABLE
+FROM INFORMATION_SCHEMA.TABLES t
+INNER JOIN INFORMATION_SCHEMA.COLUMNS c ON
+         c.TABLE_SCHEMA = t.TABLE_SCHEMA AND c.TABLE_NAME = t.TABLE_NAME
+--WHERE t.TABLE_TYPE = 'BASE TABLE'    
+WHERE t.TABLE_SCHEMA NOT IN ('TESTSCHEMA', 'INFORMATION_SCHEMA', 'PUBLIC', 'FIVETRAN_UNSUBTLE_STAGING')
+ORDER BY t.TABLE_SCHEMA,
+       t.TABLE_NAME,
+       c.ORDINAL_POSITION
+;
