@@ -4,7 +4,7 @@ Remembered the calendar trick from Travelopia:
 
 SELECT 'PRE', date_dependent_column1 AS DEPENDENT_VALUE, other_columns_you_want FROM calendar_table
 UNION ALL
-SELECT 'POST', date_dependent_column2,  AS DEPENDENT_VALUE, other_columns_you_want FROM calendar_table
+SELECT 'POST', date_dependent_column2 AS DEPENDENT_VALUE, other_columns_you_want FROM calendar_table
 
 2. Then in your data cte(s) add a date dependent flag column containing either 'PRE' or 'POST'
 
