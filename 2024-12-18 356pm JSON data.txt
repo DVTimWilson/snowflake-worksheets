@@ -1,0 +1,258 @@
+// https://docs.snowflake.com/en/sql-reference/functions/parse_json
+// https://docs.snowflake.com/en/user-guide/querying-semistructured
+
+// https://medium.com/@ganeshnv0/avro-parquet-and-orc-file-format-comparison-ff776d375c7e
+
+CREATE OR REPLACE TABLE car_sales
+( 
+  src variant
+)
+AS
+SELECT PARSE_JSON(column1) AS src
+FROM VALUES
+('{ 
+    "date" : "2017-04-28", 
+    "dealership" : "Valley View Auto Sales",
+    "salesperson" : {
+      "id": "55",
+      "name": "Frank Beasley"
+    },
+    "customer" : [
+      {"name": "Joyce Ridgely", "phone": "16504378889", "address": "San Francisco, CA"}
+    ],
+    "vehicle" : [
+      {"make": "Honda", "model": "Civic", "year": "2017", "price": "20275", "extras":["ext warranty", "paint protection"]}
+    ]
+}'),
+('{ 
+    "date" : "2017-04-28", 
+    "dealership" : "Tindel Toyota",
+    "salesperson" : {
+      "id": "274",
+      "name": "Greg Northrup"
+    },
+    "customer" : [
+      {"name": "Bradley Greenbloom", "phone": "12127593751", "address": "New York, NY"}
+    ],
+    "vehicle" : [
+      {"make": "Toyota", "model": "Camry", "year": "2017", "price": "23500", "extras":["ext warranty", "rust proofing", "fabric protection"]}  
+    ]
+}') v
+;
+
+SELECT * FROM car_sales
+;
+
+SELECT src:dealership
+    FROM car_sales
+    ORDER BY 1
+;
+
+// Dot notation
+SELECT src:salesperson.name
+    FROM car_sales
+    ORDER BY 1
+;
+
+// Bracket notation
+SELECT src['salesperson']['name']
+    FROM car_sales
+    ORDER BY 1
+;
+
+SELECT src:customer[0].name, src:vehicle[0]
+    FROM car_sales
+    ORDER BY 1
+;
+
+SELECT src:customer[0].name, src:vehicle[0].price
+    FROM car_sales
+    ORDER BY 1
+;
+
+SELECT src:vehicle[0].price::NUMBER * 0.10 AS tax
+    FROM car_sales
+    ORDER BY tax
+;
+
+SELECT src:dealership, src:dealership::VARCHAR
+    FROM car_sales
+    ORDER BY 2
+;
+
+CREATE TABLE pets (v variant);
+
+INSERT INTO pets SELECT PARSE_JSON ('{"species":"dog", "name":"Fido", "is_dog":"true"} ');
+INSERT INTO pets SELECT PARSE_JSON ('{"species":"cat", "name":"Bubby", "is_dog":"false"}');
+INSERT INTO pets SELECT PARSE_JSON ('{"species":"cat", "name":"dog terror", "is_dog":"false"}');
+
+SELECT a.v, b.key, b.value FROM pets a,LATERAL FLATTEN(input => a.v) b
+WHERE b.value LIKE '%dog%'
+;
+
+SELECT
+  value:name::string as "Customer Name",
+  value:address::string as "Address"
+  FROM
+    car_sales
+  , LATERAL FLATTEN(INPUT => SRC:customer)
+;
+
+SELECT
+  vm.value:make::string as make,
+  vm.value:model::string as model,
+  ve.value::string as "Extras Purchased"
+  FROM
+    car_sales
+    , LATERAL FLATTEN(INPUT => SRC:vehicle) vm
+    , LATERAL FLATTEN(INPUT => vm.value:extras) ve
+  ORDER BY make, model, "Extras Purchased"
+;
+
+SELECT array_size(src:customer)
+FROM car_sales
+;
+
+SELECT f.*
+FROM car_sales
+, table(flatten(src:salesperson)) f
+;
+-- SEQ	KEY	PATH	INDEX	VALUE	THIS
+-- 1	id	id		"55"	{
+--   "id": "55",
+--   "name": "Frank Beasley"
+-- }
+-- 1	name	name		"Frank Beasley"	{
+--   "id": "55",
+--   "name": "Frank Beasley"
+-- }
+-- 2	id	id		"274"	{
+--   "id": "274",
+--   "name": "Greg Northrup"
+-- }
+-- 2	name	name		"Greg Northrup"	{
+--   "id": "274",
+--   "name": "Greg Northrup"
+-- }
+
+SELECT f.*
+FROM car_sales
+, table(flatten(src:customer)) f
+;
+-- SEQ	KEY	PATH	INDEX	VALUE	THIS
+-- 1		[0]	0	{
+--   "address": "San Francisco, CA",
+--   "name": "Joyce Ridgely",
+--   "phone": "16504378889"
+-- }	[
+--   {
+--     "address": "San Francisco, CA",
+--     "name": "Joyce Ridgely",
+--     "phone": "16504378889"
+--   }
+-- ]
+-- 2		[0]	0	{
+--   "address": "New York, NY",
+--   "name": "Bradley Greenbloom",
+--   "phone": "12127593751"
+-- }	[
+--   {
+--     "address": "New York, NY",
+--     "name": "Bradley Greenbloom",
+--     "phone": "12127593751"
+--   }
+-- ]
+
+SELECT f.*
+FROM car_sales
+, table(flatten(src:vehicle)) f
+;
+-- SEQ	KEY	PATH	INDEX	VALUE	THIS
+-- 1		[0]	0	{
+--   "extras": [
+--     "ext warranty",
+--     "paint protection"
+--   ],
+--   "make": "Honda",
+--   "model": "Civic",
+--   "price": "20275",
+--   "year": "2017"
+-- }	[
+--   {
+--     "extras": [
+--       "ext warranty",
+--       "paint protection"
+--     ],
+--     "make": "Honda",
+--     "model": "Civic",
+--     "price": "20275",
+--     "year": "2017"
+--   }
+-- ]
+-- 2		[0]	0	{
+--   "extras": [
+--     "ext warranty",
+--     "rust proofing",
+--     "fabric protection"
+--   ],
+--   "make": "Toyota",
+--   "model": "Camry",
+--   "price": "23500",
+--   "year": "2017"
+-- }	[
+--   {
+--     "extras": [
+--       "ext warranty",
+--       "rust proofing",
+--       "fabric protection"
+--     ],
+--     "make": "Toyota",
+--     "model": "Camry",
+--     "price": "23500",
+--     "year": "2017"
+--   }
+-- ]
+
+// Using FLATTEN to List Distinct Key Names
+SELECT REGEXP_REPLACE(f.path, '\\[[0-9]+\\]', '[]') AS "Path",
+  TYPEOF(f.value) AS "Type",
+  COUNT(*) AS "Count"
+FROM car_sales,
+LATERAL FLATTEN(src, RECURSIVE=>true) f
+GROUP BY 1, 2 ORDER BY 1, 2
+;
+
+// Using FLATTEN to List Paths in an OBJECT
+// The following query returns keys, paths, and values (including VARIANT “null” values) for all data types stored in a VARIANT column. The code assumes that the VARIANT column contains an OBJECT in each row.
+SELECT
+  t.src,
+  f.seq,
+  f.key,
+  f.path,
+  REGEXP_COUNT(f.path,'\\.|\\[') +1 AS Level,
+  TYPEOF(f.value) AS "Type",
+  f.index,
+  f.value AS "Current Level Value",
+  f.this AS "Above Level Value"
+FROM car_sales t,
+LATERAL FLATTEN(t.src, recursive=>true) f
+;
+
+// Using FLATTEN to List Paths in an OBJECT
+// The following query is similar to the first query, but excludes nested OBJECTs and ARRAYs
+SELECT
+  t.src,
+  f.seq,
+  f.key,
+  f.path,
+  REGEXP_COUNT(f.path,'\\.|\\[') +1 AS Level,
+  TYPEOF(f.value) AS "Type",
+  f.index,
+  f.value AS "Current Level Value",
+  f.this AS "Above Level Value"
+FROM car_sales t,
+LATERAL FLATTEN(t.src, recursive=>true) f
+WHERE "Type" NOT IN ('OBJECT','ARRAY')
+;
+
+

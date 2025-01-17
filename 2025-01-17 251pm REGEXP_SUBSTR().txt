@@ -1,0 +1,16 @@
+WITH source_data (COMMENTS) AS (
+    SELECT 'REF: AB CD EF' FROM DUAL UNION ALL
+    SELECT 'REF: ABC CD EF' FROM DUAL UNION ALL
+    SELECT 'RDF: AB CD EF' FROM DUAL UNION ALL
+    SELECT 'Remaining Interest owed:69.67' FROM DUAL UNION ALL
+    SELECT 'Remaining Interest owed:69.67 ABCDEFG' FROM DUAL
+)
+
+SELECT
+    COMMENTS
+    , RIGHT(TRIM(REGEXP_SUBSTR(COMMENTS, 'REF:\\s\\w\\w\\s')), 2) AS COMMENTS_EXTRACT
+    , SPLIT(TRIM(REGEXP_SUBSTR(COMMENTS, 'Remaining Interest owed:\\d+\\.\\d+')), ':')[1] AS COMMENTS_EXTRACT
+FROM source_data
+;
+
+

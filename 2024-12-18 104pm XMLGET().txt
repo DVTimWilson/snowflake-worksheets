@@ -1,0 +1,71 @@
+// https://community.snowflake.com/s/article/introduction-to-loading-and-parsing-xml-data-using-sql
+// https://community.snowflake.com/s/article/HOW-TO-QUERY-NESTED-XML-DATA-IN-SNOWFLAKE
+// https://docs.snowflake.com/en/sql-reference/functions/parse_xml
+// https://docs.snowflake.com/en/sql-reference/functions/xmlget
+// https://docs.snowflake.com/en/sql-reference/functions/get
+
+// https://medium.com/snowflake/working-with-xml-in-snowflake-part-i-8b4eca1c01fa
+// https://medium.com/snowflake/working-with-xml-in-snowflake-part-ii-774b4d32399
+
+// GET() and XMLGET() function calls instead of the dot or bracket notation used for JSON
+
+// Create a Snowflake table with a single variant column
+  create or replace table DEPT_EMP_ADDR (
+     xmldata variant not null
+);
+
+-- Since this is a small file, you can use the Load Table dialog in the WebUI (from the Databases tab, select the Tables tab, select the DEPT_EMP_ADDR table and then select the Load Data....option).
+
+SELECT * FROM DEPT_EMP_ADDR;
+
+//1. Query to parse out named element values at the root level (DEPT).
+  SELECT
+     GET( XMLGET( xmldata, 'dept_id'), '$')::INTEGER as deptID,
+     XMLGET( xmldata, 'dept_id' ):"$"::INTEGER AS DEPT_ID,
+     XMLGET( xmldata, 'dept_name' ):"$"::STRING AS DEPT_NAME
+  FROM DEPT_EMP_ADDR
+;
+
+SELECT
+     GET(xmldata, '@dept_id')::integer as dept_id,
+     GET(xmldata, '@dept_name')::string as dept_name
+FROM DEPT_EMP_ADDR
+;
+
+//2. Query to parse out all the elements at the next level down (EMPLOYEE).
+select
+       XMLGET( xmldata, 'dept_id' ):"$"::string AS dept_id
+     , XMLGET( xmldata, 'dept_name' ):"$"::string AS dept_name
+     , XMLGET( emp.value, 'emp_id' ):"$"::integer as emp_id
+     , XMLGET( emp.value, 'emp_fname' ):"$"::string as emp_fname
+     , XMLGET( emp.value, 'emp_lname' ):"$"::string as emp_lname
+     , XMLGET( emp.value, 'emp_title' ):"$"::string as emp_title
+     , XMLGET( emp.value, 'emp_ssn' ):"$"::string as emp_ssn
+from
+    dept_emp_addr
+    ,  lateral FLATTEN(dept_emp_addr.xmldata:"$") emp
+  where GET( emp.value, '@') = 'employee'
+  order by dept_id, emp_id
+;
+
+//3. Query to parse out all the elements at the next level down (ADDRESS).
+select
+     XMLGET( xmldata, 'dept_id' ):"$"::INTEGER AS ID
+   , XMLGET( xmldata, 'dept_name' ):"$"::STRING AS NAME
+   , XMLGET( emp.value, 'emp_id' ):"$"::INTEGER as emp_id
+   , XMLGET( emp.value, 'emp_fname' ):"$"::STRING || ' ' ||
+     XMLGET( emp.value, 'emp_lname' ):"$"::STRING as emp_name
+   , XMLGET( addr.value, 'street_1' ):"$"::STRING as street_1
+   , XMLGET( addr.value, 'city' ):"$"::STRING as city
+   , XMLGET( addr.value, 'state' ):"$"::STRING as state
+   , XMLGET( addr.value, 'zipcode' ):"$"::STRING as zipcode
+   , TRY_TO_DATE(XMLGET( addr.value, 'start_date' ):"$"::STRING) as start_date
+   , TRY_TO_DATE(XMLGET( addr.value, 'end_date' ):"$"::STRING) as end_date
+from
+  dept_emp_addr
+  ,  lateral FLATTEN( xmldata:"$" ) emp
+  ,  lateral FLATTEN( emp.value:"$" ) addr
+where emp.value like '<employee>%'
+  and addr.value like '<address>%'
+order by ID, emp_id, start_date desc
+;
