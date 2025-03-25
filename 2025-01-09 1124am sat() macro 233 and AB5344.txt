@@ -1,0 +1,240 @@
+-- 19 unique records
+with src_data as (
+    select 
+        '2c66b8cf619cc08cb5dce3850eaa1aec' as pk,
+        'random string' as payload_col_1,
+        'another string' as payload_col_2,
+        to_timestamp('2024-05-10') as payload_date_col,
+        sysdate() as load_datetime
+    union all
+    select
+        'f01cdac679f3bf71d0001de345141252' as pk,
+        'string val' as payload_col_1,
+        'another string val' as payload_col_2,
+        to_timestamp('2024-03-05') as payload_date_col,
+        sysdate() as load_datetime
+    union all
+    select
+        'f01cdac679f3bf71d0001de345141252' as pk,
+        'string val test' as payload_col_1,
+        'another string val' as payload_col_2,
+        to_timestamp('2024-03-06') as payload_date_col,
+        sysdate() as load_datetime
+    union all
+    select
+        'f01cdac679f3bf71d0001de345141252' as pk,
+        'string val test 1' as payload_col_1,
+        'another string val test' as payload_col_2,
+        to_timestamp('2024-03-05') as payload_date_col,
+        sysdate() as load_datetime
+    union all
+    select
+        'f01cdac679f3bf71d0001de345141252' as pk,
+        'string val test 2' as payload_col_1,
+        'another string val' as payload_col_2,
+        to_timestamp('2024-03-05') as payload_date_col,
+        sysdate() as load_datetime
+    union all
+    select 
+        '2c66b8cf619cc08cb5dce3850eaa1aec' as pk,
+        'random string 1' as payload_col_1,
+        'another string' as payload_col_2,
+        to_timestamp('2024-05-11') as payload_date_col,
+        sysdate() as load_datetime
+    union all
+    select 
+        '2c66b8cf619cc08cb5dce3850eaa1aec' as pk,
+        'random string diff' as payload_col_1,
+        'another string' as payload_col_2,
+        to_timestamp('2024-05-10') as payload_date_col,
+        sysdate() as load_datetime
+    union all
+    select 
+        '2c66b8cf619cc08cb5dce3850eaa1aec' as pk,
+        'random string diff d' as payload_col_1,
+        'another string' as payload_col_2,
+        to_timestamp('2024-05-10') as payload_date_col,
+        sysdate() as load_datetime
+    union all
+    select 
+        '2c66b8cf619cc08cb5dce3850eaa1aec' as pk,
+        'random string diff a' as payload_col_1,
+        'another string' as payload_col_2,
+        to_timestamp('2024-05-10') as payload_date_col,
+        sysdate() as load_datetime
+    union all
+    select 
+        '2c66b8cf619cc08cb5dce3850eaa1aec' as pk,
+        'random string diff' as payload_col_1,
+        'another string a' as payload_col_2,
+        to_timestamp('2024-05-10') as payload_date_col,
+        sysdate() as load_datetime
+    union all
+    select 
+        '2c66b8cf619cc08cb5dce3850eaa1aec' as pk,
+        'random string diff' as payload_col_1,
+        'another string again' as payload_col_2,
+        to_timestamp('2024-05-10') as payload_date_col,
+        sysdate() as load_datetime
+    union all
+    select 
+        '2c66b8cf619cc08cb5dce3850eaa1aec' as pk,
+        'random string diff' as payload_col_1,
+        'another string dssa' as payload_col_2,
+        to_timestamp('2024-05-10') as payload_date_col,
+        sysdate() as load_datetime
+    union all
+    select 
+        '2c66b8cf619cc08cb5dce3850eaa1aec' as pk,
+        'random string diff 2' as payload_col_1,
+        'another string dssa' as payload_col_2,
+        to_timestamp('2024-05-10') as payload_date_col,
+        sysdate() as load_datetime
+    union all
+    select 
+        '2c66b8cf619cc08cb5dce3850eaa1aec' as pk,
+        'random string diff 3' as payload_col_1,
+        'another string dssa' as payload_col_2,
+        to_timestamp('2024-05-10') as payload_date_col,
+        sysdate() as load_datetime
+    union all
+    select 
+        '2c66b8cf619cc08cb5dce3850eaa1aec' as pk,
+        'random string diff' as payload_col_1,
+        'another string dssa d' as payload_col_2,
+        to_timestamp('2024-05-10') as payload_date_col,
+        sysdate() as load_datetime
+    union all
+    select 
+        '2c66b8cf619cc08cb5dce3850eaa1aec' as pk,
+        'random string diff 123' as payload_col_1,
+        'another string dssa' as payload_col_2,
+        to_timestamp('2024-05-10') as payload_date_col,
+        sysdate() as load_datetime
+    union all
+    select 
+        '2c66b8cf619cc08cb5dce3850eaa1aec' as pk,
+        'random string diff' as payload_col_1,
+        'another string dssa test' as payload_col_2,
+        to_timestamp('2024-05-09') as payload_date_col,
+        sysdate() as load_datetime
+    union all
+    select 
+        '2c66b8cf619cc08cb5dce3850eaa1aec' as pk,
+        'random string diff 1' as payload_col_1,
+        'another string dssa' as payload_col_2,
+        to_timestamp('2024-05-07') as payload_date_col,
+        sysdate() as load_datetime
+    union all
+    select 
+        '2c66b8cf619cc08cb5dce3850eaa1aec' as pk,
+        'random string diff 53453' as payload_col_1,
+        'another string dssa' as payload_col_2,
+        to_timestamp('2024-05-09') as payload_date_col,
+        sysdate() as load_datetime
+)
+select
+    pk,
+    payload_col_1,
+    payload_col_2,
+    payload_date_col,
+    load_datetime
+from src_data
+;
+
+SELECT *
+FROM AUTOMATE_DV_DEV.TEST_TIM_WILSON.SATELLITE_TS
+;
+
+select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+
+WITH actual_data AS (
+    SELECT * FROM AUTOMATE_DV_DEV.TEST_TIM_WILSON.SATELLITE_TS
+),
+expected_data AS (
+    SELECT * FROM AUTOMATE_DV_DEV.TEST_TIM_WILSON.satellite_ts_expected_seed
+),
+order_actual_data AS (
+    SELECT "CUSTOMER_DOB"::VARCHAR AS "CUSTOMER_DOB", "CUSTOMER_NAME"::VARCHAR AS "CUSTOMER_NAME", "CUSTOMER_PHONE"::VARCHAR AS "CUSTOMER_PHONE", "CUSTOMER_PK"::VARCHAR AS "CUSTOMER_PK", "EFFECTIVE_FROM"::VARCHAR AS "EFFECTIVE_FROM", "HASHDIFF"::VARCHAR AS "HASHDIFF", "LOAD_DATETIME"::VARCHAR AS "LOAD_DATETIME", "SOURCE"::VARCHAR AS "SOURCE"
+    FROM actual_data
+    ORDER BY "CUSTOMER_DOB", "CUSTOMER_NAME", "CUSTOMER_PHONE", "CUSTOMER_PK", "EFFECTIVE_FROM", "HASHDIFF", "LOAD_DATETIME", "SOURCE"
+),
+order_expected_data AS (
+    SELECT "CUSTOMER_DOB"::VARCHAR AS "CUSTOMER_DOB", "CUSTOMER_NAME"::VARCHAR AS "CUSTOMER_NAME", "CUSTOMER_PHONE"::VARCHAR AS "CUSTOMER_PHONE", "CUSTOMER_PK"::VARCHAR AS "CUSTOMER_PK", "EFFECTIVE_FROM"::VARCHAR AS "EFFECTIVE_FROM", "HASHDIFF"::VARCHAR AS "HASHDIFF", "LOAD_DATETIME"::VARCHAR AS "LOAD_DATETIME", "SOURCE"::VARCHAR AS "SOURCE"
+    FROM expected_data
+    ORDER BY "CUSTOMER_DOB", "CUSTOMER_NAME", "CUSTOMER_PHONE", "CUSTOMER_PK", "EFFECTIVE_FROM", "HASHDIFF", "LOAD_DATETIME", "SOURCE"
+),
+compare_e_to_a AS (
+    SELECT * FROM order_expected_data
+    EXCEPT
+    SELECT * FROM order_actual_data
+),
+compare_a_to_e AS (
+    SELECT * FROM order_actual_data
+    EXCEPT
+    SELECT * FROM order_expected_data
+),
+duplicates_actual AS (
+    SELECT "CUSTOMER_DOB", "CUSTOMER_NAME", "CUSTOMER_PHONE", "CUSTOMER_PK", "EFFECTIVE_FROM", "HASHDIFF", "LOAD_DATETIME", "SOURCE", COUNT(*) AS COUNT
+    FROM order_actual_data
+    GROUP BY "CUSTOMER_DOB", "CUSTOMER_NAME", "CUSTOMER_PHONE", "CUSTOMER_PK", "EFFECTIVE_FROM", "HASHDIFF", "LOAD_DATETIME", "SOURCE"
+    HAVING COUNT(*) > 1
+),
+duplicates_expected AS (
+    SELECT "CUSTOMER_DOB", "CUSTOMER_NAME", "CUSTOMER_PHONE", "CUSTOMER_PK", "EFFECTIVE_FROM", "HASHDIFF", "LOAD_DATETIME", "SOURCE", COUNT(*) AS COUNT
+    FROM order_expected_data
+    GROUP BY "CUSTOMER_DOB", "CUSTOMER_NAME", "CUSTOMER_PHONE", "CUSTOMER_PK", "EFFECTIVE_FROM", "HASHDIFF", "LOAD_DATETIME", "SOURCE"
+    HAVING COUNT(*) > 1
+),
+duplicates_not_in_actual AS (
+    SELECT "CUSTOMER_DOB", "CUSTOMER_NAME", "CUSTOMER_PHONE", "CUSTOMER_PK", "EFFECTIVE_FROM", "HASHDIFF", "LOAD_DATETIME", "SOURCE"
+    FROM duplicates_expected
+    WHERE CUSTOMER_PK NOT IN (SELECT CUSTOMER_PK FROM duplicates_actual)
+),
+duplicates_not_in_expected AS (
+    SELECT "CUSTOMER_DOB", "CUSTOMER_NAME", "CUSTOMER_PHONE", "CUSTOMER_PK", "EFFECTIVE_FROM", "HASHDIFF", "LOAD_DATETIME", "SOURCE"
+    FROM duplicates_actual
+    WHERE CUSTOMER_PK NOT IN (SELECT CUSTOMER_PK FROM duplicates_expected)
+),
+compare AS (
+    SELECT "CUSTOMER_DOB", "CUSTOMER_NAME", "CUSTOMER_PHONE", "CUSTOMER_PK", "EFFECTIVE_FROM", "HASHDIFF", "LOAD_DATETIME", "SOURCE",
+           'E_TO_A' AS "ERROR_SOURCE",
+           'EXPECTED RECORD NOT IN ACTUAL' AS "MESSAGE"
+    FROM compare_e_to_a
+    UNION ALL
+    SELECT "CUSTOMER_DOB", "CUSTOMER_NAME", "CUSTOMER_PHONE", "CUSTOMER_PK", "EFFECTIVE_FROM", "HASHDIFF", "LOAD_DATETIME", "SOURCE",
+           'A_TO_E' AS "ERROR_SOURCE",
+           'ACTUAL RECORD NOT IN EXPECTED' AS "MESSAGE"
+    FROM compare_a_to_e
+    UNION ALL
+    SELECT "CUSTOMER_DOB", "CUSTOMER_NAME", "CUSTOMER_PHONE", "CUSTOMER_PK", "EFFECTIVE_FROM", "HASHDIFF", "LOAD_DATETIME", "SOURCE",
+           'DUPES_NOT_IN_A' AS "ERROR_SOURCE",
+           'DUPLICATE RECORDS WE DID EXPECT BUT ARE NOT PRESENT IN ACTUAL' AS "MESSAGE"
+    FROM duplicates_not_in_actual
+    UNION ALL
+    SELECT "CUSTOMER_DOB", "CUSTOMER_NAME", "CUSTOMER_PHONE", "CUSTOMER_PK", "EFFECTIVE_FROM", "HASHDIFF", "LOAD_DATETIME", "SOURCE",
+           'DUPES_NOT_IN_E' AS "ERROR_SOURCE",
+           'DUPLICATE RECORDS WE DID NOT EXPECT AND ARE PRESENT IN ACTUAL' AS "MESSAGE"
+    FROM duplicates_not_in_expected
+)
+
+-- For manual debugging
+-- SELECT * FROM order_actual_data
+-- SELECT * FROM order_expected_data
+-- SELECT * FROM compare_e_to_a
+-- SELECT * FROM compare_a_to_e
+-- SELECT * FROM duplicates_actual
+-- SELECT * FROM duplicates_expected
+-- SELECT * FROM duplicates_not_in_actual
+-- SELECT * FROM duplicates_not_in_expected
+-- SELECT * FROM compare
+
+SELECT * FROM compare
+      
+    ) dbt_internal_test
+;
