@@ -1,0 +1,139 @@
+USE DATABASE TIM_WILSON
+;
+
+CREATE SCHEMA checks
+;
+
+CREATE OR REPLACE PROCEDURE tim_wilson.checks.analyze_tables_last_7_days_all()
+    RETURNS STRING
+    LANGUAGE JAVASCRIPT EXECUTE
+    AS CALLER
+    AS $$ try { // Get all tables in tim_wilson.bronze schema
+    var table_query = `
+        SELECT TABLE_NAME  
+        FROM INFORMATION_SCHEMA.TABLES  
+        WHERE TABLE_SCHEMA = 'BRONZE'  
+AND TABLE_TYPE = 'BASE TABLE'
+//LIMIT 5
+`;
+var table_stmt = snowflake.createStatement({ sqlText: table_query });
+var table_result = table_stmt.execute();
+var anomaly_results = [];
+// Loop through each table
+    while (table_result.next()) { var table_name = table_result.getColumnValue(1);
+// Get the DATE column dynamically for each table
+    var date_col_query = `
+            SELECT COLUMN_NAME  
+            FROM INFORMATION_SCHEMA.COLUMNS  
+            WHERE TABLE_NAME = '${table_name}'  
+            AND TABLE_SCHEMA = 'BRONZE'
+            AND DATA_TYPE ILIKE '%DATE%'
+AND COLUMN_NAME NOT ILIKE 'LOAD%'
+LIMIT 1
+`;
+var date_col_stmt = snowflake.createStatement({ sqlText: date_col_query });
+var date_col_result = date_col_stmt.execute();
+if (! date_col_result.next()) { // If no date column is found, skip this table
+    continue;
+} var date_col = date_col_result.getColumnValue(1);
+// Get columns for current table
+    var column_query = `
+            SELECT COLUMN_NAME, DATA_TYPE  
+            FROM INFORMATION_SCHEMA.COLUMNS  
+            WHERE TABLE_NAME = '${table_name}'  
+            AND TABLE_SCHEMA = 'BRONZE'
+// and COLUMN_NAME = 'NAME'
+order by 1 
+`;
+var col_stmt = snowflake.createStatement({ sqlText: column_query });
+var col_result = col_stmt.execute();
+// Loop through each column
+    while (col_result.next()) { var column_name = col_result.getColumnValue(1);
+var data_type = col_result.getColumnValue(2).toLowerCase();
+var anomaly_query = "";
+if (
+        data_type.includes('number') || data_type.includes('float') || data_type.includes('decimal') || data_type.includes('integer')
+    ) { // Numeric column anomaly detection
+    anomaly_query = `
+                WITH daily_figures AS (
+            -- Compute daily averages first
+                SELECT 
+                 to_date(\"${date_col}\") DATE,
+                 SUM( \"${column_name}\") AS COLUMN_TOTALS
+                 FROM TIM_WILSON.BRONZE.\"${table_name}\"
+                 WHERE to_date(\"${date_col}\") BETWEEN DATEADD(day, -8, CURRENT_DATE()) AND DATEADD(day, -1, CURRENT_DATE())
+                GROUP BY 1
+)
+                    SELECT 
+                        '${table_name}' AS table_name, '${column_name}' AS column_name,
+                        sum( case when DATE = DATEADD(day, -1, CURRENT_DATE()) then COLUMN_TOTALS else 0 end ) value_yesterday,
+AVG( case when DATE != DATEADD(day, -1, CURRENT_DATE()) then COLUMN_TOTALS end ) AS avg_prev_7_days,
+STDDEV( case when DATE != DATEADD(day, -1, CURRENT_DATE()) then COLUMN_TOTALS end ) AS stddev_prev_7_days
+FROM daily_figures
+HAVING ABS(value_yesterday - avg_prev_7_days) > 3 * stddev_prev_7_days
+`;
+}
+    else if (
+        data_type.includes('varchar') || data_type.includes('string') || data_type.includes('text')
+    ) { // Text column anomaly detection (based on length)
+    anomaly_query = `
+                WITH daily_figures AS (
+                 -- Compute daily averages first
+                SELECT 
+                 to_date(\"${date_col}\") DATE,
+                 SUM(LENGTH (\"${column_name}\")) AS COLUMN_TOTALS
+                 FROM TIM_WILSON.BRONZE.\"${table_name}\"
+                 WHERE to_date(\"${date_col}\") BETWEEN DATEADD(day, -8, CURRENT_DATE()) AND DATEADD(day, -1, CURRENT_DATE())
+                GROUP BY 1
+)
+                    SELECT 
+                    '${table_name}' AS table_name, '${column_name}' AS column_name,
+                        sum( case when DATE = DATEADD(day, -1, CURRENT_DATE()) then COLUMN_TOTALS else 0 end ) value_yesterday,
+AVG( case when DATE != DATEADD(day, -1, CURRENT_DATE()) then COLUMN_TOTALS end ) AS avg_prev_7_days,
+STDDEV( case when DATE != DATEADD(day, -1, CURRENT_DATE()) then COLUMN_TOTALS end ) AS stddev_prev_7_days
+FROM daily_figures
+HAVING ABS(value_yesterday - avg_prev_7_days) > 3 * stddev_prev_7_days
+`;
+} if (anomaly_query != "") { try { var anomaly_stmt = snowflake.createStatement({ sqlText: anomaly_query });
+var anomaly_result = anomaly_stmt.execute();
+const currentTimestamp = new Date().toISOString();
+while (anomaly_result.next()) { anomaly_results.push(
+        `(
+                            '${currentTimestamp}',
+                            '${anomaly_result.getColumnValue(1)}',
+                            '${anomaly_result.getColumnValue(2)}',
+                            ${anomaly_result.getColumnValue(3)},
+                            ${anomaly_result.getColumnValue(4)}
+)`
+    );
+} } catch (inner_err) { continue;
+} } } } // Insert anomalies
+    if (anomaly_results.length > 0) { var insert_query = `INSERT INTO tim_wilson.checks.anomaly_results VALUES ` + anomaly_results.join(',');
+snowflake.execute({ sqlText: insert_query });
+} //   return "Analysis complete. Anomalies stored in tim_wilson.checks.anomaly_results.";
+    return(anomaly_query) //   return(insert_query)
+    } catch (err) { return "Error: " + err.message;
+} $$;
+
+CALL tim_wilson.checks.analyze_tables_last_7_days_all()
+;
+
+
+                WITH daily_figures AS (
+                 -- Compute daily averages first
+                SELECT 
+                 to_date("DATE") DATE,
+                 SUM(LENGTH ("TYPE2")) AS COLUMN_TOTALS
+                 FROM TIM_WILSON.BRONZE."ALLOCATEDHOURSANDEARNINGS"
+                 WHERE to_date("DATE") BETWEEN DATEADD(day, -8, CURRENT_DATE()) AND DATEADD(day, -1, CURRENT_DATE())
+                GROUP BY 1
+)
+                    SELECT 
+                    'ALLOCATEDHOURSANDEARNINGS' AS table_name, 'TYPE2' AS column_name,
+                        sum( case when DATE = DATEADD(day, -1, CURRENT_DATE()) then COLUMN_TOTALS else 0 end ) value_yesterday,
+AVG( case when DATE != DATEADD(day, -1, CURRENT_DATE()) then COLUMN_TOTALS end ) AS avg_prev_7_days,
+STDDEV( case when DATE != DATEADD(day, -1, CURRENT_DATE()) then COLUMN_TOTALS end ) AS stddev_prev_7_days
+FROM daily_figures
+HAVING ABS(value_yesterday - avg_prev_7_days) > 3 * stddev_prev_7_days
+;
+
