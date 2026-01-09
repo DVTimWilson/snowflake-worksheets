@@ -119,7 +119,7 @@ federal_holidays_unpivot AS (
 calendar_dim AS (
     SELECT
         dim_date
-        ,DATE_TRUNC('week', dim_date) AS week_commencing_date
+        ,TO_DATE(DATE_TRUNC('week', dim_date)) AS week_commencing_date
         ,DATE_FORMAT(dim_date, 'yyyyMM') AS year_month
         ,CASE WHEN DAYNAME(dim_date) IN ('Sat', 'Sun') THEN 0
             WHEN holiday_date IS NOT NULL THEN 0
@@ -128,28 +128,21 @@ calendar_dim AS (
         ,SUM(CASE WHEN DAYNAME(dim_date) IN ('Sat', 'Sun') THEN 0
             WHEN holiday_date IS NOT NULL THEN 0
             ELSE 1
-        END) OVER(ORDER BY dim_date) AS working_day_index
+        END) OVER (ORDER BY dim_date) AS working_day_index
         ,holiday_name
-        ,DECODE(DAYNAME(dim_date),
-                     'Mon', 'Monday',
-                     'Tue', 'Tuesday',
-                     'Wed', 'Wednesday',
-                     'Thu', 'Thursday',
-                     'Fri', 'Friday',
-                     'Sat', 'Saturday',
-                     'Sun', 'Sunday')  AS day_name
+        ,DATE_FORMAT(dim_date, 'EEEE') AS day_name
         ,DAYNAME(dim_date) AS day_name_abv
-        ,DAYOFWEEK(dim_date) AS day_of_week
+        ,DAYOFWEEK(dim_date) AS day_num_of_week
         ,MONTH(dim_date) AS month_num
         ,CONCAT(YEAR(dim_date),TO_CHAR(dim_date,'MM')) AS month_id
-        ,TO_CHAR(dim_date,'MMMM') AS month_name
+        ,DATE_FORMAT(date_day, 'MMMM') AS month_name
         ,MONTHNAME(dim_date) AS month_name_abv
-        ,TO_DATE(DATE_TRUNC('MONTH', dim_date)) as first_day_month
+        ,TO_DATE(DATE_TRUNC('MONTH', dim_date)) AS first_day_month
         ,LAST_DAY(dim_date) AS last_day_month
         ,QUARTER(dim_date) AS quarter_num
         ,CONCAT(YEAR(dim_date),'Q',QUARTER(dim_date)) AS quarter_id
-        ,TO_DATE(DATE_TRUNC('QUARTER', dim_date)) as first_day_quarter
-        ,TO_DATE(DATE_ADD(QUARTER, 1, DATE_ADD(DAY, -1, TO_DATE(DATE_TRUNC('QUARTER', dim_date))))) as last_day_quarter
+        ,TO_DATE(DATE_TRUNC('QUARTER', dim_date)) AS first_day_quarter
+        ,TO_DATE(DATE_ADD(QUARTER, 1, DATE_ADD(DAY, -1, TO_DATE(DATE_TRUNC('QUARTER', dim_date))))) AS last_day_quarter
         ,YEAR(dim_date) AS dim_year
     FROM cte_dates
     LEFT OUTER JOIN federal_holidays_unpivot

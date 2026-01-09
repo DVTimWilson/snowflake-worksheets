@@ -1,0 +1,12 @@
+SELECT a, COUNT(*) AS record_count
+FROM VALUES ('Abcdefg'), ('Abcdefg'), ('Abcdefg'), ('ABCDEFG'), ('ABCDEFG') AS test_data(a)
+GROUP BY a
+;
+
+SELECT a, ROW_NUMBER() OVER (PARTITION BY a ORDER BY 1) AS rn
+FROM VALUES ('Abcdefg'), ('Abcdefg'), ('Abcdefg'), ('ABCDEFG'), ('ABCDEFG') AS test_data(a)
+;
+
+SELECT DISTINCT a
+FROM VALUES ('Abcdefg'), ('Abcdefg'), ('Abcdefg'), ('ABCDEFG'), ('ABCDEFG') AS test_data(a)
+;

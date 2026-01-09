@@ -1,0 +1,115 @@
+ALTER SESSION SET USE_CACHED_RESULT=FALSE
+;
+-- 102
+with aggregate AS (
+SELECT a.DEPARTMENT_HK
+       , month(b.PERFROMDATE) AS "MONTH"
+       , year(b.PERFROMDATE) AS "YEAR"
+       , sum(b.CREDIT1) AS CREDIT
+       , sum(b.DEBIT1) AS DEBIT
+       , sum(b.FISCALPERCB) AS COST
+
+FROM TIM_WILSON.SILVER.lnk_trial_balance AS a
+
+INNER JOIN TIM_WILSON.SILVER.ref_hub_natural AS d
+ON d.NATURAL_HK = a.NATURAL_HK
+AND UPPER(d.NATURAL_ID) LIKE '%LABOR%'
+
+INNER JOIN TIM_WILSON.GOLD_MFG.br_latest_trial_balance AS b
+ON a.TRIAL_BALANCE_LHK = b.TRIAL_BALANCE_LHK
+
+GROUP BY a.department_hk, month(b.PERFROMDATE), year(b.PERFROMDATE)
+    )
+
+SELECT c.DEPARTMENT_NAME ,aggregate.*
+FROM aggregate
+
+LEFT OUTER JOIN TIM_WILSON.SILVER.hub_department AS c
+ON c.department_hk = aggregate.department_hk
+;
+
+-- 102
+with aggregate AS (
+SELECT a.DEPARTMENT_HK
+       , month(b.PERFROMDATE) AS "MONTH"
+       , year(b.PERFROMDATE) AS "YEAR"
+       , sum(b.CREDIT1) AS CREDIT
+       , sum(b.DEBIT1) AS DEBIT
+       , sum(b.FISCALPERCB) AS COST
+
+FROM TIM_WILSON.SILVER.lnk_trial_balance AS a
+
+INNER JOIN TIM_WILSON.SILVER.ref_hub_natural AS d
+ON d.NATURAL_HK = a.NATURAL_HK
+
+INNER JOIN TIM_WILSON.GOLD_MFG.br_latest_trial_balance AS b
+ON a.TRIAL_BALANCE_LHK = b.TRIAL_BALANCE_LHK
+
+WHERE UPPER(d.NATURAL_ID) LIKE '%LABOR%'
+
+GROUP BY a.department_hk, month(b.PERFROMDATE), year(b.PERFROMDATE)
+    )
+
+SELECT c.DEPARTMENT_NAME ,aggregate.*
+FROM aggregate
+
+LEFT OUTER JOIN TIM_WILSON.SILVER.hub_department AS c
+ON c.department_hk = aggregate.department_hk
+
+;
+
+
+-- 6
+with aggregate AS (
+SELECT a.DEPARTMENT_HK
+       , month(b.PERFROMDATE) AS "MONTH"
+       , year(b.PERFROMDATE) AS "YEAR"
+       , sum(b.CREDIT1) AS CREDIT
+       , sum(b.DEBIT1) AS DEBIT
+       , sum(b.FISCALPERCB) AS COST
+
+FROM TIM_WILSON.SILVER.lnk_trial_balance AS a
+
+INNER JOIN TIM_WILSON.GOLD_MFG.br_latest_trial_balance AS b
+ON a.TRIAL_BALANCE_LHK = b.TRIAL_BALANCE_LHK
+
+GROUP BY a.department_hk, month(b.PERFROMDATE), year(b.PERFROMDATE)
+    )
+
+SELECT c.DEPARTMENT_NAME ,aggregate.*
+FROM aggregate
+
+LEFT OUTER JOIN TIM_WILSON.SILVER.hub_department AS c
+ON c.department_hk = aggregate.department_hk
+
+WHERE c.department_name = 'Maintenance - Lancaster'
+OR c.DEPARTMENT_NAME = 'Maintenance - York'
+OR c.DEPARTMENT_NAME = 'Maintenance - Ozark'
+;
+
+-- 6
+with aggregate AS (
+SELECT a.DEPARTMENT_HK
+       , month(b.PERFROMDATE) AS "MONTH"
+       , year(b.PERFROMDATE) AS "YEAR"
+       , sum(b.CREDIT1) AS CREDIT
+       , sum(b.DEBIT1) AS DEBIT
+       , sum(b.FISCALPERCB) AS COST
+
+FROM TIM_WILSON.SILVER.lnk_trial_balance AS a
+
+INNER JOIN TIM_WILSON.GOLD_MFG.br_latest_trial_balance AS b
+ON a.TRIAL_BALANCE_LHK = b.TRIAL_BALANCE_LHK
+
+GROUP BY a.department_hk, month(b.PERFROMDATE), year(b.PERFROMDATE)
+    )
+
+SELECT c.DEPARTMENT_NAME ,aggregate.*
+FROM aggregate
+
+LEFT OUTER JOIN TIM_WILSON.SILVER.hub_department AS c
+ON c.department_hk = aggregate.department_hk
+
+--WHERE UPPER(c.department_name) LIKE 'MAINTENANCE%'
+ORDER BY c.department_name
+;

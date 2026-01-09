@@ -1,0 +1,226 @@
+CREATE SCHEMA SOURCE_DATA
+;
+
+CREATE OR REPLACE TABLE
+    TIM_WILSON.SOURCE_DATA.ABC_BANK_POSITION (
+        accountID TEXT,
+        symbol TEXT,
+        description TEXT,
+        exchange TEXT,
+        report_date DATE,
+        quantity NUMBER(38,0),
+        cost_base NUMBER(38,5),
+        position_value NUMBER(38,5),
+        currency TEXT
+)
+;
+
+CREATE OR REPLACE FILE FORMAT
+    TIM_WILSON.SOURCE_DATA.ABC_BANK_CSV_FILE_FORMAT
+        TYPE = 'CSV'
+        COMPRESSION = 'AUTO'
+        FIELD_DELIMITER = ','
+        RECORD_DELIMITER = '\n'
+        SKIP_HEADER = 1
+        FIELD_OPTIONALLY_ENCLOSED_BY = '\042'
+        TRIM_SPACE = FALSE
+        ERROR_ON_COLUMN_COUNT_MISMATCH = TRUE
+        ESCAPE = 'NONE'
+        ESCAPE_UNENCLOSED_FIELD = '\134'
+        DATE_FORMAT = 'AUTO'
+        TIMESTAMP_FORMAT = 'AUTO'
+        NULL_IF = ('\\N')
+;
+
+SELECT *
+FROM TIM_WILSON.SOURCE_DATA.ABC_BANK_POSITION
+;
+
+DROP VIEW TIM_WILSON.TIM_WILSON.POSITION_ABC_BANK
+;
+
+-- Generate STG query
+SELECT
+    ', '|| COLUMN_NAME || ' AS ' || COLUMN_NAME || ' -- ' || DATA_TYPE AS SQL_TEXT
+FROM TIM_WILSON.INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_SCHEMA = 'SOURCE_DATA'
+    AND TABLE_NAME = 'ABC_BANK_POSITION'
+ORDER BY ORDINAL_POSITION
+;
+
+DROP VIEW TIM_WILSON.TIM_WILSON_STAGING.STG_ABC_BANK_POSITION
+;
+
+
+
+WITH
+src_data as (
+    SELECT
+        SECURITY_CODE     as SECURITY_CODE    -- TEXT
+         , SECURITY_NAME     as SECURITY_NAME    -- TEXT
+         , SECTOR            as SECTOR_NAME      -- TEXT
+         , INDUSTRY          as INDUSTRY_NAME    -- TEXT
+         , COUNTRY           as COUNTRY_CODE     -- TEXT
+         , EXCHANGE          as EXCHANGE_CODE    -- TEXT
+         , LOAD_TS           as LOAD_TS          -- TIMESTAMP_NTZ
+
+         , 'SEED.ABC_BANK_SECURITY_INFO' as RECORD_SOURCE
+
+    FROM TIM_WILSON.TIM_WILSON_SEED_DATA.abc_bank_security_info
+ ),
+
+default_record as (
+    SELECT
+        '-1'      as SECURITY_CODE
+        , 'Missing' as SECURITY_NAME
+        , 'Missing' as SECTOR_NAME
+        , 'Missing' as INDUSTRY_NAME
+        , '-1'      as COUNTRY_CODE
+        , '-1'      as EXCHANGE_CODE
+        , '2020-01-01' as LOAD_TS_UTC
+        , 'Missing' as RECORD_SOURCE
+),
+
+with_default_record as(
+    SELECT * FROM src_data
+    UNION ALL
+    SELECT * FROM default_record
+),
+
+hashed as (
+    SELECT
+        md5(cast(coalesce(cast(SECURITY_CODE as TEXT), '_dbt_utils_surrogate_key_null_') as TEXT)) as SECURITY_HKEY
+        , md5(cast(coalesce(cast(SECURITY_CODE as TEXT), '_dbt_utils_surrogate_key_null_') || '-' || coalesce(cast(SECURITY_NAME as TEXT), '_dbt_utils_surrogate_key_null_') || '-' || coalesce(cast(SECTOR_NAME as TEXT), '_dbt_utils_surrogate_key_null_') || '-' || coalesce(cast(INDUSTRY_NAME as TEXT), '_dbt_utils_surrogate_key_null_') || '-' || coalesce(cast(COUNTRY_CODE as TEXT), '_dbt_utils_surrogate_key_null_') || '-' || coalesce(cast(EXCHANGE_CODE as TEXT), '_dbt_utils_surrogate_key_null_') as TEXT)) as SECURITY_HDIFF
+        , * EXCLUDE LOAD_TS
+        , LOAD_TS as LOAD_TS_UTC
+    FROM with_default_record
+)
+SELECT * FROM hashed
+;
+
+
+
+
+
+with __dbt__cte__stg_abc_bank_security_info as (
+
+
+WITH
+src_data as (
+    SELECT
+        SECURITY_CODE     as SECURITY_CODE    -- TEXT
+         , SECURITY_NAME     as SECURITY_NAME    -- TEXT
+         , SECTOR            as SECTOR_NAME      -- TEXT
+         , INDUSTRY          as INDUSTRY_NAME    -- TEXT
+         , COUNTRY           as COUNTRY_CODE     -- TEXT
+         , EXCHANGE          as EXCHANGE_CODE    -- TEXT
+         , LOAD_TS           as LOAD_TS          -- TIMESTAMP_NTZ
+
+         , 'SEED.ABC_BANK_SECURITY_INFO' as RECORD_SOURCE
+
+    FROM TIM_WILSON.TIM_WILSON_SEED_DATA.abc_bank_security_info
+ ),
+
+default_record as (
+    SELECT
+        '-1'      as SECURITY_CODE
+        , 'Missing' as SECURITY_NAME
+        , 'Missing' as SECTOR_NAME
+        , 'Missing' as INDUSTRY_NAME
+        , '-1'      as COUNTRY_CODE
+        , '-1'      as EXCHANGE_CODE
+        , '2020-01-01' as LOAD_TS_UTC
+        , 'Missing' as RECORD_SOURCE
+),
+
+with_default_record as(
+    SELECT * FROM src_data
+    UNION ALL
+    SELECT * FROM default_record
+),
+
+hashed as (
+    SELECT
+        md5(cast(coalesce(cast(SECURITY_CODE as TEXT), '_dbt_utils_surrogate_key_null_') as TEXT)) as SECURITY_HKEY
+        , md5(cast(coalesce(cast(SECURITY_CODE as TEXT), '_dbt_utils_surrogate_key_null_') || '-' || coalesce(cast(SECURITY_NAME as TEXT), '_dbt_utils_surrogate_key_null_') || '-' || coalesce(cast(SECTOR_NAME as TEXT), '_dbt_utils_surrogate_key_null_') || '-' || coalesce(cast(INDUSTRY_NAME as TEXT), '_dbt_utils_surrogate_key_null_') || '-' || coalesce(cast(COUNTRY_CODE as TEXT), '_dbt_utils_surrogate_key_null_') || '-' || coalesce(cast(EXCHANGE_CODE as TEXT), '_dbt_utils_surrogate_key_null_') as TEXT)) as SECURITY_HDIFF
+        , * EXCLUDE LOAD_TS
+        , LOAD_TS as LOAD_TS_UTC
+    FROM with_default_record
+)
+SELECT * FROM hashed
+) select * from __dbt__cte__stg_abc_bank_security_info
+;
+
+-- test.portfolio_tracking.not_null_stg_abc_bank_security_info_concat_SECURITY_NAME_SECTOR_NAME_INDUSTRY_NAME_.8bd511d089: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+with __dbt__cte__stg_abc_bank_security_info as (
+
+
+WITH
+src_data as (
+    SELECT
+        SECURITY_CODE     as SECURITY_CODE    -- TEXT
+         , SECURITY_NAME     as SECURITY_NAME    -- TEXT
+         , SECTOR            as SECTOR_NAME      -- TEXT
+         , INDUSTRY          as INDUSTRY_NAME    -- TEXT
+         , COUNTRY           as COUNTRY_CODE     -- TEXT
+         , EXCHANGE          as EXCHANGE_CODE    -- TEXT
+         , LOAD_TS           as LOAD_TS          -- TIMESTAMP_NTZ
+
+         , 'SEED.ABC_BANK_SECURITY_INFO' as RECORD_SOURCE
+
+    FROM TIM_WILSON.TIM_WILSON_SEED_DATA.abc_bank_security_info
+ ),
+
+default_record as (
+    SELECT
+        '-1'      as SECURITY_CODE
+        , 'Missing' as SECURITY_NAME
+        , 'Missing' as SECTOR_NAME
+        , 'Missing' as INDUSTRY_NAME
+        , '-1'      as COUNTRY_CODE
+        , '-1'      as EXCHANGE_CODE
+        , '2020-01-01' as LOAD_TS_UTC
+        , 'Missing' as RECORD_SOURCE
+),
+
+with_default_record as(
+    SELECT * FROM src_data
+    UNION ALL
+    SELECT * FROM default_record
+),
+
+hashed as (
+    SELECT
+        md5(cast(coalesce(cast(SECURITY_CODE as TEXT), '_dbt_utils_surrogate_key_null_') as TEXT)) as SECURITY_HKEY
+        , md5(cast(coalesce(cast(SECURITY_CODE as TEXT), '_dbt_utils_surrogate_key_null_') || '-' || coalesce(cast(SECURITY_NAME as TEXT), '_dbt_utils_surrogate_key_null_') || '-' || coalesce(cast(SECTOR_NAME as TEXT), '_dbt_utils_surrogate_key_null_') || '-' || coalesce(cast(INDUSTRY_NAME as TEXT), '_dbt_utils_surrogate_key_null_') || '-' || coalesce(cast(COUNTRY_CODE as TEXT), '_dbt_utils_surrogate_key_null_') || '-' || coalesce(cast(EXCHANGE_CODE as TEXT), '_dbt_utils_surrogate_key_null_') as TEXT)) as SECURITY_HDIFF
+        , * EXCLUDE LOAD_TS
+        , LOAD_TS as LOAD_TS_UTC
+    FROM with_default_record
+)
+SELECT * FROM hashed
+) select concat(SECURITY_NAME, SECTOR_NAME, INDUSTRY_NAME)
+from (select * from __dbt__cte__stg_abc_bank_security_info where false) dbt_subquery
+where concat(SECURITY_NAME, SECTOR_NAME, INDUSTRY_NAME) is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+;
+
+SELECT CONCAT('A', '|', NULL, '|', 'C'), CONCAT_WS('|', 'A', NULL, 'C') FROM DUAL
+;
