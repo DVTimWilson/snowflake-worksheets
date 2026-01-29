@@ -1,11 +1,13 @@
-WITH flights_data (original_airport) AS (
+WITH flights_data (date, airline, original_airport) AS (
 -- only showing a single column from flights data
 SELECT *
 FROM VALUES
-  ('ABC')
-, ('EFG')
-, ('IHJ')
-, ('SJC')
+  (TO_DATE('2026-01-13'), 'A1', 'ABC')
+, (TO_DATE('2026-01-14'), 'C2', 'EFG')
+, (TO_DATE('2026-01-13'), 'A3', 'IHJ')
+, (TO_DATE('2026-01-13'), 'A1', 'SJC')
+, (TO_DATE('2026-01-14'), 'B9', 'SJC')
+, (TO_DATE('2026-01-15'), 'D6', 'SJC')
 )
 
 , new_airports (new_airport) AS (
@@ -39,5 +41,5 @@ FROM cross_join_data
 -- LEFT OUTER JOIN mapping cube data
 -- ON new_airport, etc.
 
-ORDER BY original_airport, new_airport
+ORDER BY date, original_airport, new_airport
 ;
