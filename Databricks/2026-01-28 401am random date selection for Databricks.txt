@@ -1,0 +1,46 @@
+-- Seconds in a year
+-- 31536000
+SELECT DATEDIFF(SECOND, '2025-01-01 00:00:00', '2025-12-31 23:59:59') + 1
+;
+
+WITH random_timestamps AS (
+SELECT r.id
+  , DATEADD(SECOND, ROUND((DATEDIFF(SECOND, '2025-01-01 00:00:00', '2025-12-31 23:59:59') + 1) * RAND(), 0), '2025-01-01 00:00:00') AS random_timestamp
+FROM RANGE(1, 10001, 1) AS r
+)
+
+SELECT random_timestamp
+  , COUNT(*) AS count
+FROM random_timestamps
+GROUP BY random_timestamp
+-- ORDER BY count DESC
+ORDER BY random_timestamp DESC
+;
+
+-- Approximately 20 records
+WITH number_list AS (
+  SELECT id
+  FROM RANGE(1, DATEDIFF(SECOND, '2025-01-01 00:00:00', '2025-12-31 23:59:59') + 1)
+  ORDER BY id
+)
+
+SELECT id
+  , DATEADD(SECOND, id, '2025-01-01 00:00:00') AS random_timestamp
+FROM number_list
+TABLESAMPLE (0.00005 PERCENT)
+ORDER BY id DESC
+;
+
+WITH random_timestamps AS (
+SELECT r.id
+  , DATEADD(SECOND, ROUND((DATEDIFF(SECOND, '2025-01-01 00:00:00', '2025-12-31 23:59:59') + 1) * RAND(), 0), '2025-01-01 00:00:00') AS random_timestamp
+FROM RANGE(1, 21, 1) AS r
+)
+
+SELECT random_timestamp
+  , COUNT(*) AS count
+FROM random_timestamps
+GROUP BY random_timestamp
+-- ORDER BY count DESC
+ORDER BY random_timestamp DESC
+;
