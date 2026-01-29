@@ -1,0 +1,43 @@
+WITH flights_data (original_airport) AS (
+-- only showing a single column from flights data
+SELECT *
+FROM VALUES
+  ('ABC')
+, ('EFG')
+, ('IHJ')
+, ('SJC')
+)
+
+, new_airports (new_airport) AS (
+SELECT *
+FROM VALUES
+  ('NONSJC')
+, ('SJC')
+, ('SFO')
+, ('OAK')
+)
+
+, cross_join_data (
+-- create all required records
+SELECT *
+FROM flights_data
+
+CROSS JOIN new_airports
+
+WHERE (original_airport != 'SJC' AND new_airport = 'NONSJC')
+OR (original_airport = 'SJC' AND new_airport != 'NONSJC')
+
+)
+
+SELECT *
+-- perform transformations
+-- replace original_airport with new_airport
+-- CASE or COALESCE percentage adjustments as required
+-- e.g. for non SJC the percentage could be COALESCEd from NULL to 100%
+FROM cross_join_data
+
+-- LEFT OUTER JOIN mapping cube data
+-- ON new_airport, etc.
+
+ORDER BY original_airport, new_airport
+;
