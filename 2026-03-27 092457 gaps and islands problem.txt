@@ -1,0 +1,53 @@
+-- Find users who were active for 3 consecutive days at least once.
+
+-- Sounds straightforward, right?
+
+-- But here’s the catch 👇
+
+-- • A user is considered active if they perform at least one login  
+-- • Multiple logins on the same day still count as only one active day  
+-- • The activity must be on strictly consecutive calendar days
+
+WITH logins(user_id, login_time) AS (
+  SELECT *
+  FROM VALUES
+    ('A', TO_TIMESTAMP('2026-03-01'))
+    , ('A', TO_TIMESTAMP('2026-03-04'))
+    , ('A', TO_TIMESTAMP('2026-03-05'))
+    , ('A', TO_TIMESTAMP('2026-03-06'))
+    , ('A', TO_TIMESTAMP('2026-03-11'))
+    , ('A', TO_TIMESTAMP('2026-03-12'))
+    , ('A', TO_TIMESTAMP('2026-03-15'))
+    , ('A', TO_TIMESTAMP('2026-03-16'))
+    , ('A', TO_TIMESTAMP('2026-03-17'))
+    , ('A', TO_TIMESTAMP('2026-03-18'))
+    , ('A', TO_TIMESTAMP('2026-03-19'))
+    , ('A', TO_TIMESTAMP('2026-03-21'))
+),
+
+distinct_logins AS (
+SELECT DISTINCT
+  user_id
+  , CAST(login_time AS DATE) AS login_date
+FROM logins
+),
+
+grouped_logins AS (
+SELECT
+  user_id
+  , login_date
+  , ROW_NUMBER() OVER(PARTITION BY user_id ORDER BY login_date) AS rn
+  , DATEADD(day, -ROW_NUMBER() OVER(PARTITION BY user_id ORDER BY login_date), login_date) AS grp_date
+FROM distinct_logins
+)
+
+SELECT
+  user_id
+  , MIN(login_date) AS streak_start
+  , MAX(login_date) AS streak_end
+  , COUNT(*) AS consecutive_days
+FROM grouped_logins
+GROUP BY user_id, grp_date
+HAVING COUNT(*) >= 3
+ORDER BY user_id, streak_start
+;
