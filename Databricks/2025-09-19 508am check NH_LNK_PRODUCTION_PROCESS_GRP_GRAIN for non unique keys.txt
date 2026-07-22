@@ -1,0 +1,8 @@
+-- 347952
+-- 347952 with new foreign keys
+SELECT COUNT(*)
+FROM tim_wilson.silver.nh_lnk_production_process_resource_grp_grain
+;
+
+CREATE SCHEMA tim_wilson.gold_coreview
+;

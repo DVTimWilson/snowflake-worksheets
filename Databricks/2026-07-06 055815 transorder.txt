@@ -1,0 +1,39 @@
+-- 27
+-- 501
+SELECT COUNT(*)
+FROM tim_wilson.silver.sat_kinetic_transorder_latest
+;
+
+-- 26
+-- 761
+SELECT COUNT(*)
+FROM tim_wilson.silver.br_kinetic_outbound_transorder
+;
+
+-- 998
+-- 1522
+SELECT COUNT(*)
+FROM tim_wilson.silver.br_kinetic_inbound_transorder
+;
+
+
+SELECT *
+FROM tim_wilson.silver.br_kinetic_outbound_transorder
+    QUALIFY
+        ROW_NUMBER() OVER (
+            PARTITION BY INVOICE_LINE_LHK
+                ,UNIQUE_KEY
+            ORDER BY LOAD_DATETIME DESC
+        ) = 1
+;
+
+SELECT *
+FROM tim_wilson.silver.br_kinetic_inbound_transorder
+    QUALIFY
+        ROW_NUMBER() OVER (
+            PARTITION BY INVOICE_LINE_LHK
+                ,UNIQUE_KEY
+            ORDER BY LOAD_DATETIME DESC
+        ) = 1
+;
+

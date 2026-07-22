@@ -1,0 +1,66 @@
+-- 101
+SELECT *
+FROM tim_wilson.silver.sat_resource_group_resgrpeff
+;
+
+-- 100
+SELECT DISTINCT *
+FROM tim_wilson.silver.sat_resource_group_resgrpeff
+;
+
+-- 1
+SELECT *
+FROM tim_wilson.silver.sat_resource_group_resgrpeff
+GROUP BY RESOURCE_GROUP_HK, HASHDIFF, RESGRPDEPT_DESCRIPTION, RESGRPDEPT_JCDEPT, LOAD_DATETIME, RECORD_SOURCE
+HAVING COUNT(*) > 1
+;
+
+-- 0
+SELECT RESOURCEGRPID, RESGRPDEPT_DESCRIPTION, RESGRPDEPT_JCDEPT, EXTRACT_DATE
+FROM tim_wilson.bronze.raw_resource_group_resgrpeff
+GROUP BY RESOURCEGRPID, RESGRPDEPT_DESCRIPTION, RESGRPDEPT_JCDEPT, EXTRACT_DATE
+HAVING COUNT(*) > 1
+;
+
+SELECT RESOURCEGRPID, RESGRPDEPT_DESCRIPTION, RESGRPDEPT_JCDEPT, COUNT(*)
+FROM tim_wilson.bronze.raw_resource_group_resgrpeff
+GROUP BY RESOURCEGRPID, RESGRPDEPT_DESCRIPTION, RESGRPDEPT_JCDEPT
+HAVING COUNT(*) > 1
+;
+
+-- 100
+SELECT RESOURCEGRPID, RESGRPDEPT_DESCRIPTION, RESGRPDEPT_JCDEPT, EXTRACT_DATE
+FROM tim_wilson.bronze.raw_resource_group_resgrpeff
+QUALIFY ROW_NUMBER() OVER (PARTITION BY RESOURCEGRPID, RESGRPDEPT_DESCRIPTION, RESGRPDEPT_JCDEPT ORDER BY EXTRACT_DATE DESC) = 1
+ORDER BY EXTRACT_DATE DESC
+;
+
+-- 29
+SELECT *
+FROM tim_wilson.silver.sat_department_resgrpeff
+;
+
+-- 27
+SELECT DISTINCT *
+FROM tim_wilson.silver.sat_department_resgrpeff
+;
+
+SELECT *
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+WHERE GROSS_MARGIN_PCT IS NULL
+;
+
+SELECT *
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+WHERE PRODUCT_ID IS NULL
+;
+
+SELECT *
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+WHERE UNIT_COST IS NULL
+;
+
+SELECT *
+FROM tim_wilson.gold_sow4.mart_orderrel
+WHERE REQDATE IS NULL
+;

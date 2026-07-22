@@ -1,0 +1,34 @@
+SELECT *
+FROM landing.information_schema.tables
+WHERE table_owner = 'emphyillaier@ecoreintl.com'
+;
+
+SELECT *
+FROM landing_workato_test.information_schema.tables
+WHERE table_owner = 'emphyillaier@ecoreintl.com'
+;
+
+SELECT *
+FROM develop.information_schema.tables
+WHERE table_owner = 'emphyillaier@ecoreintl.com'
+;
+
+SELECT *
+FROM uat.information_schema.tables
+WHERE table_owner = 'emphyillaier@ecoreintl.com'
+;
+
+SELECT *
+FROM production.information_schema.tables
+WHERE table_owner = 'emphyillaier@ecoreintl.com'
+;
+
+SELECT *
+FROM landing.information_schema.tables
+WHERE table_owner = 'workato_admin'
+;
+
+SELECT *
+FROM landing_workato_test.information_schema.tables
+WHERE table_owner = 'workato_admin'
+;

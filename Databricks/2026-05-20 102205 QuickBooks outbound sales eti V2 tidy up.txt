@@ -1,0 +1,120 @@
+--
+-- QuickBooks outbound sales eti V2 tidy up
+--
+
+-- 2026-04-13
+SELECT MAX(DATE)
+FROM landing.quickbooks.outbound_sales_eti_v2
+;
+
+SELECT DATE, COUNT(*)
+FROM landing.quickbooks.outbound_sales_eti_v2
+GROUP BY DATE
+ORDER BY DATE DESC
+LIMIT 10
+;
+
+-- 2026-05-20T09:30:05.000+00:00
+SELECT MAX(Extract_Date)
+FROM landing.quickbooks.outbound_sales_eti_v2
+;
+
+-- 2026-04-28T22:17:59.000+00:00
+SELECT MAX(Extract_Date)
+FROM landing.quickbooks.outbound_sales_eti_v3
+;
+
+-- CREATE TABLE landing.backup.outbound_sales_eti_v2_2026413 AS
+-- SELECT *
+-- FROM landing.quickbooks.outbound_sales_eti_v2
+-- ;
+
+SELECT DATE, COUNT(*)
+FROM psa.quickbooks.psa_quickbooks_staging_eti_v2
+GROUP BY DATE
+ORDER BY DATE DESC
+LIMIT 10
+;
+
+SELECT DATE, COUNT(*)
+FROM psa.quickbooks.psa_quickbooks_staging_eti_v3
+GROUP BY DATE
+ORDER BY DATE DESC
+LIMIT 10
+;
+
+SELECT EXTRACT_DATE, COUNT(*)
+FROM psa.quickbooks.psa_quickbooks_staging_eti_v3
+GROUP BY EXTRACT_DATE
+ORDER BY EXTRACT_DATE DESC
+LIMIT 10
+;
+
+-- 2026-05-20T09:30:05.000+00:00
+SELECT MAX(Extract_Date)
+FROM psa.quickbooks.psa_quickbooks_staging_eti_v2
+;
+
+-- CREATE TABLE psa.backup.psa_quickbooks_staging_eti_v2_20260413 AS
+-- SELECT *
+-- FROM psa.quickbooks.psa_quickbooks_staging_eti_v2
+-- ;
+
+SELECT DATE, COUNT(*)
+FROM psa_prod.quickbooks.psa_quickbooks_staging_eti_v2
+GROUP BY DATE
+ORDER BY DATE DESC
+LIMIT 10
+;
+
+-- 2026-05-20T09:30:05.000+00:00
+SELECT MAX(Extract_Date)
+FROM psa_prod.quickbooks.psa_quickbooks_staging_eti_v2
+;
+
+-- CREATE TABLE psa_prod.backup.psa_quickbooks_staging_eti_v2_20260413 AS
+-- SELECT *
+-- FROM psa_prod.quickbooks.psa_quickbooks_staging_eti_v2
+-- ;
+
+SELECT DATE, COUNT(*)
+FROM landing.quickbooks.inbound_purchases_eti
+GROUP BY DATE
+ORDER BY DATE DESC
+LIMIT 10
+;
+
+SELECT DATE, COUNT(*)
+FROM landing.quickbooks.inventory_transactions_eti
+GROUP BY DATE
+ORDER BY DATE DESC
+LIMIT 10
+;
+
+SELECT DATE, COUNT(*)
+FROM landing.quickbooks.stock_status_eti
+GROUP BY DATE
+ORDER BY DATE DESC
+LIMIT 10
+;
+
+SELECT Extract_Date, COUNT(*)
+FROM psa.quickbooks.psa_quickbooks_inbound_purchases_eti
+GROUP BY Extract_Date
+ORDER BY Extract_Date DESC
+LIMIT 10
+;
+
+SELECT Extract_Date, COUNT(*)
+FROM psa.quickbooks.psa_quickbooks_inventory_transactions_eti
+GROUP BY Extract_Date
+ORDER BY Extract_Date DESC
+LIMIT 10
+;
+
+SELECT Extract_Date, COUNT(*)
+FROM psa.quickbooks.psa_quickbooks_stock_status_eti
+GROUP BY Extract_Date
+ORDER BY Extract_Date DESC
+LIMIT 10
+;

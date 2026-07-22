@@ -1,0 +1,313 @@
+-- 30/01/2026
+-- Check source freshness
+
+SELECT DISTINCT Extract_Date
+FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+ORDER BY Extract_Date DESC
+LIMIT 10
+;
+
+SELECT DISTINCT Extract_Date
+FROM psa.kinetic.psa_plant
+ORDER BY Extract_Date DESC
+LIMIT 10
+;
+
+SELECT DISTINCT Extract_Date
+FROM psa.quickbooks.psa_quickbooks_staging_historic
+ORDER BY Extract_Date DESC
+LIMIT 10
+;
+
+SELECT *
+FROM psa.kinetic.psa_plant
+WHERE TO_DATE(Extract_Date) = '2026-01-30'
+;
+
+CREATE OR REPLACE TABLE landing.backup.allocated_department_mapping_20251030_backup
+AS SELECT * FROM landing.reftables.allocated_department_mapping_20251030_backup
+;
+
+-- DROP TABLE landing.reftables.allocated_department_mapping_20251030_backup
+-- ;
+
+SELECT DISTINCT Extract_Date
+FROM landing.operations_files.ecore_360_production
+ORDER BY Extract_Date DESC
+-- LIMIT 10
+;
+
+SELECT DISTINCT Extract_Date
+FROM landing.operations_files.tss_culling
+ORDER BY Extract_Date DESC
+-- LIMIT 10
+;
+
+SELECT DISTINCT Extract_Date
+FROM landing.dayforce.allocatedhoursandearnings
+ORDER BY Extract_Date DESC
+-- LIMIT 10
+;
+
+SELECT DISTINCT Extract_Date
+FROM landing.quickbooks.quickbooksstaging
+ORDER BY Extract_Date DESC
+-- LIMIT 10
+;
+
+
+--
+-- Housekeeping
+--
+
+-- landing
+
+CREATE OR REPLACE TABLE landing.backup.quickbooksstaging_20260130
+AS SELECT * FROM landing.quickbooks.quickbooksstaging
+;
+
+-- DROP TABLE landing.quickbooks.quickbooksstaging
+-- ;
+
+CREATE OR REPLACE TABLE landing.backup.outbound_sales_360_20260130
+AS SELECT * FROM landing.quickbooks.outbound_sales_360
+;
+
+-- DROP TABLE landing.quickbooks.outbound_sales_360
+-- ;
+
+CREATE OR REPLACE TABLE landing.backup.outbound_sales_crc_20260130
+AS SELECT * FROM landing.quickbooks.outbound_sales_crc
+;
+
+-- DROP TABLE landing.quickbooks.outbound_sales_crc
+-- ;
+
+CREATE OR REPLACE TABLE landing.backup.outbound_sales_dos_20260130
+AS SELECT * FROM landing.quickbooks.outbound_sales_dos
+;
+
+-- DROP TABLE landing.quickbooks.outbound_sales_dos
+-- ;
+
+CREATE OR REPLACE TABLE landing.backup.outbound_sales_eti_20260130
+AS SELECT * FROM landing.quickbooks.outbound_sales_eti
+;
+
+-- DROP TABLE landing.quickbooks.outbound_sales_eti
+-- ;
+
+CREATE OR REPLACE TABLE landing.backup.outbound_sales_etr_20260130
+AS SELECT * FROM landing.quickbooks.outbound_sales_etr
+;
+
+-- DROP TABLE landing.quickbooks.outbound_sales_etr
+-- ;
+
+CREATE OR REPLACE TABLE landing.backup.outbound_sales_prc_20260130
+AS SELECT * FROM landing.quickbooks.outbound_sales_prc
+;
+
+-- DROP TABLE landing.quickbooks.outbound_sales_prc
+-- ;
+
+CREATE OR REPLACE TABLE landing.backup.outbound_sales_tss_20260130
+AS SELECT * FROM landing.quickbooks.outbound_sales_tss
+;
+
+-- DROP TABLE landing.quickbooks.outbound_sales_tss
+-- ;
+
+CREATE OR REPLACE TABLE landing.backup.inbound_sales_360_20260130
+AS SELECT * FROM landing.quickbooks.inbound_sales_360
+;
+
+-- DROP TABLE landing.quickbooks.inbound_sales_360
+-- ;
+
+CREATE OR REPLACE TABLE landing.backup.inbound_sales_crc_20260130
+AS SELECT * FROM landing.quickbooks.inbound_sales_crc
+;
+
+-- DROP TABLE landing.quickbooks.inbound_sales_crc
+-- ;
+
+CREATE OR REPLACE TABLE landing.backup.inbound_sales_prc_20260130
+AS SELECT * FROM landing.quickbooks.inbound_sales_prc
+;
+
+-- DROP TABLE landing.quickbooks.inbound_sales_prc
+-- ;
+
+CREATE OR REPLACE TABLE landing.backup.inbound_sales_tss_20260130
+AS SELECT * FROM landing.quickbooks.inbound_sales_tss
+;
+
+-- DROP TABLE landing.quickbooks.inbound_sales_tss
+
+
+-- psa
+
+CREATE OR REPLACE TABLE psa.backup.psa_quickbooks_staging_historic_20260130
+AS SELECT * FROM psa.quickbooks.psa_quickbooks_staging_historic
+;
+
+-- DROP TABLE psa.quickbooks.psa_quickbooks_staging_historic
+-- ;
+
+CREATE OR REPLACE TABLE psa.backup.psa_quickbooks_staging_360_20260130
+AS SELECT * FROM psa.quickbooks.psa_quickbooks_staging_360
+;
+
+-- DROP TABLE psa.quickbooks.psa_quickbooks_staging_360
+-- ;
+
+CREATE OR REPLACE TABLE psa.backup.psa_quickbooks_staging_crc_20260130
+AS SELECT * FROM psa.quickbooks.psa_quickbooks_staging_crc
+;
+
+-- DROP TABLE psa.quickbooks.psa_quickbooks_staging_crc
+-- ;
+
+CREATE OR REPLACE TABLE psa.backup.psa_quickbooks_staging_dos_20260130
+AS SELECT * FROM psa.quickbooks.psa_quickbooks_staging_dos
+;
+
+-- DROP TABLE psa.quickbooks.psa_quickbooks_staging_dos
+-- ;
+
+CREATE OR REPLACE TABLE psa.backup.psa_quickbooks_staging_eti_20260130
+AS SELECT * FROM psa.quickbooks.psa_quickbooks_staging_eti
+;
+
+-- DROP TABLE psa.quickbooks.psa_quickbooks_staging_eti
+-- ;
+
+CREATE OR REPLACE TABLE psa.backup.psa_quickbooks_staging_etr_20260130
+AS SELECT * FROM psa.quickbooks.psa_quickbooks_staging_etr
+;
+
+-- DROP TABLE psa.quickbooks.psa_quickbooks_staging_etr
+-- ;
+
+CREATE OR REPLACE TABLE psa.backup.psa_quickbooks_staging_prc_20260130
+AS SELECT * FROM psa.quickbooks.psa_quickbooks_staging_prc
+;
+
+-- DROP TABLE psa.quickbooks.psa_quickbooks_staging_prc
+-- ;
+
+CREATE OR REPLACE TABLE psa.backup.psa_quickbooks_staging_tss_20260130
+AS SELECT * FROM psa.quickbooks.psa_quickbooks_staging_tss
+;
+
+-- DROP TABLE psa.quickbooks.psa_quickbooks_staging_tss
+-- ;
+
+CREATE OR REPLACE TABLE psa.backup.psa_quickbooks_inbound_sales_360_20260130
+AS SELECT * FROM psa.quickbooks.psa_quickbooks_inbound_sales_360
+;
+
+-- DROP TABLE psa.quickbooks.psa_quickbooks_inbound_sales_360
+-- ;
+
+CREATE OR REPLACE TABLE psa.backup.psa_quickbooks_inbound_sales_crc_20260130
+AS SELECT * FROM psa.quickbooks.psa_quickbooks_inbound_sales_crc
+;
+
+-- DROP TABLE psa.quickbooks.psa_quickbooks_inbound_sales_crc
+-- ;
+
+CREATE OR REPLACE TABLE psa.backup.psa_quickbooks_inbound_sales_prc_20260130
+AS SELECT * FROM psa.quickbooks.psa_quickbooks_inbound_sales_prc
+;
+
+-- DROP TABLE psa.quickbooks.psa_quickbooks_inbound_sales_prc
+-- ;
+
+CREATE OR REPLACE TABLE psa.backup.psa_quickbooks_inbound_sales_tss_20260130
+AS SELECT * FROM psa.quickbooks.psa_quickbooks_inbound_sales_tss
+;
+
+-- DROP TABLE psa.quickbooks.psa_quickbooks_inbound_sales_tss
+
+
+-- psa_prod
+
+CREATE OR REPLACE TABLE psa_prod.backup.psa_quickbooks_staging_360_20260130
+AS SELECT * FROM psa_prod.quickbooks.psa_quickbooks_staging_360
+;
+
+-- DROP TABLE psa_prod.quickbooks.psa_quickbooks_staging_360
+-- ;
+
+CREATE OR REPLACE TABLE psa_prod.backup.psa_quickbooks_staging_crc_20260130
+AS SELECT * FROM psa_prod.quickbooks.psa_quickbooks_staging_crc
+;
+
+-- DROP TABLE psa_prod.quickbooks.psa_quickbooks_staging_crc
+-- ;
+
+CREATE OR REPLACE TABLE psa_prod.backup.psa_quickbooks_staging_dos_20260130
+AS SELECT * FROM psa_prod.quickbooks.psa_quickbooks_staging_dos
+;
+
+-- DROP TABLE psa_prod.quickbooks.psa_quickbooks_staging_dos
+-- ;
+
+CREATE OR REPLACE TABLE psa_prod.backup.psa_quickbooks_staging_eti_20260130
+AS SELECT * FROM psa_prod.quickbooks.psa_quickbooks_staging_eti
+;
+
+-- DROP TABLE psa_prod.quickbooks.psa_quickbooks_staging_eti
+-- ;
+
+CREATE OR REPLACE TABLE psa_prod.backup.psa_quickbooks_staging_etr_20260130
+AS SELECT * FROM psa_prod.quickbooks.psa_quickbooks_staging_etr
+;
+
+-- DROP TABLE psa_prod.quickbooks.psa_quickbooks_staging_etr
+-- ;
+
+CREATE OR REPLACE TABLE psa_prod.backup.psa_quickbooks_staging_prc_20260130
+AS SELECT * FROM psa_prod.quickbooks.psa_quickbooks_staging_prc
+;
+
+-- DROP TABLE psa_prod.quickbooks.psa_quickbooks_staging_prc
+-- ;
+
+CREATE OR REPLACE TABLE psa_prod.backup.psa_quickbooks_staging_tss_20260130
+AS SELECT * FROM psa_prod.quickbooks.psa_quickbooks_staging_tss
+;
+
+-- DROP TABLE psa_prod.quickbooks.psa_quickbooks_staging_tss
+-- ;
+
+CREATE OR REPLACE TABLE psa_prod.backup.psa_quickbooks_inbound_sales_360_20260130
+AS SELECT * FROM psa_prod.quickbooks.psa_quickbooks_inbound_sales_360
+;
+
+-- DROP TABLE psa_prod.quickbooks.psa_quickbooks_inbound_sales_360
+-- ;
+
+CREATE OR REPLACE TABLE psa_prod.backup.psa_quickbooks_inbound_sales_crc_20260130
+AS SELECT * FROM psa_prod.quickbooks.psa_quickbooks_inbound_sales_crc
+;
+
+-- DROP TABLE psa_prod.quickbooks.psa_quickbooks_inbound_sales_crc
+-- ;
+
+CREATE OR REPLACE TABLE psa_prod.backup.psa_quickbooks_inbound_sales_prc_20260130
+AS SELECT * FROM psa_prod.quickbooks.psa_quickbooks_inbound_sales_prc
+;
+
+-- DROP TABLE psa_prod.quickbooks.psa_quickbooks_inbound_sales_prc
+-- ;
+
+CREATE OR REPLACE TABLE psa_prod.backup.psa_quickbooks_inbound_sales_tss_20260130
+AS SELECT * FROM psa_prod.quickbooks.psa_quickbooks_inbound_sales_tss
+;
+
+-- DROP TABLE psa_prod.quickbooks.psa_quickbooks_inbound_sales_tss
+
+

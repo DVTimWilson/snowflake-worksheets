@@ -1,0 +1,1428 @@
+WITH
+non_distinct_selection AS (
+    SELECT COUNT(*) AS non_distinct_cnt
+    FROM `develop`.`silver`.`sat_inbound_invoice_kinetic`
+),
+
+distinct_selection AS (
+    SELECT COUNT (*) as distinct_cnt
+    FROM (
+          SELECT DISTINCT *
+          FROM `develop`.`silver`.`sat_inbound_invoice_kinetic`
+         ) inner_query
+),
+
+except_selection AS (
+    SELECT non_distinct_cnt, 'non_distinct' FROM non_distinct_selection
+    UNION ALL
+    SELECT distinct_cnt, 'distinct' FROM distinct_selection
+)
+
+SELECT * FROM except_selection
+;
+
+SELECT
+INVOICE_LINE_LHK
+, HASHDIFF
+, COMPANY_ID
+, INVOICE_DATE
+, PART_CLASSID
+, PART_PRODCODE
+, CALCULATED_EIIGLCODE
+, SUPPLIER_NAME
+, ORDER_NUMBER
+, RCVDTL_POLINE
+, RCVDTL_PORELNUM
+, RCVDTL_PACKLINE
+, PART_NUMBER
+, PART_DESCRIPTION
+, PLANT
+, RCVDTL_WAREHOUSECODE
+, RCVDTL_BINNUM
+, RCVDTL_OURQTY
+, RCVDTL_IUM
+, RCVDTL_JOBNUM
+, RCVDTL_OURUNITCOST
+, INVOICE_NUMBER
+, RCVDTL_INVOICED
+, RCVDTL_RECEIVEDTO
+, RCVDTL_RECEIVEDCOMPLETE
+, RCVDTL_LOTNUM
+, RCVDTL_INSPECTIONREQ
+, RCVDTL_INSPECTIONPENDING
+, RCVHEAD_ENTRYDATE
+, USERFILE_NAME
+, PODETAIL_XORDERQTY
+, RCVHEAD_ENTRYPERSON
+, BUSINESS_UNIT_ID
+, EXTRACT_DATE
+, UNIQUE_KEY
+, LOAD_DATETIME
+, RECORD_SOURCE
+, COUNT(*)
+FROM `develop`.`silver`.`sat_inbound_invoice_kinetic`
+GROUP BY
+INVOICE_LINE_LHK
+, HASHDIFF
+, COMPANY_ID
+, INVOICE_DATE
+, PART_CLASSID
+, PART_PRODCODE
+, CALCULATED_EIIGLCODE
+, SUPPLIER_NAME
+, ORDER_NUMBER
+, RCVDTL_POLINE
+, RCVDTL_PORELNUM
+, RCVDTL_PACKLINE
+, PART_NUMBER
+, PART_DESCRIPTION
+, PLANT
+, RCVDTL_WAREHOUSECODE
+, RCVDTL_BINNUM
+, RCVDTL_OURQTY
+, RCVDTL_IUM
+, RCVDTL_JOBNUM
+, RCVDTL_OURUNITCOST
+, INVOICE_NUMBER
+, RCVDTL_INVOICED
+, RCVDTL_RECEIVEDTO
+, RCVDTL_RECEIVEDCOMPLETE
+, RCVDTL_LOTNUM
+, RCVDTL_INSPECTIONREQ
+, RCVDTL_INSPECTIONPENDING
+, RCVHEAD_ENTRYDATE
+, USERFILE_NAME
+, PODETAIL_XORDERQTY
+, RCVHEAD_ENTRYPERSON
+, BUSINESS_UNIT_ID
+, EXTRACT_DATE
+, UNIQUE_KEY
+, LOAD_DATETIME
+, RECORD_SOURCE
+HAVING COUNT(*) > 1
+;
+
+-- INVOICE_LINE_LHK	HASHDIFF	COMPANY_ID	INVOICE_DATE	PART_CLASSID	PART_PRODCODE	CALCULATED_EIIGLCODE	SUPPLIER_NAME	ORDER_NUMBER	RCVDTL_POLINE	RCVDTL_PORELNUM	RCVDTL_PACKLINE	PART_NUMBER	PART_DESCRIPTION	PLANT	RCVDTL_WAREHOUSECODE	RCVDTL_BINNUM	RCVDTL_OURQTY	RCVDTL_IUM	RCVDTL_JOBNUM	RCVDTL_OURUNITCOST	INVOICE_NUMBER	RCVDTL_INVOICED	RCVDTL_RECEIVEDTO	RCVDTL_RECEIVEDCOMPLETE	RCVDTL_LOTNUM	RCVDTL_INSPECTIONREQ	RCVDTL_INSPECTIONPENDING	RCVHEAD_ENTRYDATE	USERFILE_NAME	PODETAIL_XORDERQTY	RCVHEAD_ENTRYPERSON	BUSINESS_UNIT_ID	EXTRACT_DATE	UNIQUE_KEY	LOAD_DATETIME	RECORD_SOURCE
+-- 1YSDd0Cv+D/f1FbD4Hzcig==	nC5WcCtSON1qga0CJFIe8w==	EII	2024-07-29	XPRA		10-7030-520-40	American Packaging Distributor Corp	89674	1	4	1	OPR-0000145	Hand Stretch Wrap, Clear, Cast 80GA, 18wide rolls;	MfgSys	EQ	EQPROD	96.00	EA		13.1450	11701	1	PUR-STK	1		0	0	2024-07-29	Peggy Sargent	384.00	PSargent	F&I	2025-08-21T16:24:32.000+00:00	EII-89674-11701-1-2024-07-29	2026-02-18T15:48:20.581+00:00	KINETIC.PORCPTDATEFILTER
+-- 1YSDd0Cv+D/f1FbD4Hzcig==	51oA2UXKLPPFAd60AnMEkg==	EII	2024-07-29	XPRA		10-7030-545-40	American Packaging Distributor Corp	89674	1	4	1	OPR-0000145	Hand Stretch Wrap, Clear, Cast 80GA, 18wide rolls;	MfgSys	EQ	EQPROD	96.00	EA		13.1450	11701	1	PUR-STK	1		0	0	2024-07-29	Peggy Sargent	384.00	PSargent	F&I	2025-08-21T16:24:32.000+00:00	EII-89674-11701-1-2024-07-29	2026-02-18T15:48:20.581+00:00	KINETIC.PORCPTDATEFILTER
+-- 1YSDd0Cv+D/f1FbD4Hzcig==	nC5WcCtSON1qga0CJFIe8w==	EII	2024-07-29	XPRA		10-7030-520-40	American Packaging Distributor Corp	89674	1	4	1	OPR-0000145	Hand Stretch Wrap, Clear, Cast 80GA, 18wide rolls;	MfgSys	EQ	EQPROD	96.00	EA		13.1450	11701	1	PUR-STK	1		0	0	2024-07-29	Peggy Sargent	384.00	PSargent	F&I	2025-08-21T16:24:32.000+00:00	EII-89674-11701-1-2024-07-29	2026-02-18T15:48:20.581+00:00	KINETIC.PORCPTDATEFILTER
+SELECT *
+FROM `develop`.`silver`.`sat_inbound_invoice_kinetic`
+WHERE INVOICE_LINE_LHK = UNBASE64('1YSDd0Cv+D/f1FbD4Hzcig==')
+;
+
+-- INVOICE_LINE_LHK	HASHDIFF	COMPANY_ID	INVOICE_DATE	PART_CLASSID	PART_PRODCODE	CALCULATED_EIIGLCODE	SUPPLIER_NAME	ORDER_NUMBER	RCVDTL_POLINE	RCVDTL_PORELNUM	RCVDTL_PACKLINE	PART_NUMBER	PART_DESCRIPTION	PLANT	RCVDTL_WAREHOUSECODE	RCVDTL_BINNUM	RCVDTL_OURQTY	RCVDTL_IUM	RCVDTL_JOBNUM	RCVDTL_OURUNITCOST	INVOICE_NUMBER	RCVDTL_INVOICED	RCVDTL_RECEIVEDTO	RCVDTL_RECEIVEDCOMPLETE	RCVDTL_LOTNUM	RCVDTL_INSPECTIONREQ	RCVDTL_INSPECTIONPENDING	RCVHEAD_ENTRYDATE	USERFILE_NAME	PODETAIL_XORDERQTY	RCVHEAD_ENTRYPERSON	BUSINESS_UNIT_ID	EXTRACT_DATE	UNIQUE_KEY	LOAD_DATETIME	RECORD_SOURCE
+-- 1YSDd0Cv+D/f1FbD4Hzcig==	nC5WcCtSON1qga0CJFIe8w==	EII	2024-07-29	XPRA		10-7030-520-40	American Packaging Distributor Corp	89674	1	4	1	OPR-0000145	Hand Stretch Wrap, Clear, Cast 80GA, 18wide rolls;	MfgSys	EQ	EQPROD	96.00	EA		13.1450	11701	1	PUR-STK	1		0	0	2024-07-29	Peggy Sargent	384.00	PSargent	F&I	2025-08-21T16:24:32.000+00:00	EII-89674-11701-1-2024-07-29	2026-02-18T15:43:38.302+00:00	KINETIC.PORCPTDATEFILTER
+SELECT *
+FROM `tim_wilson`.`silver`.`sat_inbound_invoice_kinetic`
+WHERE INVOICE_LINE_LHK = UNBASE64('1YSDd0Cv+D/f1FbD4Hzcig==')
+;
+
+SELECT *
+FROM tim_wilson.psa_kinetic.psa_porcptdatefilter
+WHERE RcvDtl_PONum = 89674
+;
+
+SELECT *
+FROM landing.kinetic.porcptdatefilter
+WHERE RcvDtl_PONum = 89674
+;
+
+SELECT *
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE InvoiceNum = 759939
+;
+
+SELECT *
+FROM psa_prod.kinetic.psa_porcptdatefilter
+WHERE RcvDtl_PONum = 89674
+;
+
+SELECT *
+FROM psa.kinetic.psa_porcptdatefilter
+WHERE RcvDtl_PONum = 89674
+;
+
+SELECT 
+  md5(coalesce(cast(RcvDtl_PackSlip as string ), '')
+         || '|' || coalesce(cast(RcvDtl_Company as string ), '')
+         || '|' || coalesce(cast(Vendor_Name as string ), '')
+         || '|' || coalesce(cast(RcvHead_Plant as string ), '')
+         || '|' || coalesce(cast(Calculated_BU as string ), '')
+         || '|' || coalesce(cast(RcvDtl_PartNum as string ), '')
+         || '|' || coalesce(cast(dbt_updated_at as string ), '')
+        ) AS dbt_scd_id_recalculated
+  , md5(coalesce(cast(RcvDtl_PackSlip as string ), '')
+         || '|' || coalesce(cast(RcvDtl_Company as string ), '')
+         || '|' || coalesce(cast(Vendor_Name as string ), '')
+         || '|' || coalesce(cast(RcvHead_Plant as string ), '')
+         || '|' || coalesce(cast(Calculated_BU as string ), '')
+         || '|' || coalesce(cast(RcvDtl_PartNum as string ), '')
+         || '|' || coalesce(cast(dbt_updated_at as string ), '')
+        ) = dbt_scd_id AS identical
+    , *
+FROM psa.kinetic.psa_porcptdatefilter
+WHERE RcvDtl_PONum = 89674
+;
+
+SELECT 
+  md5(coalesce(cast(RcvDtl_PackSlip as string ), '')
+         || '|' || coalesce(cast(RcvDtl_Company as string ), '')
+         || '|' || coalesce(cast(Vendor_Name as string ), '')
+         || '|' || coalesce(cast(RcvHead_Plant as string ), '')
+         || '|' || coalesce(cast(Calculated_BU as string ), '')
+         || '|' || coalesce(cast(RcvDtl_PartNum as string ), '')
+         || '|' || coalesce(cast(dbt_updated_at as string ), '')
+        ) AS dbt_scd_id_recalculated
+  , md5(coalesce(cast(RcvDtl_PackSlip as string ), '')
+         || '|' || coalesce(cast(RcvDtl_Company as string ), '')
+         || '|' || coalesce(cast(Vendor_Name as string ), '')
+         || '|' || coalesce(cast(RcvHead_Plant as string ), '')
+         || '|' || coalesce(cast(Calculated_BU as string ), '')
+         || '|' || coalesce(cast(RcvDtl_PartNum as string ), '')
+         || '|' || coalesce(cast(dbt_updated_at as string ), '')
+        ) = dbt_scd_id AS identical
+    , *
+FROM psa_prod.kinetic.psa_porcptdatefilter
+WHERE RcvDtl_PONum = 89674
+;
+
+-- 63979
+SELECT *
+FROM (
+SELECT 
+  md5(coalesce(cast(RcvDtl_PackSlip as string ), '')
+         || '|' || coalesce(cast(RcvDtl_Company as string ), '')
+         || '|' || coalesce(cast(Vendor_Name as string ), '')
+         || '|' || coalesce(cast(RcvHead_Plant as string ), '')
+         || '|' || coalesce(cast(Calculated_BU as string ), '')
+         || '|' || coalesce(cast(RcvDtl_PartNum as string ), '')
+         || '|' || coalesce(cast(dbt_updated_at as string ), '')
+        ) AS dbt_scd_id_recalculated
+  , md5(coalesce(cast(RcvDtl_PackSlip as string ), '')
+         || '|' || coalesce(cast(RcvDtl_Company as string ), '')
+         || '|' || coalesce(cast(Vendor_Name as string ), '')
+         || '|' || coalesce(cast(RcvHead_Plant as string ), '')
+         || '|' || coalesce(cast(Calculated_BU as string ), '')
+         || '|' || coalesce(cast(RcvDtl_PartNum as string ), '')
+         || '|' || coalesce(cast(dbt_updated_at as string ), '')
+        ) = dbt_scd_id AS identical
+    , *
+FROM psa.kinetic.psa_porcptdatefilter
+) AS x
+WHERE not identical
+;
+
+SELECT *
+FROM develop.bronze.porcptdatefilter_latest
+-- WHERE RcvDtl_PONum = 89674
+-- WHERE RcvDtl_ReceiptDate = '2024-07-29'
+-- WHERE Vendor_Name = 'American Packaging Distributor Corp'
+;
+
+SELECT *
+FROM (
+SELECT
+INVOICE_LINE_LHK
+, HASHDIFF
+, COMPANY_ID
+, INVOICE_DATE
+, PART_CLASSID
+, PART_PRODCODE
+, CALCULATED_EIIGLCODE
+, SUPPLIER_NAME
+, ORDER_NUMBER
+, RCVDTL_POLINE
+, RCVDTL_PORELNUM
+, RCVDTL_PACKLINE
+, PART_NUMBER
+, PART_DESCRIPTION
+, PLANT
+, RCVDTL_WAREHOUSECODE
+, RCVDTL_BINNUM
+, RCVDTL_OURQTY
+, RCVDTL_IUM
+, RCVDTL_JOBNUM
+, RCVDTL_OURUNITCOST
+, INVOICE_NUMBER
+, RCVDTL_INVOICED
+, RCVDTL_RECEIVEDTO
+, RCVDTL_RECEIVEDCOMPLETE
+, RCVDTL_LOTNUM
+, RCVDTL_INSPECTIONREQ
+, RCVDTL_INSPECTIONPENDING
+, RCVHEAD_ENTRYDATE
+, USERFILE_NAME
+, PODETAIL_XORDERQTY
+, RCVHEAD_ENTRYPERSON
+, BUSINESS_UNIT_ID
+, EXTRACT_DATE
+, UNIQUE_KEY
+, LOAD_DATETIME
+, RECORD_SOURCE
+, ROW_NUMBER() OVER (PARTITION BY COMPANY_ID
+, INVOICE_DATE
+, PART_CLASSID
+, PART_PRODCODE
+, CALCULATED_EIIGLCODE
+, SUPPLIER_NAME
+, ORDER_NUMBER
+, RCVDTL_POLINE
+, RCVDTL_PORELNUM
+, RCVDTL_PACKLINE
+, PART_NUMBER
+, PART_DESCRIPTION
+, PLANT
+, RCVDTL_WAREHOUSECODE
+, RCVDTL_BINNUM
+, RCVDTL_OURQTY
+, RCVDTL_IUM
+, RCVDTL_JOBNUM
+, RCVDTL_OURUNITCOST
+, INVOICE_NUMBER
+, RCVDTL_INVOICED
+, RCVDTL_RECEIVEDTO
+, RCVDTL_RECEIVEDCOMPLETE
+, RCVDTL_LOTNUM
+, RCVDTL_INSPECTIONREQ
+, RCVDTL_INSPECTIONPENDING
+, RCVHEAD_ENTRYDATE
+, USERFILE_NAME
+, PODETAIL_XORDERQTY
+, RCVHEAD_ENTRYPERSON
+, BUSINESS_UNIT_ID
+, EXTRACT_DATE
+, UNIQUE_KEY
+, LOAD_DATETIME
+, RECORD_SOURCE
+ORDER BY EXTRACT_DATE DESC) AS rn
+FROM `develop`.`silver`.`sat_inbound_invoice_kinetic`
+)
+WHERE rn > 1
+;
+
+SELECT *
+FROM (
+SELECT
+INVOICE_LINE_LHK
+, HASHDIFF
+, COMPANY
+, INVOICENUM
+, INVOICEDATE
+, INVOICETYPE
+, CREDITMEMO
+, CUSTNUM
+, CUSTID
+, NAME
+, INVOICELINE
+, PARTNUM
+, LINEDESC
+, PRODCODE
+, SELLINGSHIPQTY
+, SALESUM
+, DOCUNITPRICE
+, DOCEXTPRICE
+, DOCDISCOUNT
+, DOCTOTALMISCCHRG
+, SALESPRICE
+, DOCUNITCOST
+, DOCEXTCOST
+, GM
+, GMPCT
+, SHIPTOCUSTNUM
+, SHIPTONUM
+, OTS
+, ADDRESSID
+, SHIPTONAME
+, SHIPTOADDRESS1
+, SHIPTOADDRESS2
+, SHIPTOADDRESS3
+, SHIPTOCITY
+, SHIPTOSTATE
+, SHIPTOZIP
+, SHIPTOCOUNTRY
+, SALESREPLIST
+, BUSINESSUNIT
+, SOLDTOSTATE
+, GROUPCODE
+, TERRITORYID
+, CHARACTER03
+, MASTERKEY
+, PLANT
+, FORMULA
+, WIDTH
+, THICK
+, AREA
+, SFSOLD
+, BASEFORULA
+, ROUTETOMARKETCODE
+, ROUTETOMARKET
+, CUSTPLATFORMCODE
+, CUSTPLATFORM
+, CUSTDESCRIPTIONCODE
+, CUSTDESCRIPTION
+, BRANDED
+, MARKET_C
+, APPLICATION_C
+, FORM_C
+, FORMAT_C
+, BRAND_C
+, BUSINESS_UNIT_ID
+, MARKET2_C
+, PLATFORM_C
+, PROJECTNAME_C
+, ORDERNUM
+, NTLACCOUNT
+, ASSIST
+, BILLTOCOUNTRY
+, REQUESTDATE
+, NEEDBYDATE
+, CUSTSEGMENT_C
+, ORDERDATE
+, TESTMARKETID
+, TESTMARKET
+, POUNDS
+, EXTRACT_DATE
+, UNIQUE_KEY
+, LOAD_DATETIME
+, RECORD_SOURCE
+, ROW_NUMBER() OVER (PARTITION BY 
+COMPANY
+, INVOICENUM
+, INVOICEDATE
+, INVOICETYPE
+, CREDITMEMO
+, CUSTNUM
+, CUSTID
+, NAME
+, INVOICELINE
+, PARTNUM
+, LINEDESC
+, PRODCODE
+, SELLINGSHIPQTY
+, SALESUM
+, DOCUNITPRICE
+, DOCEXTPRICE
+, DOCDISCOUNT
+, DOCTOTALMISCCHRG
+, SALESPRICE
+, DOCUNITCOST
+, DOCEXTCOST
+, GM
+, GMPCT
+, SHIPTOCUSTNUM
+, SHIPTONUM
+, OTS
+, ADDRESSID
+, SHIPTONAME
+, SHIPTOADDRESS1
+, SHIPTOADDRESS2
+, SHIPTOADDRESS3
+, SHIPTOCITY
+, SHIPTOSTATE
+, SHIPTOZIP
+, SHIPTOCOUNTRY
+, SALESREPLIST
+, BUSINESSUNIT
+, SOLDTOSTATE
+, GROUPCODE
+, TERRITORYID
+, CHARACTER03
+, MASTERKEY
+, PLANT
+, FORMULA
+, WIDTH
+, THICK
+, AREA
+, SFSOLD
+, BASEFORULA
+, ROUTETOMARKETCODE
+, ROUTETOMARKET
+, CUSTPLATFORMCODE
+, CUSTPLATFORM
+, CUSTDESCRIPTIONCODE
+, CUSTDESCRIPTION
+, BRANDED
+, MARKET_C
+, APPLICATION_C
+, FORM_C
+, FORMAT_C
+, BRAND_C
+, BUSINESS_UNIT_ID
+, MARKET2_C
+, PLATFORM_C
+, PROJECTNAME_C
+, ORDERNUM
+, NTLACCOUNT
+, ASSIST
+, BILLTOCOUNTRY
+, REQUESTDATE
+, NEEDBYDATE
+, CUSTSEGMENT_C
+, ORDERDATE
+, TESTMARKETID
+, TESTMARKET
+, POUNDS
+, EXTRACT_DATE
+, UNIQUE_KEY
+, LOAD_DATETIME
+, RECORD_SOURCE
+ORDER BY EXTRACT_DATE DESC) AS rn
+FROM `develop`.`silver`.`sat_outbound_invoice_kinetic`
+)
+WHERE rn > 1
+;
+
+SELECT *
+FROM `develop`.`silver`.`sat_outbound_invoice_kinetic`
+WHERE INVOICE_LINE_LHK = UNBASE64('934HHS28Et+ZzYMt98H3SQ==')
+;
+
+SELECT *
+FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+WHERE InvoiceNum = 759939
+;
+
+CREATE OR REPLACE TABLE `tim_wilson`.`tim_wilson`.`sat_inbound_invoice_kinetic_repair`
+AS
+SELECT *
+FROM (
+SELECT
+INVOICE_LINE_LHK
+, HASHDIFF
+, COMPANY_ID
+, INVOICE_DATE
+, PART_CLASSID
+, PART_PRODCODE
+, CALCULATED_EIIGLCODE
+, SUPPLIER_NAME
+, ORDER_NUMBER
+, RCVDTL_POLINE
+, RCVDTL_PORELNUM
+, RCVDTL_PACKLINE
+, PART_NUMBER
+, PART_DESCRIPTION
+, PLANT
+, RCVDTL_WAREHOUSECODE
+, RCVDTL_BINNUM
+, RCVDTL_OURQTY
+, RCVDTL_IUM
+, RCVDTL_JOBNUM
+, RCVDTL_OURUNITCOST
+, INVOICE_NUMBER
+, RCVDTL_INVOICED
+, RCVDTL_RECEIVEDTO
+, RCVDTL_RECEIVEDCOMPLETE
+, RCVDTL_LOTNUM
+, RCVDTL_INSPECTIONREQ
+, RCVDTL_INSPECTIONPENDING
+, RCVHEAD_ENTRYDATE
+, USERFILE_NAME
+, PODETAIL_XORDERQTY
+, RCVHEAD_ENTRYPERSON
+, BUSINESS_UNIT_ID
+, EXTRACT_DATE
+, UNIQUE_KEY
+, LOAD_DATETIME
+, RECORD_SOURCE
+, ROW_NUMBER() OVER (PARTITION BY COMPANY_ID
+, INVOICE_DATE
+, PART_CLASSID
+, PART_PRODCODE
+, CALCULATED_EIIGLCODE
+, SUPPLIER_NAME
+, ORDER_NUMBER
+, RCVDTL_POLINE
+, RCVDTL_PORELNUM
+, RCVDTL_PACKLINE
+, PART_NUMBER
+, PART_DESCRIPTION
+, PLANT
+, RCVDTL_WAREHOUSECODE
+, RCVDTL_BINNUM
+, RCVDTL_OURQTY
+, RCVDTL_IUM
+, RCVDTL_JOBNUM
+, RCVDTL_OURUNITCOST
+, INVOICE_NUMBER
+, RCVDTL_INVOICED
+, RCVDTL_RECEIVEDTO
+, RCVDTL_RECEIVEDCOMPLETE
+, RCVDTL_LOTNUM
+, RCVDTL_INSPECTIONREQ
+, RCVDTL_INSPECTIONPENDING
+, RCVHEAD_ENTRYDATE
+, USERFILE_NAME
+, PODETAIL_XORDERQTY
+, RCVHEAD_ENTRYPERSON
+, BUSINESS_UNIT_ID
+, EXTRACT_DATE
+, UNIQUE_KEY
+, LOAD_DATETIME
+, RECORD_SOURCE
+ORDER BY EXTRACT_DATE DESC) AS rn
+FROM `develop`.`silver`.`sat_inbound_invoice_kinetic`
+)
+WHERE rn = 1
+;
+
+-- 68592
+SELECT COUNT(*)
+FROM `tim_wilson`.`tim_wilson`.`sat_inbound_invoice_kinetic_repair`
+; 
+
+-- 68601
+SELECT COUNT(*)
+FROM `develop`.`silver`.`sat_inbound_invoice_kinetic`
+;
+
+-- TRUNCATE TABLE `develop`.`silver`.`sat_inbound_invoice_kinetic`
+-- ;
+
+INSERT INTO `develop`.`silver`.`sat_inbound_invoice_kinetic`
+SELECT INVOICE_LINE_LHK
+, HASHDIFF
+, COMPANY_ID
+, INVOICE_DATE
+, PART_CLASSID
+, PART_PRODCODE
+, CALCULATED_EIIGLCODE
+, SUPPLIER_NAME
+, ORDER_NUMBER
+, RCVDTL_POLINE
+, RCVDTL_PORELNUM
+, RCVDTL_PACKLINE
+, PART_NUMBER
+, PART_DESCRIPTION
+, PLANT
+, RCVDTL_WAREHOUSECODE
+, RCVDTL_BINNUM
+, RCVDTL_OURQTY
+, RCVDTL_IUM
+, RCVDTL_JOBNUM
+, RCVDTL_OURUNITCOST
+, INVOICE_NUMBER
+, RCVDTL_INVOICED
+, RCVDTL_RECEIVEDTO
+, RCVDTL_RECEIVEDCOMPLETE
+, RCVDTL_LOTNUM
+, RCVDTL_INSPECTIONREQ
+, RCVDTL_INSPECTIONPENDING
+, RCVHEAD_ENTRYDATE
+, USERFILE_NAME
+, PODETAIL_XORDERQTY
+, RCVHEAD_ENTRYPERSON
+, BUSINESS_UNIT_ID
+, EXTRACT_DATE
+, UNIQUE_KEY
+, LOAD_DATETIME
+, RECORD_SOURCE FROM `tim_wilson`.`tim_wilson`.`sat_inbound_invoice_kinetic_repair`
+;
+
+
+
+
+
+
+CREATE OR REPLACE TABLE `tim_wilson`.`tim_wilson`.`sat_outbound_invoice_kinetic_repair` 
+AS
+SELECT *
+FROM (
+SELECT
+INVOICE_LINE_LHK
+, HASHDIFF
+, COMPANY
+, INVOICENUM
+, INVOICEDATE
+, INVOICETYPE
+, CREDITMEMO
+, CUSTNUM
+, CUSTID
+, NAME
+, INVOICELINE
+, PARTNUM
+, LINEDESC
+, PRODCODE
+, SELLINGSHIPQTY
+, SALESUM
+, DOCUNITPRICE
+, DOCEXTPRICE
+, DOCDISCOUNT
+, DOCTOTALMISCCHRG
+, SALESPRICE
+, DOCUNITCOST
+, DOCEXTCOST
+, GM
+, GMPCT
+, SHIPTOCUSTNUM
+, SHIPTONUM
+, OTS
+, ADDRESSID
+, SHIPTONAME
+, SHIPTOADDRESS1
+, SHIPTOADDRESS2
+, SHIPTOADDRESS3
+, SHIPTOCITY
+, SHIPTOSTATE
+, SHIPTOZIP
+, SHIPTOCOUNTRY
+, SALESREPLIST
+, BUSINESSUNIT
+, SOLDTOSTATE
+, GROUPCODE
+, TERRITORYID
+, CHARACTER03
+, MASTERKEY
+, PLANT
+, FORMULA
+, WIDTH
+, THICK
+, AREA
+, SFSOLD
+, BASEFORULA
+, ROUTETOMARKETCODE
+, ROUTETOMARKET
+, CUSTPLATFORMCODE
+, CUSTPLATFORM
+, CUSTDESCRIPTIONCODE
+, CUSTDESCRIPTION
+, BRANDED
+, MARKET_C
+, APPLICATION_C
+, FORM_C
+, FORMAT_C
+, BRAND_C
+, BUSINESS_UNIT_ID
+, MARKET2_C
+, PLATFORM_C
+, PROJECTNAME_C
+, ORDERNUM
+, NTLACCOUNT
+, ASSIST
+, BILLTOCOUNTRY
+, REQUESTDATE
+, NEEDBYDATE
+, CUSTSEGMENT_C
+, ORDERDATE
+, TESTMARKETID
+, TESTMARKET
+, POUNDS
+, EXTRACT_DATE
+, UNIQUE_KEY
+, LOAD_DATETIME
+, RECORD_SOURCE
+, ROW_NUMBER() OVER (PARTITION BY 
+COMPANY
+, INVOICENUM
+, INVOICEDATE
+, INVOICETYPE
+, CREDITMEMO
+, CUSTNUM
+, CUSTID
+, NAME
+, INVOICELINE
+, PARTNUM
+, LINEDESC
+, PRODCODE
+, SELLINGSHIPQTY
+, SALESUM
+, DOCUNITPRICE
+, DOCEXTPRICE
+, DOCDISCOUNT
+, DOCTOTALMISCCHRG
+, SALESPRICE
+, DOCUNITCOST
+, DOCEXTCOST
+, GM
+, GMPCT
+, SHIPTOCUSTNUM
+, SHIPTONUM
+, OTS
+, ADDRESSID
+, SHIPTONAME
+, SHIPTOADDRESS1
+, SHIPTOADDRESS2
+, SHIPTOADDRESS3
+, SHIPTOCITY
+, SHIPTOSTATE
+, SHIPTOZIP
+, SHIPTOCOUNTRY
+, SALESREPLIST
+, BUSINESSUNIT
+, SOLDTOSTATE
+, GROUPCODE
+, TERRITORYID
+, CHARACTER03
+, MASTERKEY
+, PLANT
+, FORMULA
+, WIDTH
+, THICK
+, AREA
+, SFSOLD
+, BASEFORULA
+, ROUTETOMARKETCODE
+, ROUTETOMARKET
+, CUSTPLATFORMCODE
+, CUSTPLATFORM
+, CUSTDESCRIPTIONCODE
+, CUSTDESCRIPTION
+, BRANDED
+, MARKET_C
+, APPLICATION_C
+, FORM_C
+, FORMAT_C
+, BRAND_C
+, BUSINESS_UNIT_ID
+, MARKET2_C
+, PLATFORM_C
+, PROJECTNAME_C
+, ORDERNUM
+, NTLACCOUNT
+, ASSIST
+, BILLTOCOUNTRY
+, REQUESTDATE
+, NEEDBYDATE
+, CUSTSEGMENT_C
+, ORDERDATE
+, TESTMARKETID
+, TESTMARKET
+, POUNDS
+, EXTRACT_DATE
+, UNIQUE_KEY
+, LOAD_DATETIME
+, RECORD_SOURCE
+ORDER BY EXTRACT_DATE DESC) AS rn
+FROM `develop`.`silver`.`sat_outbound_invoice_kinetic`
+)
+WHERE rn = 1
+;
+
+-- 332342
+SELECT COUNT(*)
+FROM `tim_wilson`.`tim_wilson`.`sat_outbound_invoice_kinetic_repair`
+; 
+
+-- 332487
+SELECT COUNT(*)
+FROM `develop`.`silver`.`sat_outbound_invoice_kinetic`
+;
+
+-- TRUNCATE TABLE `develop`.`silver`.`sat_outbound_invoice_kinetic`
+-- ;
+
+INSERT INTO `develop`.`silver`.`sat_outbound_invoice_kinetic`
+SELECT INVOICE_LINE_LHK
+, HASHDIFF
+, COMPANY
+, INVOICENUM
+, INVOICEDATE
+, INVOICETYPE
+, CREDITMEMO
+, CUSTNUM
+, CUSTID
+, NAME
+, INVOICELINE
+, PARTNUM
+, LINEDESC
+, PRODCODE
+, SELLINGSHIPQTY
+, SALESUM
+, DOCUNITPRICE
+, DOCEXTPRICE
+, DOCDISCOUNT
+, DOCTOTALMISCCHRG
+, SALESPRICE
+, DOCUNITCOST
+, DOCEXTCOST
+, GM
+, GMPCT
+, SHIPTOCUSTNUM
+, SHIPTONUM
+, OTS
+, ADDRESSID
+, SHIPTONAME
+, SHIPTOADDRESS1
+, SHIPTOADDRESS2
+, SHIPTOADDRESS3
+, SHIPTOCITY
+, SHIPTOSTATE
+, SHIPTOZIP
+, SHIPTOCOUNTRY
+, SALESREPLIST
+, BUSINESSUNIT
+, SOLDTOSTATE
+, GROUPCODE
+, TERRITORYID
+, CHARACTER03
+, MASTERKEY
+, PLANT
+, FORMULA
+, WIDTH
+, THICK
+, AREA
+, SFSOLD
+, BASEFORULA
+, ROUTETOMARKETCODE
+, ROUTETOMARKET
+, CUSTPLATFORMCODE
+, CUSTPLATFORM
+, CUSTDESCRIPTIONCODE
+, CUSTDESCRIPTION
+, BRANDED
+, MARKET_C
+, APPLICATION_C
+, FORM_C
+, FORMAT_C
+, BRAND_C
+, BUSINESS_UNIT_ID
+, MARKET2_C
+, PLATFORM_C
+, PROJECTNAME_C
+, ORDERNUM
+, NTLACCOUNT
+, ASSIST
+, BILLTOCOUNTRY
+, REQUESTDATE
+, NEEDBYDATE
+, CUSTSEGMENT_C
+, ORDERDATE
+, TESTMARKETID
+, TESTMARKET
+, POUNDS
+, EXTRACT_DATE
+, UNIQUE_KEY
+, LOAD_DATETIME
+, RECORD_SOURCE
+FROM `tim_wilson`.`tim_wilson`.`sat_outbound_invoice_kinetic_repair`
+;
+
+SELECT DISTINCT CodeTypeID
+FROM landing.kinetic.udcodes
+;
+
+SELECT 
+  md5(coalesce(cast(INVOICENUM as string ), '')
+         || '|' || coalesce(cast(INVOICETYPE as string ), '')
+         || '|' || coalesce(cast(INVOICELINE as string ), '')
+         || '|' || coalesce(cast(COMPANY as string ), '')
+         || '|' || coalesce(cast(INVOICEDATE as string ), '')
+         || '|' || coalesce(cast(dbt_updated_at as string ), '')
+        ) AS dbt_scd_id_recalculated
+  , md5(coalesce(cast(INVOICENUM as string ), '')
+         || '|' || coalesce(cast(INVOICETYPE as string ), '')
+         || '|' || coalesce(cast(INVOICELINE as string ), '')
+         || '|' || coalesce(cast(COMPANY as string ), '')
+         || '|' || coalesce(cast(INVOICEDATE as string ), '')
+         || '|' || coalesce(cast(dbt_updated_at as string ), '')
+        ) = dbt_scd_id AS identical
+    , *
+FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+WHERE InvoiceNum = 759939
+;
+
+-- 0
+SELECT COUNT(*)
+FROM (
+SELECT 
+  md5(coalesce(cast(INVOICENUM as string ), '')
+         || '|' || coalesce(cast(INVOICETYPE as string ), '')
+         || '|' || coalesce(cast(INVOICELINE as string ), '')
+         || '|' || coalesce(cast(COMPANY as string ), '')
+         || '|' || coalesce(cast(INVOICEDATE as string ), '')
+         || '|' || coalesce(cast(dbt_updated_at as string ), '')
+        ) AS dbt_scd_id_recalculated
+  , md5(coalesce(cast(INVOICENUM as string ), '')
+         || '|' || coalesce(cast(INVOICETYPE as string ), '')
+         || '|' || coalesce(cast(INVOICELINE as string ), '')
+         || '|' || coalesce(cast(COMPANY as string ), '')
+         || '|' || coalesce(cast(INVOICEDATE as string ), '')
+         || '|' || coalesce(cast(dbt_updated_at as string ), '')
+        ) = dbt_scd_id AS identical
+    , *
+FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+) AS x
+WHERE not identical
+;
+
+-- 581766
+SELECT COUNT(*)
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+;
+
+-- 330367
+SELECT COUNT(DISTINCT INVOICENUM
+                                               ,INVOICETYPE
+                                               ,INVOICELINE
+                                               ,COMPANY
+                                               ,INVOICEDATE)
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE EXTRACT_DATE IS NOT NULL
+;
+
+-- 330367
+-- 331348 ???
+SELECT COUNT(*)
+FROM (
+SELECT *
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+QUALIFY ROW_NUMBER() OVER (PARTITION BY INVOICENUM
+                                               ,INVOICETYPE
+                                               ,INVOICELINE
+                                               ,COMPANY
+                                               ,INVOICEDATE 
+                                               ,Name
+                                               ,SellingShipQty
+                                               ,DocUnitPrice
+                                               ,DocTotalMiscChrg
+                                               ,DocUnitCost
+                                               ,ShipToCustNum
+                                               ,SoldToState
+                                               ,GroupCode
+                                               ,TerritoryID
+                                               ,Character03
+                                               ,Formula
+                      , Width
+                      -- , Thick
+                      , Area
+                      -- , SFSold
+                      -- , BaseForula
+                      -- , RouteToMarketCode
+                      -- , RouteToMarket
+                      -- , CustPlatformCode
+                      -- , CustPlatform
+                      -- , CustDescriptionCode
+                      -- , CustDescription
+                      -- , Branded
+                      -- , Market_c
+                      -- , Application_c
+                      -- , Form_c
+                      -- , Format_c
+                      -- , Brand_c
+                      -- , BusinessUnit_c
+                      , Market2_c
+                      -- , Platform_c
+                      , ProjectName_c
+                      -- , OrderNum
+                      -- , NtlAccount
+                      -- , Assist
+                      -- , BillToCountry
+                      , RequestDate
+                      , NeedByDate
+                      , CustSegment_c
+                      -- , OrderDate
+                      -- , TestMarketID
+                      -- , TestMarket
+                      -- , Pounds 
+
+
+                                   ORDER BY EXTRACT_DATE DESC) = 1
+) AS x
+;
+
+-- 331348
+SELECT COUNT(*)
+FROM (
+SELECT *
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+QUALIFY ROW_NUMBER() OVER (PARTITION BY Company
+                      , InvoiceNum
+                      , InvoiceDate
+                      , InvoiceType
+                      , CreditMemo
+                      , CustNum
+                      , CustID
+                      , Name
+                      , InvoiceLine
+                      , PartNum
+                      , LineDesc
+                      , ProdCode
+                      , SellingShipQty
+                      , SalesUm
+                      , DocUnitPrice
+                      , DocExtPrice
+                      , DocDiscount
+                      , DocTotalMiscChrg
+                      , SalesPrice
+                      , DocUnitCost
+                      , DocExtCost
+                      , GM
+                      , GMpct
+                      , ShipToCustNum
+                      , ShipToNum
+                      , OTS
+                      , AddressID
+                      , ShipToName
+                      , ShipToAddress1
+                      , ShipToAddress2
+                      , ShipToAddress3
+                      , ShipToCity
+                      , ShipToState
+                      , ShipToZIP
+                      , ShipToCountry
+                      , SalesRepList
+                      , BusinessUnit
+                      , SoldToState
+                      , GroupCode
+                      , TerritoryID
+                      , Character03
+                      , MasterKey
+                      , Plant
+                      , Formula
+                      , Width
+                      , Thick
+                      , Area
+                      , SFSold
+                      , BaseForula
+                      , RouteToMarketCode
+                      , RouteToMarket
+                      , CustPlatformCode
+                      , CustPlatform
+                      , CustDescriptionCode
+                      , CustDescription
+                      , Branded
+                      , Market_c
+                      , Application_c
+                      , Form_c
+                      , Format_c
+                      , Brand_c
+                      , BusinessUnit_c
+                      , Market2_c
+                      , Platform_c
+                      , ProjectName_c
+                      , OrderNum
+                      , NtlAccount
+                      , Assist
+                      , BillToCountry
+                      , RequestDate
+                      , NeedByDate
+                      , CustSegment_c
+                      , OrderDate
+                      , TestMarketID
+                      , TestMarket
+                      , Pounds 
+                                   ORDER BY EXTRACT_DATE DESC) = 1
+) AS x
+;
+
+-- 331348
+SELECT COUNT(*)
+FROM (
+SELECT *
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+QUALIFY ROW_NUMBER() OVER (PARTITION BY 
+                      Company
+                      , InvoiceNum
+                      , InvoiceDate
+                      , InvoiceType
+                      -- , CreditMemo
+                      -- , CustNum
+                      -- , CustID
+                      , Name
+                      , InvoiceLine
+                      -- , PartNum
+                      -- , LineDesc
+                      -- , ProdCode
+                      , SellingShipQty
+                      -- , SalesUm
+                      , DocUnitPrice
+                      -- , DocExtPrice
+                      -- , DocDiscount
+                      , DocTotalMiscChrg
+                      -- , SalesPrice
+                      , DocUnitCost
+                      -- , DocExtCost
+                      -- , GM
+                      -- , GMpct
+                      , ShipToCustNum
+                      -- , ShipToNum
+                      -- , OTS
+                      -- , AddressID
+                      -- , ShipToName
+                      , ShipToAddress1
+                      , ShipToAddress2
+                      -- , ShipToAddress3
+                      -- , ShipToCity
+                      -- , ShipToState
+                      -- , ShipToZIP
+                      -- , ShipToCountry
+                      -- , SalesRepList
+                      -- , BusinessUnit
+                      , SoldToState
+                      , GroupCode
+                      , TerritoryID
+                      , Character03
+                      -- , MasterKey
+                      -- , Plant
+                      , Formula
+                      , Width
+                      -- , Thick
+                      -- , Area
+                      , SFSold
+                      -- , BaseForula
+                      -- , RouteToMarketCode
+                      -- , RouteToMarket
+                      -- , CustPlatformCode
+                      -- , CustPlatform
+                      -- , CustDescriptionCode
+                      -- , CustDescription
+                      -- , Branded
+                      -- , Market_c
+                      -- , Application_c
+                      -- , Form_c
+                      -- , Format_c
+                      -- , Brand_c
+                      -- , BusinessUnit_c
+                      , Market2_c
+                      -- , Platform_c
+                      , ProjectName_c
+                      -- , OrderNum
+                      -- , NtlAccount
+                      -- , Assist
+                      , BillToCountry
+                      , RequestDate
+                      , NeedByDate
+                      , CustSegment_c
+                      -- , OrderDate
+                      -- , TestMarketID
+                      -- , TestMarket
+                      -- , Pounds 
+                                   ORDER BY EXTRACT_DATE DESC) = 1
+) AS x
+;
+
+-- 331348
+-- 330367
+SELECT COUNT(*)
+FROM (
+SELECT *
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+QUALIFY ROW_NUMBER() OVER (PARTITION BY 
+-- Company
+-- , InvoiceNum
+-- , InvoiceDate
+-- , InvoiceType
+-- , Name
+-- , InvoiceLine
+-- , SellingShipQty
+-- , DocUnitPrice
+-- , DocTotalMiscChrg
+-- , DocUnitCost
+-- , ShipToCustNum
+-- , ShipToAddress1
+-- , ShipToAddress2
+-- , SoldToState
+-- , GroupCode
+-- , TerritoryID
+-- , Character03
+-- , Formula
+-- , Width
+-- , SFSold
+-- , Market2_c
+-- , ProjectName_c
+-- , BillToCountry
+-- , RequestDate
+-- , NeedByDate
+-- , CustSegment_c
+INVOICENUM
+                                               ,INVOICETYPE
+                                               ,INVOICELINE
+                                               ,COMPANY
+                                               ,INVOICEDATE
+                                   ORDER BY EXTRACT_DATE DESC) = 1
+) AS x
+;
+
+
+
+
+-- 597630
+SELECT COUNT(*)
+FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+;
+
+-- 330892
+SELECT COUNT(*)
+FROM (
+SELECT DISTINCT
+Company
+                      , InvoiceNum
+                      , InvoiceDate
+                      , InvoiceType
+                      , CreditMemo
+                      , CustNum
+                      , CustID
+                      , Name
+                      , InvoiceLine
+                      , PartNum
+                      , LineDesc
+                      , ProdCode
+                      , SellingShipQty
+                      , SalesUm
+                      , DocUnitPrice
+                      , DocExtPrice
+                      , DocDiscount
+                      , DocTotalMiscChrg
+                      , SalesPrice
+                      , DocUnitCost
+                      , DocExtCost
+                      , GM
+                      , GMpct
+                      , ShipToCustNum
+                      , ShipToNum
+                      , OTS
+                      , AddressID
+                      , ShipToName
+                      , ShipToAddress1
+                      , ShipToAddress2
+                      , ShipToAddress3
+                      , ShipToCity
+                      , ShipToState
+                      , ShipToZIP
+                      , ShipToCountry
+                      , SalesRepList
+                      , BusinessUnit
+                      , SoldToState
+                      , GroupCode
+                      , TerritoryID
+                      , Character03
+                      , MasterKey
+                      , Plant
+                      , Formula
+                      , Width
+                      , Thick
+                      , Area
+                      , SFSold
+                      , BaseForula
+                      , RouteToMarketCode
+                      , RouteToMarket
+                      , CustPlatformCode
+                      , CustPlatform
+                      , CustDescriptionCode
+                      , CustDescription
+                      , Branded
+                      , Market_c
+                      , Application_c
+                      , Form_c
+                      , Format_c
+                      , Brand_c
+                      , BusinessUnit_c
+                      , Market2_c
+                      , Platform_c
+                      , ProjectName_c
+                      , OrderNum
+                      , NtlAccount
+                      , Assist
+                      , BillToCountry
+                      , RequestDate
+                      , NeedByDate
+                      , CustSegment_c
+                      , OrderDate
+                      , TestMarketID
+                      , TestMarket
+                      , Pounds
+FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+) AS x
+;
+
+-- 577238
+SELECT COUNT(*)
+FROM (
+SELECT DISTINCT
+Company
+                      , InvoiceNum
+                      , InvoiceDate
+                      , InvoiceType
+                      , CreditMemo
+                      , CustNum
+                      , CustID
+                      , Name
+                      , InvoiceLine
+                      , PartNum
+                      , LineDesc
+                      , ProdCode
+                      , SellingShipQty
+                      , SalesUm
+                      , DocUnitPrice
+                      , DocExtPrice
+                      , DocDiscount
+                      , DocTotalMiscChrg
+                      , SalesPrice
+                      , DocUnitCost
+                      , DocExtCost
+                      , GM
+                      , GMpct
+                      , ShipToCustNum
+                      , ShipToNum
+                      , OTS
+                      , AddressID
+                      , ShipToName
+                      , ShipToAddress1
+                      , ShipToAddress2
+                      , ShipToAddress3
+                      , ShipToCity
+                      , ShipToState
+                      , ShipToZIP
+                      , ShipToCountry
+                      , SalesRepList
+                      , BusinessUnit
+                      , SoldToState
+                      , GroupCode
+                      , TerritoryID
+                      , Character03
+                      , MasterKey
+                      , Plant
+                      , Formula
+                      , Width
+                      , Thick
+                      , Area
+                      , SFSold
+                      , BaseForula
+                      , RouteToMarketCode
+                      , RouteToMarket
+                      , CustPlatformCode
+                      , CustPlatform
+                      , CustDescriptionCode
+                      , CustDescription
+                      , Branded
+                      , Market_c
+                      , Application_c
+                      , Form_c
+                      , Format_c
+                      , Brand_c
+                      , BusinessUnit_c
+                      , Market2_c
+                      , Platform_c
+                      , ProjectName_c
+                      , OrderNum
+                      , NtlAccount
+                      , Assist
+                      , BillToCountry
+                      , RequestDate
+                      , NeedByDate
+                      , CustSegment_c
+                      , OrderDate
+                      , TestMarketID
+                      , TestMarket
+                      , Pounds
+                      , EXTRACT_DATE
+FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+
+) AS x
+;
+
+
+--
+-- 23/02/2026
+--
+
+-- 614308
+SELECT COUNT(*)
+FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+;
+
+-- 379829
+SELECT COUNT(*)
+FROM tim_wilson.psa_kinetic.psa_sales_sherrigmquery_allcompanies
+;
+

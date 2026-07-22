@@ -1,0 +1,397 @@
+SELECT *
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE InvoiceNum = 759939  -- 2 records
+-- WHERE InvoiceNum = 771237  -- 96 records
+ORDER BY EXTRACT_DATE ASC, INVOICELINE ASC
+;
+
+SELECT 
+INVOICENUM
+,INVOICETYPE
+,INVOICELINE
+,COMPANY
+,INVOICEDATE
+,COUNT(*) AS count
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+GROUP BY INVOICENUM
+        ,INVOICETYPE
+        ,INVOICELINE
+        ,COMPANY
+        ,INVOICEDATE
+HAVING COUNT(*) > 15
+;
+
+    SELECT *
+        ,TO_TIMESTAMP('2026-02-20 12:15:07.181429') AS psa_loaded_at
+    FROM (
+        SELECT DISTINCT Company
+                      , InvoiceNum
+                      , InvoiceDate
+                      , InvoiceType
+                      , CreditMemo
+                      , CustNum
+                      , CustID
+                      , Name
+                      , InvoiceLine
+                      , PartNum
+                      , LineDesc
+                      , ProdCode
+                      , SellingShipQty
+                      , SalesUm
+                      , DocUnitPrice
+                      , DocExtPrice
+                      , DocDiscount
+                      , DocTotalMiscChrg
+                      , SalesPrice
+                      , DocUnitCost
+                      , DocExtCost
+                      , GM
+                      , GMpct
+                      , ShipToCustNum
+                      , ShipToNum
+                      , OTS
+                      , AddressID
+                      , ShipToName
+                      , ShipToAddress1
+                      , ShipToAddress2
+                      , ShipToAddress3
+                      , ShipToCity
+                      , ShipToState
+                      , ShipToZIP
+                      , ShipToCountry
+                      , SalesRepList
+                      , BusinessUnit
+                      , SoldToState
+                      , GroupCode
+                      , TerritoryID
+                      , Character03
+                      , MasterKey
+                      , Plant
+                      , Formula
+                      , Width
+                      , Thick
+                      , Area
+                      , SFSold
+                      , BaseForula
+                      , RouteToMarketCode
+                      , RouteToMarket
+                      , CustPlatformCode
+                      , CustPlatform
+                      , CustDescriptionCode
+                      , CustDescription
+                      , Branded
+                      , Market_c
+                      , Application_c
+                      , Form_c
+                      , Format_c
+                      , Brand_c
+                      , BusinessUnit_c
+                      , Market2_c
+                      , Platform_c
+                      , ProjectName_c
+                      , OrderNum
+                      , NtlAccount
+                      , Assist
+                      , BillToCountry
+                      , RequestDate
+                      , NeedByDate
+                      , CustSegment_c
+                      , OrderDate
+                      , TestMarketID
+                      , TestMarket
+                      , Pounds
+                      , Extract_Date
+        FROM `landing`.`kinetic`.`sales_sherrigmquery_allcompanies`
+        WHERE EXTRACT_DATE IS NOT NULL
+        -- AND InvoiceNum = 759939
+        -- AND InvoiceNum = 766590
+        AND InvoiceNum = 771237  -- 6 records
+        QUALIFY ROW_NUMBER() OVER (PARTITION BY INVOICENUM
+                                               ,INVOICETYPE
+                                               ,INVOICELINE
+                                               ,COMPANY
+                                               ,INVOICEDATE 
+                                   ORDER BY EXTRACT_DATE DESC) = 1
+    ) AS x
+;
+
+-- No DISTINCT and QUALIFY on two grains
+-- 23/02/2026
+-- 331397  landing
+-- 330740  psa
+SELECT COUNT(*)
+FROM (
+    SELECT *
+        ,TO_TIMESTAMP('2026-02-20 12:15:07.181429') AS psa_loaded_at
+    FROM (
+        SELECT  Company
+                      , InvoiceNum
+                      , InvoiceDate
+                      , InvoiceType
+                      , CreditMemo
+                      , CustNum
+                      , CustID
+                      , Name
+                      , InvoiceLine
+                      , PartNum
+                      , LineDesc
+                      , ProdCode
+                      , SellingShipQty
+                      , SalesUm
+                      , DocUnitPrice
+                      , DocExtPrice
+                      , DocDiscount
+                      , DocTotalMiscChrg
+                      , SalesPrice
+                      , DocUnitCost
+                      , DocExtCost
+                      , GM
+                      , GMpct
+                      , ShipToCustNum
+                      , ShipToNum
+                      , OTS
+                      , AddressID
+                      , ShipToName
+                      , ShipToAddress1
+                      , ShipToAddress2
+                      , ShipToAddress3
+                      , ShipToCity
+                      , ShipToState
+                      , ShipToZIP
+                      , ShipToCountry
+                      , SalesRepList
+                      , BusinessUnit
+                      , SoldToState
+                      , GroupCode
+                      , TerritoryID
+                      , Character03
+                      , MasterKey
+                      , Plant
+                      , Formula
+                      , Width
+                      , Thick
+                      , Area
+                      , SFSold
+                      , BaseForula
+                      , RouteToMarketCode
+                      , RouteToMarket
+                      , CustPlatformCode
+                      , CustPlatform
+                      , CustDescriptionCode
+                      , CustDescription
+                      , Branded
+                      , Market_c
+                      , Application_c
+                      , Form_c
+                      , Format_c
+                      , Brand_c
+                      , BusinessUnit_c
+                      , Market2_c
+                      , Platform_c
+                      , ProjectName_c
+                      , OrderNum
+                      , NtlAccount
+                      , Assist
+                      , BillToCountry
+                      , RequestDate
+                      , NeedByDate
+                      , CustSegment_c
+                      , OrderDate
+                      , TestMarketID
+                      , TestMarket
+                      , Pounds
+                      , Extract_Date
+        FROM `landing`.`kinetic`.`sales_sherrigmquery_allcompanies`
+--        FROM `psa`.`kinetic`.`psa_sales_sherrigmquery_allcompanies`
+        WHERE EXTRACT_DATE IS NOT NULL
+        -- AND InvoiceNum = 759939  -- now 2 records
+        -- AND InvoiceNum = 766590
+        -- AND InvoiceNum = 771237  -- 6 records still
+QUALIFY
+
+-- Higher grain should be ROW_NUMBER() or RANK()?
+--  ROW_NUMBER() OVER (PARTITION BY INVOICENUM
+  RANK() OVER (PARTITION BY INVOICENUM
+                              ,INVOICETYPE
+                              ,INVOICELINE
+                              ,COMPANY
+                              ,INVOICEDATE 
+                  ORDER BY EXTRACT_DATE DESC) = 1
+
+AND
+
+  ROW_NUMBER() OVER (PARTITION BY Company
+                            , InvoiceNum
+                            , InvoiceDate
+                            , InvoiceType
+                            , Name
+                            , InvoiceLine
+                            , SellingShipQty
+                            , DocUnitPrice
+                            , DocTotalMiscChrg
+                            , DocUnitCost
+                            , ShipToCustNum
+                            , ShipToAddress1
+                            , ShipToAddress2
+                            , SoldToState
+                            , GroupCode
+                            , TerritoryID
+                            , Character03
+                            , Formula
+                            , Width
+                            , SFSold
+                            , Market2_c
+                            , ProjectName_c
+                            , BillToCountry
+                            , RequestDate
+                            , NeedByDate
+                            , CustSegment_c
+                  ORDER BY EXTRACT_DATE DESC) = 1
+    ) AS x
+) AS y
+;
+
+-- 602158
+SELECT COUNT(*)
+FROM `psa`.`kinetic`.`psa_sales_sherrigmquery_allcompanies`
+;
+
+-- 602158
+SELECT COUNT(*)
+FROM (
+  SELECT
+  Company
+                      , InvoiceNum
+                      , InvoiceDate
+                      , InvoiceType
+                      , CreditMemo
+                      , CustNum
+                      , CustID
+                      , Name
+                      , InvoiceLine
+                      , PartNum
+                      , LineDesc
+                      , ProdCode
+                      , SellingShipQty
+                      , SalesUm
+                      , DocUnitPrice
+                      , DocExtPrice
+                      , DocDiscount
+                      , DocTotalMiscChrg
+                      , SalesPrice
+                      , DocUnitCost
+                      , DocExtCost
+                      , GM
+                      , GMpct
+                      , ShipToCustNum
+                      , ShipToNum
+                      , OTS
+                      , AddressID
+                      , ShipToName
+                      , ShipToAddress1
+                      , ShipToAddress2
+                      , ShipToAddress3
+                      , ShipToCity
+                      , ShipToState
+                      , ShipToZIP
+                      , ShipToCountry
+                      , SalesRepList
+                      , BusinessUnit
+                      , SoldToState
+                      , GroupCode
+                      , TerritoryID
+                      , Character03
+                      , MasterKey
+                      , Plant
+                      , Formula
+                      , Width
+                      , Thick
+                      , Area
+                      , SFSold
+                      , BaseForula
+                      , RouteToMarketCode
+                      , RouteToMarket
+                      , CustPlatformCode
+                      , CustPlatform
+                      , CustDescriptionCode
+                      , CustDescription
+                      , Branded
+                      , Market_c
+                      , Application_c
+                      , Form_c
+                      , Format_c
+                      , Brand_c
+                      , BusinessUnit_c
+                      , Market2_c
+                      , Platform_c
+                      , ProjectName_c
+                      , OrderNum
+                      , NtlAccount
+                      , Assist
+                      , BillToCountry
+                      , RequestDate
+                      , NeedByDate
+                      , CustSegment_c
+                      , OrderDate
+                      , TestMarketID
+                      , TestMarket
+                      , Pounds
+                      , Extract_Date
+  FROM `psa`.`kinetic`.`psa_sales_sherrigmquery_allcompanies`
+) AS x
+;
+
+-- 96656
+SELECT COUNT(*)
+FROM landing.salesforce.lead_2026_02_19
+;
+
+-- 62818
+SELECT COUNT(*)
+FROM landing.salesforce.opportunity_2026_02_19
+;
+
+SELECT *
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+-- WHERE InvoiceNum = 759939  -- 2 records
+WHERE InvoiceNum = 771237  -- 96 records
+
+-- 6 records
+-- QUALIFY ROW_NUMBER() OVER (PARTITION BY INVOICENUM
+--                               ,INVOICETYPE
+--                               ,INVOICELINE
+--                               ,COMPANY
+--                               ,INVOICEDATE 
+--                   ORDER BY EXTRACT_DATE DESC) = 1
+
+-- 6 records
+-- QUALIFY ROW_NUMBER() OVER (PARTITION BY Company
+--                             , InvoiceNum
+--                             , InvoiceDate
+--                             , InvoiceType
+--                             , Name
+--                             , InvoiceLine
+--                             , SellingShipQty
+--                             , DocUnitPrice
+--                             , DocTotalMiscChrg
+--                             , DocUnitCost
+--                             , ShipToCustNum
+--                             , ShipToAddress1
+--                             , ShipToAddress2
+--                             , SoldToState
+--                             , GroupCode
+--                             , TerritoryID
+--                             , Character03
+--                             , Formula
+--                             , Width
+--                             , SFSold
+--                             , Market2_c
+--                             , ProjectName_c
+--                             , BillToCountry
+--                             , RequestDate
+--                             , NeedByDate
+--                             , CustSegment_c
+--                   ORDER BY EXTRACT_DATE DESC) = 1
+
+ORDER BY EXTRACT_DATE ASC, INVOICELINE ASC
+;

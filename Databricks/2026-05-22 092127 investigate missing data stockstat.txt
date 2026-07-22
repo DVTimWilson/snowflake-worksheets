@@ -1,0 +1,85 @@
+SELECT DATE, COUNT(*)
+FROM (
+SELECT 
+      UNIQUE_KEY
+    , DATE
+    , INVENTORY_ITEM_ID
+    , INVENTORY_ITEM_DESCRIPTION
+    , CLASS_ID
+    , PROD_CODE
+    , COREVIEW_PRODUCT_CATEGORY
+    , ENTITY
+    , BU
+    , SITE
+    , WAREHOUSE_CODE
+    , EXTENDED_COST
+    , UNIT_COST
+    , UOM
+    , QUANTITY
+    , UNIT_WEIGHT
+    , WEIGHT_LBS
+    , IS_ACQUIRED_DATE
+    , IS_ACQUIRED_NOW
+    , META_LOAD_DATETIME
+    , RECORD_SOURCE
+FROM `production`.`silver`.`bsat_combined_inventory_stock_levels`
+WHERE DATE IS NOT NULL
+) AS x
+GROUP BY DATE
+ORDER BY DATE DESC
+;
+
+SELECT DATE, COUNT(*)
+FROM (
+WITH sats AS (
+    SELECT *
+    FROM `production`.`silver`.`br_inventory_stock_levels_kinetic_step_1`
+
+    UNION ALL
+
+    SELECT *
+    FROM `production`.`silver`.`br_combined_quickbooks_stock_status_step_1`
+)
+
+SELECT sats.*    
+    , COALESCE(c.ACQUISITION_DATE, CAST('1900-01-01' AS DATE)) AS IS_ACQUIRED_DATE
+    , CASE 
+          WHEN COALESCE(c.ACQUISITION_DATE, CAST('1900-01-01' AS DATE)) <= sats.DATE THEN 1
+          ELSE 0
+      END AS IS_ACQUIRED_NOW
+FROM sats
+LEFT JOIN `production`.`silver`.`ref_master_ecore_companies` AS c
+    ON UPPER(sats.ENTITY) = UPPER(c.COMPANY_CODE)
+) AS x
+GROUP BY DATE
+ORDER BY DATE DESC
+;
+
+SELECT *
+FROM production.silver.sat_inventory_stock_levels
+WHERE TO_DATE(INVENTORY_DATE) = '2026-05-20'
+;
+
+SELECT *
+FROM psa_prod.kinetic.psa_inventory_stockstat
+WHERE INVENTORY_DATE = '2026-05-20'
+;
+
+-- 2026-05-20T11:17:08.733+00:00
+SELECT *
+FROM production.meta.waterlevels
+WHERE TABLE_NAME LIKE '%stg_inventory_stockstat%'
+ORDER BY STARTED_AT_TS DESC
+;
+
+SELECT *
+FROM uat.meta.waterlevels
+WHERE TABLE_NAME LIKE '%stg_inventory_stockstat%'
+ORDER BY STARTED_AT_TS DESC
+;
+
+-- 2026-05-20T08:10:03.000+00:00
+SELECT DISTINCT Extract_Date
+FROM landing.kinetic.stockstat
+ORDER BY Extract_Date DESC
+;

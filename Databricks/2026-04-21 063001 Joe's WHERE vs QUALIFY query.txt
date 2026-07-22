@@ -1,0 +1,54 @@
+WITH x AS (SELECT *
+FROM develop.gold_coreview.mart_inventory_stock_levels as a
+LEFT JOIN landing.raw_baq_explore.consolidated_part_master as b
+ON a.INVENTORY_ITEM_ID = b.PartNum
+AND A.ENTITY = b.Company
+-- WHERE a.QUANTITY != 0 -- 10414
+-- WHERE a.QUANTITY = 0 -- 413
+QUALIFY row_number() over(PARTITION BY a.ENTITY, a.INVENTORY_ITEM_ID ORDER BY a.DATE DESC) = 1  -- 10433
+)
+
+SELECT *
+FROM x
+WHERE 1=1
+-- AND QUANTITY != 0  -- 10220
+AND QUANTITY = 0  -- 213
+-- AND QUANTITY > 0  -- 8854
+-- AND QUANTITY < 0  -- 1560
+-- AND date >= current_date() - 30
+-- AND date <= current_date() 
+ORDER BY DATE DESC
+;
+
+-- Joe's query
+WITH x AS (SELECT *
+FROM develop.gold_coreview.mart_inventory_stock_levels as a
+LEFT JOIN landing.raw_baq_explore.consolidated_part_master as b
+ON a.INVENTORY_ITEM_ID = b.PartNum
+AND A.ENTITY = b.Company
+QUALIFY row_number() over(PARTITION BY a.ENTITY, a.INVENTORY_ITEM_ID ORDER BY a.DATE DESC) = 1  -- 10433
+)
+
+SELECT *
+FROM x
+WHERE 1=1
+AND QUANTITY > 0  -- 8706
+ORDER BY DATE DESC
+;
+
+-- 8854
+WITH x AS (SELECT *
+FROM develop.gold_coreview.mart_inventory_stock_levels as a
+LEFT JOIN landing.raw_baq_explore.consolidated_part_master as b
+ON a.INVENTORY_ITEM_ID = b.PartNum
+AND A.ENTITY = b.Company
+WHERE a.QUANTITY != 0
+QUALIFY row_number() over(PARTITION BY a.ENTITY, a.INVENTORY_ITEM_ID ORDER BY a.DATE DESC) = 1  -- 10433
+)
+
+SELECT *
+FROM x
+WHERE 1=1
+AND QUANTITY > 0  -- 8854
+ORDER BY DATE DESC
+;

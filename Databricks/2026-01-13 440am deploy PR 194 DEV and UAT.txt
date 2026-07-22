@@ -1,0 +1,343 @@
+CREATE TABLE psa.backup.psa_allocatedhoursandearnings_20260113
+AS SELECT * FROM psa.dayforce.psa_allocatedhoursandearnings;
+
+CREATE TABLE psa.backup.psa_sales_sherrigmquery_allcompanies_20260113
+AS SELECT * FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies;
+
+CREATE TABLE psa.backup.psa_customer_20260113
+AS SELECT * FROM psa.kinetic.psa_customer;
+
+CREATE TABLE psa.backup.psa_materialyield_20260113
+AS SELECT * FROM psa.kinetic.psa_materialyield;
+
+CREATE TABLE psa.backup.psa_orderdtl_20260113
+AS SELECT * FROM psa.kinetic.psa_orderdtl;
+
+CREATE TABLE psa.backup.psa_orderhed_20260113
+AS SELECT * FROM psa.kinetic.psa_orderhed;
+
+CREATE TABLE psa.backup.psa_orderrel_20260113
+AS SELECT * FROM psa.kinetic.psa_orderrel;
+
+CREATE TABLE psa.backup.psa_shipdtl_20260113
+AS SELECT * FROM psa.kinetic.psa_shipdtl;
+
+CREATE TABLE psa.backup.psa_shiphead_20260113
+AS SELECT * FROM psa.kinetic.psa_shiphead;
+
+CREATE TABLE psa.backup.psa_shippingperformance_20260113
+AS SELECT * FROM psa.kinetic.psa_shippingperformance;
+
+CREATE TABLE psa.backup.psa_shipto_20260113
+AS SELECT * FROM psa.kinetic.psa_shipto;
+
+CREATE TABLE psa.backup.psa_shipvia_20260113
+AS SELECT * FROM psa.kinetic.psa_shipvia;
+
+
+-- psa_allocatedhoursandearnings
+
+UPDATE psa.dayforce.psa_allocatedhoursandearnings
+SET dbt_scd_id = md5(coalesce(cast(DATE AS string ), '')
+           || '|' || coalesce(cast(ALLOCATED_DEPARTMENT AS string ), '')
+           || '|' || coalesce(cast(ALLOCATED_LEDGER_CODE AS string ), '')
+           || '|' || coalesce(cast(HOME_DEPARTMENT AS string ), '')
+           || '|' || coalesce(cast(HOME_LEDGER_CODE AS string ), '')
+           || '|' || coalesce(cast(JOB_NAME AS string ), '')
+           || '|' || coalesce(cast(TOTAL_HOURS AS string ), '')
+           || '|' || coalesce(cast(NET_HOURS AS string ), '')
+           || '|' || coalesce(cast(PAY_AMOUNT AS string ), '')
+           || '|' || coalesce(cast(PAY_CODE_NAME AS string ), '')
+           || '|' || coalesce(cast(PAY_CATEGORY_NAME AS string ), '')
+           || '|' || coalesce(cast(DATA_ID AS string ), '')
+           || '|' || coalesce(cast(PAY_CLASS AS string ), '')
+           || '|' || coalesce(cast(PAY_TYPE AS string ), '')
+           || '|' || coalesce(cast(ENTITY AS string ), '')
+           || '|' || coalesce(cast(DEPT AS string ), '')
+           || '|' || coalesce(cast(TYPE AS string ), '')
+           || '|' || coalesce(cast(BU_FOR_DIRECT AS string ), '')
+           || '|' || coalesce(cast(SITE AS string ), '')
+           || '|' || coalesce(cast(MONTH AS string ), '')
+           || '|' || coalesce(cast(FORMULAS_DRAG_DOWN AS string ), '')
+           || '|' || coalesce(cast(TYPE2 AS string ), '')
+           || '|' || coalesce(cast(dbt_updated_at AS string ), ''));
+
+-- psa_sales_sherrigmquery_allcompanies
+
+UPDATE psa.kinetic.psa_sales_sherrigmquery_allcompanies
+SET dbt_scd_id = md5(coalesce(cast(INVOICENUM AS string ), '')
+           || '|' || coalesce(cast(INVOICETYPE AS string ), '')
+           || '|' || coalesce(cast(INVOICELINE AS string ), '')
+           || '|' || coalesce(cast(COMPANY AS string ), '')
+           || '|' || coalesce(cast(INVOICEDATE AS string ), '')
+           || '|' || coalesce(cast(dbt_updated_at AS string ), ''));
+
+-- psa_customer
+
+UPDATE psa.kinetic.psa_customer
+SET dbt_scd_id = md5(coalesce(cast(COMPANY AS string ), '')
+            || '|' || coalesce(cast(CUSTID AS string ), '')
+            || '|' || coalesce(cast(dbt_updated_at AS string ), '')
+            );
+
+-- psa_materialyeild
+
+UPDATE psa.kinetic.psa_materialyield
+SET dbt_scd_id = md5(coalesce(cast(YEAR AS string ), '')
+                          || '|' || coalesce(cast(MONTH AS string ), '')
+                          || '|' || coalesce(cast(MONTHNAME AS string ), '')
+                          || '|' || coalesce(cast(YIELDPERCENTAGE AS string ), '')
+                          || '|' || coalesce(cast(JCDEPT AS string ), '')
+                          || '|' || coalesce(cast(dbt_updated_at AS string ), ''));
+
+-- psa_orderdtl
+
+UPDATE psa.kinetic.psa_orderdtl
+SET dbt_scd_id = md5(coalesce(cast(COMPANY AS string ), '')
+           || '|' || coalesce(cast(ORDERNUM AS string ), '')
+           || '|' || coalesce(cast(ORDERLINE AS string ), '')
+           || '|' || coalesce(cast(PARTNUM AS string ), '')
+           || '|' || coalesce(cast(dbt_updated_at AS string ), ''));
+
+-- psa_orderhed
+
+UPDATE psa.kinetic.psa_orderhed
+SET dbt_scd_id = md5(coalesce(cast(COMPANY AS string ), '')
+           || '|' || coalesce(cast(ORDERNUM AS string ), '')
+           || '|' || coalesce(cast(dbt_updated_at AS string ), ''));
+
+-- psa_orderrel
+
+UPDATE psa.kinetic.psa_orderrel
+SET dbt_scd_id = md5(coalesce(cast(COMPANY AS string ), '')
+           || '|' || coalesce(cast(ORDERNUM AS string ), '')
+           || '|' || coalesce(cast(ORDERLINE AS string ), '')
+           || '|' || coalesce(cast(ORDERRELNUM AS string ), '')
+           || '|' || coalesce(cast(dbt_updated_at AS string ), ''));
+
+-- psa_shipdtl
+
+UPDATE psa.kinetic.psa_shipdtl
+SET dbt_scd_id = md5(coalesce(cast(COMPANY AS string ), '')
+           || '|' || coalesce(cast(PACKNUM AS string ), '')
+           || '|' || coalesce(cast(PACKLINE AS string ), '')
+           || '|' || coalesce(cast(dbt_updated_at AS string ), ''));
+
+-- psa_shiphead
+
+UPDATE psa.kinetic.psa_shiphead
+SET dbt_scd_id = md5(coalesce(cast(COMPANY AS string ), '')
+           || '|' || coalesce(cast(PACKNUM AS string ), '')
+           || '|' || coalesce(cast(dbt_updated_at AS string ), ''));
+
+-- psa_shippingperformance
+
+UPDATE psa.kinetic.psa_shippingperformance
+SET dbt_scd_id = md5(coalesce(cast(SHIPHEAD_COMPANY AS string ), '')
+           || '|' || coalesce(cast(SHIPHEAD_DATE01 AS string ), '')
+           || '|' || coalesce(cast(SHIPHEAD_SHIPDATE AS string ), '')
+           || '|' || coalesce(cast(SHIPHEAD_PACKNUM AS string ), '')
+           || '|' || coalesce(cast(SHIPHEAD_SHIPPERSON AS string ), '')
+           || '|' || coalesce(cast(SHIPDTL_ORDERNUM AS string ), '')
+           || '|' || coalesce(cast(SHIPDTL_ORDERLINE AS string ), '')
+           || '|' || coalesce(cast(ORDERREL_REQDATE AS string ), '')
+           || '|' || coalesce(cast(ORDERREL_NEEDBYDATE AS string ), '')
+           || '|' || coalesce(cast(UDCODES_CODEDESC AS string ), '')
+           || '|' || coalesce(cast(UDCODESSDTD_CODEDESC AS string ), '')
+           || '|' || coalesce(cast(ORDERREL_CHECKBOX01 AS string ), '')
+           || '|' || coalesce(cast(CUSTOMER_CUSTID AS string ), '')
+           || '|' || coalesce(cast(CUSTOMER_NAME AS string ), '')
+           || '|' || coalesce(cast(dbt_updated_at AS string ), ''));
+
+-- psa_shipto
+
+UPDATE psa.kinetic.psa_shipto
+SET dbt_scd_id = md5(coalesce(cast(COMPANY AS string ), '')
+           || '|' || coalesce(cast(CUSTNUM AS string ), '')
+           || '|' || coalesce(cast(SHIPTONUM AS string ), '')
+           || '|' || coalesce(cast(dbt_updated_at AS string ), ''));
+
+-- psa_shipvia
+
+UPDATE psa.kinetic.psa_shipvia
+SET dbt_scd_id = md5(coalesce(cast(COMPANY AS string ), '')
+           || '|' || coalesce(cast(SHIPVIACODE AS string ), '')
+           || '|' || coalesce(cast(dbt_updated_at AS string ), ''));
+
+
+SELECT *
+FROM psa.dayforce.psa_allocatedhoursandearnings
+WHERE EXTRACT_DATE > '2026-01-13'
+AND md5(coalesce(cast(DATE AS string ), '')
+           || '|' || coalesce(cast(ALLOCATED_DEPARTMENT AS string ), '')
+           || '|' || coalesce(cast(ALLOCATED_LEDGER_CODE AS string ), '')
+           || '|' || coalesce(cast(HOME_DEPARTMENT AS string ), '')
+           || '|' || coalesce(cast(HOME_LEDGER_CODE AS string ), '')
+           || '|' || coalesce(cast(JOB_NAME AS string ), '')
+           || '|' || coalesce(cast(TOTAL_HOURS AS string ), '')
+           || '|' || coalesce(cast(NET_HOURS AS string ), '')
+           || '|' || coalesce(cast(PAY_AMOUNT AS string ), '')
+           || '|' || coalesce(cast(PAY_CODE_NAME AS string ), '')
+           || '|' || coalesce(cast(PAY_CATEGORY_NAME AS string ), '')
+           || '|' || coalesce(cast(DATA_ID AS string ), '')
+           || '|' || coalesce(cast(PAY_CLASS AS string ), '')
+           || '|' || coalesce(cast(PAY_TYPE AS string ), '')
+           || '|' || coalesce(cast(ENTITY AS string ), '')
+           || '|' || coalesce(cast(DEPT AS string ), '')
+           || '|' || coalesce(cast(TYPE AS string ), '')
+           || '|' || coalesce(cast(BU_FOR_DIRECT AS string ), '')
+           || '|' || coalesce(cast(SITE AS string ), '')
+           || '|' || coalesce(cast(MONTH AS string ), '')
+           || '|' || coalesce(cast(FORMULAS_DRAG_DOWN AS string ), '')
+           || '|' || coalesce(cast(TYPE2 AS string ), '')
+           || '|' || coalesce(cast(dbt_updated_at AS string ), '')) != dbt_scd_id
+;
+
+SELECT EXTRACT_DATE, COUNT(*) AS record_count
+FROM psa.dayforce.psa_allocatedhoursandearnings
+GROUP BY EXTRACT_DATE
+ORDER BY EXTRACT_DATE DESC
+;
+
+SELECT EXTRACT_DATE, COUNT(*) AS record_count
+FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+GROUP BY EXTRACT_DATE
+ORDER BY EXTRACT_DATE DESC
+;
+
+SELECT EXTRACT_DATE, COUNT(*) AS record_count
+FROM psa.kinetic.psa_customer
+GROUP BY EXTRACT_DATE
+ORDER BY EXTRACT_DATE DESC
+;
+
+SELECT EXTRACT_DATE, COUNT(*) AS record_count
+FROM psa.kinetic.psa_resgrpeff
+GROUP BY EXTRACT_DATE
+ORDER BY EXTRACT_DATE DESC
+;
+
+SELECT EXTRACT_DATE, COUNT(*) AS record_count
+FROM psa.kinetic.psa_coparts
+GROUP BY EXTRACT_DATE
+ORDER BY EXTRACT_DATE DESC
+;
+
+SELECT EXTRACT_DATE, COUNT(*) AS record_count
+FROM psa.kinetic.psa_inventory_stockstat
+GROUP BY EXTRACT_DATE
+ORDER BY EXTRACT_DATE DESC
+;
+
+SELECT EXTRACT_DATE, COUNT(*) AS record_count
+FROM psa.kinetic.psa_customer
+GROUP BY EXTRACT_DATE
+ORDER BY EXTRACT_DATE DESC
+;
+
+SELECT EXTRACT_DATE, COUNT(*) AS record_count
+FROM landing.dayforce.allocatedhoursandearnings
+GROUP BY EXTRACT_DATE
+ORDER BY EXTRACT_DATE DESC
+;
+
+SELECT EXTRACT_DATE, COUNT(*) AS record_count
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+GROUP BY EXTRACT_DATE
+ORDER BY EXTRACT_DATE DESC
+;
+
+SELECT EXTRACT_DATE, COUNT(*) AS record_count
+FROM landing.kinetic.customer
+GROUP BY EXTRACT_DATE
+ORDER BY EXTRACT_DATE DESC
+;
+
+SELECT *
+FROM psa.dayforce.psa_allocatedhoursandearnings
+WHERE TO_DATE(EXTRACT_DATE) = '2026-01-13'
+;
+
+SELECT *
+FROM psa.dayforce.psa_allocatedhoursandearnings
+WHERE TO_DATE(EXTRACT_DATE) = '2026-01-14'
+;
+
+SELECT EXTRACT_DATE, COUNT(*) AS record_count
+FROM tim_wilson.psa_dayforce.psa_allocatedhoursandearnings
+GROUP BY EXTRACT_DATE
+ORDER BY EXTRACT_DATE DESC
+;
+
+SELECT *
+FROM tim_wilson.psa_dayforce.psa_allocatedhoursandearnings
+WHERE TO_DATE(EXTRACT_DATE) = '2026-01-14'
+;
+
+SELECT *
+FROM tim_wilson.psa_dayforce.psa_allocatedhoursandearnings
+WHERE TO_DATE(EXTRACT_DATE) = '2026-01-13'
+EXCEPT
+SELECT *
+FROM psa.dayforce.psa_allocatedhoursandearnings
+WHERE TO_DATE(EXTRACT_DATE) = '2026-01-13'
+;
+
+SELECT *
+FROM psa.dayforce.psa_allocatedhoursandearnings
+WHERE TO_DATE(EXTRACT_DATE) = '2026-01-13'
+EXCEPT
+SELECT *
+FROM tim_wilson.psa_dayforce.psa_allocatedhoursandearnings
+WHERE TO_DATE(EXTRACT_DATE) = '2026-01-13'
+;
+
+CREATE TABLE tim_wilson.psa_dayforce.psa_allocatedhoursandearnings
+AS SELECT * FROM psa.backup.psa_allocatedhoursandearnings_20260113;
+
+UPDATE tim_wilson.psa_dayforce.psa_allocatedhoursandearnings
+SET dbt_scd_id = md5(coalesce(cast(DATE AS string ), '')
+           || '|' || coalesce(cast(ALLOCATED_DEPARTMENT AS string ), '')
+           || '|' || coalesce(cast(ALLOCATED_LEDGER_CODE AS string ), '')
+           || '|' || coalesce(cast(HOME_DEPARTMENT AS string ), '')
+           || '|' || coalesce(cast(HOME_LEDGER_CODE AS string ), '')
+           || '|' || coalesce(cast(JOB_NAME AS string ), '')
+           || '|' || coalesce(cast(TOTAL_HOURS AS string ), '')
+           || '|' || coalesce(cast(NET_HOURS AS string ), '')
+           || '|' || coalesce(cast(PAY_AMOUNT AS string ), '')
+           || '|' || coalesce(cast(PAY_CODE_NAME AS string ), '')
+           || '|' || coalesce(cast(PAY_CATEGORY_NAME AS string ), '')
+           || '|' || coalesce(cast(DATA_ID AS string ), '')
+           || '|' || coalesce(cast(PAY_CLASS AS string ), '')
+           || '|' || coalesce(cast(PAY_TYPE AS string ), '')
+           || '|' || coalesce(cast(ENTITY AS string ), '')
+           || '|' || coalesce(cast(DEPT AS string ), '')
+           || '|' || coalesce(cast(TYPE AS string ), '')
+           || '|' || coalesce(cast(BU_FOR_DIRECT AS string ), '')
+           || '|' || coalesce(cast(SITE AS string ), '')
+           || '|' || coalesce(cast(MONTH AS string ), '')
+           || '|' || coalesce(cast(FORMULAS_DRAG_DOWN AS string ), '')
+           || '|' || coalesce(cast(TYPE2 AS string ), '')
+           || '|' || coalesce(cast(dbt_updated_at AS string ), ''));
+
+SELECT *
+FROM develop.meta.waterlevels
+WHERE TABLE_NAME = '`develop`.`bronze`.`stg_operator_dayforce`'
+ORDER BY STARTED_AT_TS DESC
+;
+
+SELECT *
+FROM develop.gold_coreview.mart_inventory_stock_levels
+ORDER BY DATE DESC
+;
+
+SELECT *
+FROM develop.gold_coreview.mart_inventory_stock_levels_backfill
+ORDER BY DATE DESC
+;
+
+SELECT *
+FROM develop.gold_coreview.mart_inventory_stock_levels_backfill
+WHERE dim_date = '2026-01-13'
+ORDER BY DATE DESC
+;

@@ -1,0 +1,253 @@
+-- Check max timestamps to determine new Extract_Date
+SELECT MAX(WATERLEVEL_TS), MAX(STARTED_AT_TS)
+FROM production.meta.waterlevels
+WHERE TABLE_NAME = '`production`.`bronze`.`stg_quickbooks_outbound_360_v2`'
+;
+
+SELECT CURRENT_TIMESTAMP()
+;
+
+-- DROP TABLE landing.quickbooks.outbound_sales_360_20260428
+-- ;
+
+-- CREATE OR REPLACE TABLE landing.quickbooks.outbound_sales_360_20260428 AS
+-- SELECT *, TO_TIMESTAMP('2026-05-19 13:00:00.000+00:00') AS Extract_Date
+-- FROM landing_workato_test.quickbooks.outbound_sales_360_20260428
+-- ;
+
+-- 18634
+SELECT COUNT(*)
+FROM landing_workato_test.quickbooks.outbound_sales_360_20260428
+;
+
+-- 18634
+SELECT COUNT(*)
+FROM landing.quickbooks.outbound_sales_360_20260428
+;
+
+-- Check that Extract_Date is correct
+SELECT *
+FROM landing.quickbooks.outbound_sales_360_20260428
+ORDER BY Date DESC
+LIMIT 10
+;
+
+-- 2026-05-19T09:30:05.000+00:00
+SELECT MAX(Extract_Date)
+FROM landing.quickbooks.outbound_sales_360_v2
+;
+
+SELECT Extract_Date, COUNT(*)
+FROM landing.quickbooks.outbound_sales_360_v2
+GROUP BY Extract_Date
+ORDER BY Extract_Date DESC
+LIMIT 10
+;
+
+-- Check that column names match
+SELECT column_name
+FROM landing_workato_test.information_schema.columns
+WHERE table_name = 'outbound_sales_360_20260428'
+-- ORDER BY ordinal_position
+EXCEPT
+SELECT column_name
+FROM landing.information_schema.columns
+WHERE table_name = 'outbound_sales_360_v2'
+-- ORDER BY ordinal_position
+;
+
+-- Check that column names match
+SELECT column_name
+FROM landing.information_schema.columns
+WHERE table_name = 'outbound_sales_360_v2'
+EXCEPT
+SELECT column_name
+FROM landing_workato_test.information_schema.columns
+WHERE table_name = 'outbound_sales_360_20260428'
+;
+
+-- Corrections for column names
+ALTER TABLE landing_workato_test.quickbooks.outbound_sales_360_20260428
+SET TBLPROPERTIES ('delta.columnMapping.mode' = 'name')
+;
+
+ALTER TABLE landing_workato_test.quickbooks.outbound_sales_360_20260428
+RENAME COLUMN `PO#` TO `PONum`
+;
+
+ALTER TABLE landing_workato_test.quickbooks.outbound_sales_360_20260428
+RENAME COLUMN `ExportDate` TO `Export_Date_From_QB`
+;
+
+-- Check that column names match
+SELECT column_name
+FROM landing.information_schema.columns
+WHERE table_name = 'outbound_sales_360_20260428'
+-- ORDER BY ordinal_position
+EXCEPT
+SELECT column_name
+FROM landing.information_schema.columns
+WHERE table_name = 'outbound_sales_360_v2'
+-- ORDER BY ordinal_position
+;
+
+-- Check that column names match
+SELECT column_name
+FROM landing.information_schema.columns
+WHERE table_name = 'outbound_sales_360_v2'
+EXCEPT
+SELECT column_name
+FROM landing.information_schema.columns
+WHERE table_name = 'outbound_sales_360_20260428'
+;
+
+-- 638747
+SELECT COUNT(*)
+FROM landing.quickbooks.outbound_sales_360_v2
+;
+
+-- -- -- INSERT new historical data into regular landing table
+-- INSERT INTO landing.quickbooks.outbound_sales_360_v2
+-- (Type
+-- ,Date
+-- ,Num
+-- ,PONum
+-- ,Name
+-- ,NameAddress
+-- ,NameStreet1
+-- ,NameStreet2
+-- ,NameCity
+-- ,NameState
+-- ,NameZip
+-- ,NameContact
+-- ,NameAccountNum
+-- ,Memo
+-- ,ShipDate
+-- ,DelivDate
+-- ,DueDate
+-- ,Item
+-- ,ItemDescription
+-- ,Account
+-- ,Class
+-- ,Rep
+-- ,Clr
+-- ,Split
+-- ,Qty
+-- ,UOM
+-- ,SalesPrice
+-- ,Debit
+-- ,Credit
+-- ,Amount
+-- ,SONum
+-- ,AccountType
+-- ,ShipToCity
+-- ,ShipToAddress1
+-- ,ShipToAddress2
+-- ,ShipToState
+-- ,ShipZip
+-- ,Notes
+-- ,AmountPaid
+-- ,LastName
+-- ,FirstName
+-- ,Company
+-- ,Index
+-- ,Export_Date_From_QB
+-- ,Extract_Date)
+
+-- SELECT
+-- Type
+-- ,Date
+-- ,Num
+-- ,PONum
+-- ,Name
+-- ,NameAddress
+-- ,NameStreet1
+-- ,NameStreet2
+-- ,NameCity
+-- ,NameState
+-- ,NameZip
+-- ,NameContact
+-- ,NameAccountNum
+-- ,Memo
+-- ,ShipDate
+-- ,DelivDate
+-- ,DueDate
+-- ,Item
+-- ,ItemDescription
+-- ,Account
+-- ,Class
+-- ,Rep
+-- ,Clr
+-- ,Split
+-- ,Qty
+-- ,UOM
+-- ,SalesPrice
+-- ,Debit
+-- ,Credit
+-- ,Amount
+-- ,SONum
+-- ,AccountType
+-- ,ShipToCity
+-- ,ShipToAddress1
+-- ,ShipToAddress2
+-- ,ShipToState
+-- ,ShipZip
+-- ,Notes
+-- ,AmountPaid
+-- ,LastName
+-- ,FirstName
+-- ,Company
+-- ,Index
+-- ,Export_Date_From_QB
+-- ,Extract_Date
+-- FROM landing.quickbooks.outbound_sales_360_20260428
+-- ;
+
+-- Check that new COUNT is 638747 + 18634 = 657381 
+SELECT COUNT(*)
+FROM landing.quickbooks.outbound_sales_360_v2
+;
+
+--
+-- 20/05/2026
+--
+
+SELECT COUNT(*)
+FROM landing.quickbooks.outbound_sales_360_v2
+WHERE Extract_Date = '2026-05-19 13:00:00.000+00:00'
+;
+
+SELECT Extract_Date, COUNT(*)
+FROM psa.quickbooks.psa_quickbooks_staging_360_v2
+GROUP BY Extract_Date
+ORDER BY Extract_Date DESC
+LIMIT 10
+;
+
+SELECT Extract_Date, COUNT(*)
+FROM develop.silver.sat_outbound_invoice_quickbooks_360_v2
+GROUP BY Extract_Date
+ORDER BY Extract_Date DESC
+LIMIT 10
+;
+
+SELECT Extract_Date, COUNT(*)
+FROM develop.silver.sat_outbound_invoice_quickbooks_360_v2_latest
+GROUP BY Extract_Date
+ORDER BY Extract_Date DESC
+LIMIT 10
+;
+
+SELECT Extract_Date, COUNT(*)
+FROM develop.silver.sat_outbound_invoice_quickbooks_eti_v3
+GROUP BY Extract_Date
+ORDER BY Extract_Date DESC
+LIMIT 10
+;
+
+SELECT Extract_Date, COUNT(*)
+FROM develop.silver.sat_outbound_invoice_quickbooks_eti_v3_latest
+GROUP BY Extract_Date
+ORDER BY Extract_Date DESC
+LIMIT 10
+;

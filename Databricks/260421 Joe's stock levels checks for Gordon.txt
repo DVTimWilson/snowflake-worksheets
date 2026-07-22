@@ -1,0 +1,29 @@
+--
+-- 21/04/2026  Joe
+--
+-- One with the parts that currently have a stock balance
+-- and a second one where there is currently no stock but there has been stock.
+--
+
+with x as( SELECT DISTINCT INVENTORY_ITEM_ID,ENTITY
+FROM develop.gold_coreview.mart_inventory_stock_levels as a
+LEFT JOIN landing.raw_baq_explore.consolidated_part_master as b
+ON a.INVENTORY_ITEM_ID = b.PartNum
+AND A.ENTITY = b.Company
+WHERE a.QUANTITY <> 0
+QUALIFY row_number() over(PARTITION BY a.ENTITY, a.INVENTORY_ITEM_ID ORDER BY a.DATE DESC) = 1)
+
+SELECT COUNT(*)
+FROM x
+WHERE QUANTITY >0
+;
+
+-- Actually query this selects parts that have neve been in stock
+SELECT DISTINCT *
+FROM landing.raw_baq_explore.consolidated_part_master as b
+LEFT ANTI JOIN develop.gold_coreview.mart_inventory_stock_levels as a
+ON a.INVENTORY_ITEM_ID = b.PartNum
+AND A.ENTITY = b.Company
+-- WHERE a.QUANTITY <> 0
+-- QUALIFY row_number() over(PARTITION BY a.ENTITY, a.INVENTORY_ITEM_ID ORDER BY a.DATE DESC) = 1
+;

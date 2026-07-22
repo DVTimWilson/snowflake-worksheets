@@ -1,0 +1,397 @@
+--==== TO BE DELETED ====--
+
+--
+-- Backups
+--
+
+-- CREATE TABLE landing.backup.sales_sherrigmquery_allcompanies_20260622 AS
+-- SELECT * FROM landing.kinetic.sales_sherrigmquery_allcompanies
+-- ;
+
+-- -- 1255461
+-- SELECT COUNT(*) FROM landing.backup.sales_sherrigmquery_allcompanies_20260622
+-- ;
+-- SELECT COUNT(*) FROM landing.kinetic.sales_sherrigmquery_allcompanies
+-- ;
+
+-- CREATE TABLE landing_workato_test.backup.sales_sherrigmquery_allcompanies_20260622 AS
+-- SELECT * FROM landing_workato_test.kinetic.sales_sherrigmquery_allcompanies
+-- ;
+
+-- -- 142503
+-- SELECT COUNT(*) FROM landing_workato_test.backup.sales_sherrigmquery_allcompanies_20260622
+-- ;
+-- SELECT COUNT(*) FROM landing_workato_test.kinetic.sales_sherrigmquery_allcompanies
+-- ;
+
+-- psa
+CREATE TABLE psa.backup.psa_sales_sherrigmquery_allcompanies_20260622 AS
+SELECT * FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+;
+
+-- psa_prod
+-- CREATE TABLE psa_prod.backup.psa_sales_sherrigmquery_allcompanies_20260622 AS
+-- SELECT * FROM psa_prod.kinetic.psa_sales_sherrigmquery_allcompanies
+-- ;
+
+CREATE TABLE develop.backup.sat_outbound_invoice_kinetic_20260622 AS
+SELECT * FROM develop.silver.sat_outbound_invoice_kinetic
+;
+
+CREATE TABLE develop.backup.hub_outbound_invoice_20260622 AS
+SELECT * FROM develop.silver.hub_outbound_invoice
+;
+
+CREATE TABLE develop.backup.lnk_outbound_invoice_line_20260622 AS
+SELECT * FROM develop.silver.lnk_outbound_invoice_line
+;
+
+CREATE TABLE develop.backup.hub_order_20260622 AS
+SELECT * FROM develop.silver.hub_order
+;
+
+CREATE TABLE develop.backup.lnk_order_fulfilment_20260622 AS
+SELECT * FROM develop.silver.lnk_order_fulfilment
+;
+
+
+
+-- 1 hub order
+-- 2
+SELECT *
+-- DELETE
+FROM develop.silver.hub_order
+WHERE ORDER_HK IN (
+SELECT DISTINCT c.ORDER_HK
+FROM develop.silver.hub_order as c
+INNER JOIN develop.silver.lnk_order_fulfilment as a
+ON c.ORDER_HK = a.ORDER_HK
+INNER JOIN develop.silver.hub_outbound_invoice as b
+ON a.OUTBOUND_INVOICE_HK = b.OUTBOUND_INVOICE_HK
+WHERE 1=1
+AND b.COMPANY_ID IN ('ETC', 'ECS', 'ERP')
+AND c.RECORD_SOURCE = 'KINETIC.SHERRIGM'
+)
+;
+
+-- 2 lnk order fulfillment
+-- 6199
+SELECT *
+-- DELETE
+FROM develop.silver.lnk_order_fulfilment
+WHERE OUTBOUND_INVOICE_HK IN (
+SELECT DISTINCT a.OUTBOUND_INVOICE_HK
+FROM develop.silver.lnk_order_fulfilment as a
+INNER JOIN develop.silver.hub_outbound_invoice as b
+ON a.OUTBOUND_INVOICE_HK = b.OUTBOUND_INVOICE_HK
+WHERE 1=1
+AND b.COMPANY_ID IN ('ETC', 'ECS', 'ERP')
+AND a.RECORD_SOURCE = 'KINETIC.SHERRIGM'
+)
+;
+
+--3 lnk outbound invoice line
+-- 8826
+SELECT *
+-- DELETE
+FROM develop.silver.lnk_outbound_invoice_line
+WHERE COMPANY_HK IN (
+SELECT DISTINCT a.COMPANY_HK
+FROM develop.silver.lnk_outbound_invoice_line as a
+INNER JOIN develop.silver.hub_outbound_invoice as b
+ON a.OUTBOUND_INVOICE_HK = b.OUTBOUND_INVOICE_HK
+WHERE 1=1
+AND b.COMPANY_ID IN ('ETC', 'ECS', 'ERP')
+AND a.RECORD_SOURCE = 'KINETIC.SHERRIGM'
+)
+;
+
+-- 4 hub outbound invoice
+-- 6199
+SELECT DISTINCT *
+-- DELETE
+FROM develop.silver.hub_outbound_invoice
+WHERE 1=1
+AND COMPANY_ID IN ('ETC', 'ECS', 'ERP')
+AND RECORD_SOURCE = 'KINETIC.SHERRIGM'
+;
+
+-- 5 sherri sat
+-- 8870
+SELECT *
+-- DELETE
+FROM develop.silver.sat_outbound_invoice_kinetic
+WHERE 1=1
+AND Company IN ('ETC', 'ECS', 'ERP')
+AND InvoiceDate >= '2026-04-13'
+;
+
+-- -- 6 psa
+-- -- 98897
+-- SELECT *
+-- -- DELETE
+-- FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+-- WHERE 1=1
+-- AND Company IN ('ETC', 'ECS', 'ERP')
+-- AND InvoiceDate >= '2026-04-13'
+;
+
+-- -- 7 landing
+-- -- 100,000+
+-- -- Deleted 107026
+-- SELECT *
+-- -- DELETE
+-- FROM landing.kinetic.sales_sherrigmquery_allcompanies
+-- WHERE 1=1
+-- AND Company IN ('ETC', 'ECS', 'ERP')
+-- AND InvoiceDate >= '2026-04-13'
+;
+
+-- 142503
+-- INSERT INTO landing.kinetic.sales_sherrigmquery_allcompanies
+-- (Company, InvoiceNum, InvoiceDate, InvoiceType, CreditMemo, CustNum, CustID, Name, InvoiceLine, PartNum, LineDesc, ProdCode, SellingShipQty, SalesUm, DocUnitPrice, DocExtPrice, DocDiscount, DocTotalMiscChrg, SalesPrice, DocUnitCost, DocExtCost, GM, GMpct, ShipToCustNum, ShipToNum, OTS, AddressID, ShipToName, ShipToAddress1, ShipToAddress2, ShipToAddress3, ShipToCity, ShipToState, ShipToZIP, ShipToCountry, SalesRepList, BusinessUnit, SoldToState, GroupCode, TerritoryID, Character03, MasterKey, Plant, Formula, Width, Thick, Area, SFSold, BaseForula, RouteToMarketCode, RouteToMarket, CustPlatformCode, CustPlatform, CustDescriptionCode, CustDescription, Branded, Market_c, Application_c, Form_c, Format_c, Brand_c, BusinessUnit_c, Market2_c, Platform_c, ProjectName_c, OrderNum, NtlAccount, Assist, BillToCountry, RequestDate, NeedByDate, CustSegment_c, OrderDate, TestMarketID, TestMarket, Pounds, Extract_Date)
+-- SELECT Company, InvoiceNum, InvoiceDate, InvoiceType, CreditMemo, CustNum, CustID, Name, InvoiceLine, PartNum, LineDesc, ProdCode, SellingShipQty, SalesUm, DocUnitPrice, DocExtPrice, DocDiscount, DocTotalMiscChrg, SalesPrice, DocUnitCost, DocExtCost, GM, GMpct, ShipToCustNum, ShipToNum, OTS, NULL AS AddressID, ShipToName, ShipToAddress1, ShipToAddress2, ShipToAddress3, ShipToCity, ShipToState, ShipToZIP, ShipToCountry, SalesRepList, BusinessUnit, SoldToState, GroupCode, TerritoryID, Character03, MasterKey, Plant, Formula, Width, Thick, Area, SFSold, BaseForula, RouteToMarketCode, RouteToMarket, CustPlatformCode, CustPlatform, CustDescriptionCode, CustDescription, Branded, Market_c, Application_c, Form_c, Format_c, Brand_c, BusinessUnit_c, Market2_c, Platform_c, ProjectName_c, OrderNum, NtlAccount, Assist, BillToCountry, RequestDate, NeedByDate, CustSegment_c, OrderDate, TestMarketID, TestMarket, NULL AS Pounds, Extract_Date
+-- FROM landing_workato_test.kinetic.sales_sherrigmquery_allcompanies
+-- ;
+
+
+-- UAT
+CREATE TABLE uat.backup.sat_outbound_invoice_kinetic_20260622 AS
+SELECT * FROM uat.silver.sat_outbound_invoice_kinetic
+;
+
+CREATE TABLE uat.backup.hub_outbound_invoice_20260622 AS
+SELECT * FROM uat.silver.hub_outbound_invoice
+;
+
+CREATE TABLE uat.backup.lnk_outbound_invoice_line_20260622 AS
+SELECT * FROM uat.silver.lnk_outbound_invoice_line
+;
+
+CREATE TABLE uat.backup.hub_order_20260622 AS
+SELECT * FROM uat.silver.hub_order
+;
+
+CREATE TABLE uat.backup.lnk_order_fulfilment_20260622 AS
+SELECT * FROM uat.silver.lnk_order_fulfilment
+;
+
+
+
+-- 1 hub order
+-- 2
+SELECT *
+--DELETE
+FROM uat.silver.hub_order
+WHERE ORDER_HK IN (
+SELECT DISTINCT c.ORDER_HK
+FROM uat.silver.hub_order as c
+INNER JOIN uat.silver.lnk_order_fulfilment as a
+ON c.ORDER_HK = a.ORDER_HK
+INNER JOIN uat.silver.hub_outbound_invoice as b
+ON a.OUTBOUND_INVOICE_HK = b.OUTBOUND_INVOICE_HK
+WHERE 1=1
+AND b.COMPANY_ID IN ('ETC', 'ECS', 'ERP')
+AND c.RECORD_SOURCE = 'KINETIC.SHERRIGM'
+)
+;
+
+-- 2 lnk order fulfillment
+-- 6393
+-- SELECT *
+-- DELETE
+FROM uat.silver.lnk_order_fulfilment
+WHERE OUTBOUND_INVOICE_HK IN (
+SELECT DISTINCT a.OUTBOUND_INVOICE_HK
+FROM uat.silver.lnk_order_fulfilment as a
+INNER JOIN uat.silver.hub_outbound_invoice as b
+ON a.OUTBOUND_INVOICE_HK = b.OUTBOUND_INVOICE_HK
+WHERE 1=1
+AND b.COMPANY_ID IN ('ETC', 'ECS', 'ERP')
+AND a.RECORD_SOURCE = 'KINETIC.SHERRIGM'
+)
+;
+
+--3 lnk outbound invoice line
+-- 9096
+-- SELECT *
+-- DELETE
+FROM uat.silver.lnk_outbound_invoice_line
+WHERE COMPANY_HK IN (
+SELECT DISTINCT a.COMPANY_HK
+FROM uat.silver.lnk_outbound_invoice_line as a
+INNER JOIN uat.silver.hub_outbound_invoice as b
+ON a.OUTBOUND_INVOICE_HK = b.OUTBOUND_INVOICE_HK
+WHERE 1=1
+AND b.COMPANY_ID IN ('ETC', 'ECS', 'ERP')
+AND a.RECORD_SOURCE = 'KINETIC.SHERRIGM'
+)
+;
+
+-- 4 hub outbound invoice
+-- 6393
+-- SELECT DISTINCT *
+-- DELETE
+FROM uat.silver.hub_outbound_invoice
+WHERE 1=1
+AND COMPANY_ID IN ('ETC', 'ECS', 'ERP')
+AND RECORD_SOURCE = 'KINETIC.SHERRIGM'
+;
+
+-- 5 sherri sat
+-- 9149
+-- SELECT *
+-- DELETE
+FROM uat.silver.sat_outbound_invoice_kinetic
+WHERE 1=1
+AND Company IN ('ETC', 'ECS', 'ERP')
+AND InvoiceDate >= '2026-04-13'
+;
+
+-- 6 psa
+-- 98897
+-- SELECT *
+-- -- DELETE
+-- FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+-- WHERE 1=1
+-- AND Company IN ('ETC', 'ECS', 'ERP')
+-- AND InvoiceDate >= '2026-04-13'
+;
+
+-- 7 landing
+-- 100,000+
+-- Deleted 107026
+SELECT *
+-- DELETE
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE 1=1
+AND Company IN ('ETC', 'ECS', 'ERP')
+AND InvoiceDate >= '2026-04-13'
+;
+
+-- 2026-06-22T11:00:11.000+00:00
+-- 2026-06-22T10:09:06.000+00:00
+-- 2026-06-22T02:51:41.000+00:00
+SELECT DISTINCT EXTRACT_DATE FROM landing.kinetic.sales_sherrigmquery_allcompanies
+ORDER BY 1 DESC
+;
+
+-- 2026-06-22T11:00:11.000+00:00
+SELECT *
+FROM uat.meta.waterlevels
+WHERE TABLE_NAME LIKE '%stg_sales_sherrigmquery_allcompanies%'
+ORDER BY WATERLEVEL_TS DESC
+;
+
+-- 2026-06-22T10:09:06.000+00:00
+SELECT DISTINCT EXTRACT_DATE FROM landing_workato_test.kinetic.sales_sherrigmquery_allcompanies
+ORDER BY 1 DESC
+;
+
+-- 142503
+SELECT COUNT(*)
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE Extract_Date = TO_TIMESTAMP('2026-06-22T10:09:06.000+00:00')
+;
+
+-- 142503
+UPDATE landing.kinetic.sales_sherrigmquery_allcompanies
+SET Extract_Date = TO_TIMESTAMP('2026-06-22T13:00:0.000+00:00')
+WHERE Extract_Date = TO_TIMESTAMP('2026-06-22T10:09:06.000+00:00')
+;
+
+-- 2026-06-22T13:00:00.000+00:00
+-- 2026-06-22T10:09:06.000+00:00
+SELECT DISTINCT EXTRACT_DATE FROM landing.kinetic.sales_sherrigmquery_allcompanies
+ORDER BY 1 DESC
+;
+
+--
+-- After scheduled UAT load
+--
+
+-- 6 psa
+-- 8813
+SELECT *
+FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+WHERE 1=1
+AND Company IN ('ETC', 'ECS', 'ERP')
+AND InvoiceDate >= '2026-04-13'
+ORDER BY InvoiceDate
+;
+
+-- 7 landing
+-- 100,000+
+SELECT *
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE 1=1
+AND Company IN ('ETC', 'ECS', 'ERP')
+AND InvoiceDate >= '2026-04-13'
+;
+
+-- 1 hub order
+-- 2
+SELECT *
+FROM uat.silver.hub_order
+WHERE ORDER_HK IN (
+SELECT DISTINCT c.ORDER_HK
+FROM uat.silver.hub_order as c
+INNER JOIN uat.silver.lnk_order_fulfilment as a
+ON c.ORDER_HK = a.ORDER_HK
+INNER JOIN uat.silver.hub_outbound_invoice as b
+ON a.OUTBOUND_INVOICE_HK = b.OUTBOUND_INVOICE_HK
+WHERE 1=1
+AND b.COMPANY_ID IN ('ETC', 'ECS', 'ERP')
+AND c.RECORD_SOURCE = 'KINETIC.SHERRIGM'
+)
+;
+
+-- 2 lnk order fulfillment
+-- 6290, was 6393
+SELECT *
+FROM uat.silver.lnk_order_fulfilment
+WHERE OUTBOUND_INVOICE_HK IN (
+SELECT DISTINCT a.OUTBOUND_INVOICE_HK
+FROM uat.silver.lnk_order_fulfilment as a
+INNER JOIN uat.silver.hub_outbound_invoice as b
+ON a.OUTBOUND_INVOICE_HK = b.OUTBOUND_INVOICE_HK
+WHERE 1=1
+AND b.COMPANY_ID IN ('ETC', 'ECS', 'ERP')
+AND a.RECORD_SOURCE = 'KINETIC.SHERRIGM'
+)
+;
+
+--3 lnk outbound invoice line
+-- 8777, was 9096
+SELECT *
+FROM uat.silver.lnk_outbound_invoice_line
+WHERE COMPANY_HK IN (
+SELECT DISTINCT a.COMPANY_HK
+FROM uat.silver.lnk_outbound_invoice_line as a
+INNER JOIN uat.silver.hub_outbound_invoice as b
+ON a.OUTBOUND_INVOICE_HK = b.OUTBOUND_INVOICE_HK
+WHERE 1=1
+AND b.COMPANY_ID IN ('ETC', 'ECS', 'ERP')
+AND a.RECORD_SOURCE = 'KINETIC.SHERRIGM'
+)
+;
+
+-- 4 hub outbound invoice
+-- 6290, was 6393
+SELECT DISTINCT *
+FROM uat.silver.hub_outbound_invoice
+WHERE 1=1
+AND COMPANY_ID IN ('ETC', 'ECS', 'ERP')
+AND RECORD_SOURCE = 'KINETIC.SHERRIGM'
+;
+
+-- 5 sherri sat
+-- 8813, was 9149
+SELECT *
+FROM uat.silver.sat_outbound_invoice_kinetic
+WHERE 1=1
+AND Company IN ('ETC', 'ECS', 'ERP')
+AND InvoiceDate >= '2026-04-13'
+;
+
+

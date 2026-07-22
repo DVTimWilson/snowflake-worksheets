@@ -1,0 +1,189 @@
+SELECT SPLIT_PART('QUICKEN.TEST', '.', 1)
+;
+
+SELECT *
+FROM tim_wilson.gold_coreview.mart_inventory_transactions
+;
+
+-- 2197082
+SELECT COUNT(*)
+FROM tim_wilson.silver.sat_inventory_transactions_latest
+;
+
+-- 10992
+SELECT COUNT(*)
+FROM tim_wilson.silver.sat_quickbooks_inventory_transactions_360_latest
+;
+
+-- 2208074
+SELECT COUNT(*)
+FROM tim_wilson.gold_coreview.mart_inventory_transactions
+;
+
+SELECT DISTINCT COLLISION_KEY
+FROM tim_wilson.bronze.stg_inventory_transactions
+;
+
+SELECT DISTINCT COLLISION_KEY
+FROM tim_wilson.bronze.stg_quickbooks_inventory_transactions_360
+;
+
+SELECT DISTINCT COLLISION_CODE
+FROM tim_wilson.silver.bstg_combined_inventory_transactions
+;
+
+SELECT DISTINCT RECORD_SOURCE
+FROM tim_wilson.silver.bsat_combined_inventory_transactions
+;
+
+SELECT INVENTORY_TRANSACTION_HK
+FROM tim_wilson.silver.bsat_combined_inventory_transactions
+WHERE SPLIT_PART(RECORD_SOURCE, '.', 1) = 'QUICKBOOKS'
+EXCEPT
+SELECT INVENTORY_TRANSACTION_HK
+FROM tim_wilson.silver.sat_quickbooks_inventory_transactions_360_latest
+
+;
+
+SELECT INVENTORY_TRANSACTION_HK
+FROM tim_wilson.silver.sat_quickbooks_inventory_transactions_360_latest
+EXCEPT
+SELECT INVENTORY_TRANSACTION_HK
+FROM tim_wilson.silver.bsat_combined_inventory_transactions
+WHERE SPLIT_PART(RECORD_SOURCE, '.', 1) = 'QUICKBOOKS'
+;
+
+-- AABIRuu3c6dtqD0k+EVO7w==
+SELECT *
+FROM tim_wilson.silver.bstg_combined_inventory_transactions
+WHERE TRANNUM = '14811612'
+;
+
+-- AABIRuu3c6dtqD0k+EVO7w==
+SELECT *
+FROM tim_wilson.silver.sat_inventory_transactions_latest
+WHERE TRANNUM = '14811612'
+;
+
+-- 0 HKs not matching!!!
+SELECT INVENTORY_TRANSACTION_HK
+FROM tim_wilson.silver.bsat_combined_inventory_transactions
+WHERE SPLIT_PART(RECORD_SOURCE, '.', 1) = 'KINETIC'
+EXCEPT
+SELECT INVENTORY_TRANSACTION_HK
+FROM tim_wilson.silver.sat_inventory_transactions_latest
+;
+
+-- AAe72Qw4lH1USX2alIg02Q==
+SELECT INVENTORY_TRANSACTION_HK
+FROM tim_wilson.silver.sat_quickbooks_inventory_transactions_360_latest
+;
+
+-- 8393, 4.000000, 2025-06-24
+-- DECIMAL(20,6)
+SELECT NUM, QTY, DATE, *
+FROM tim_wilson.silver.sat_quickbooks_inventory_transactions_360_latest
+WHERE INVENTORY_TRANSACTION_HK = UNBASE64('AAe72Qw4lH1USX2alIg02Q==')
+;
+
+SELECT NUM, QTY, DATE, *
+FROM tim_wilson.silver.sat_quickbooks_inventory_transactions_360_latest
+WHERE NUM = '8393'
+;
+
+SELECT TRANNUM, TRANQTY, TRANDATE, PARTNUM, *
+FROM tim_wilson.gold_coreview.mart_inventory_transactions
+WHERE TRANNUM = '8393'
+;
+
+-- 8393, 4.00000000, 2025-06-24
+-- DECIMAL(22,8)
+SELECT TRANNUM, TRANQTY, TRANDATE, *
+FROM tim_wilson.silver.bstg_combined_inventory_transactions
+WHERE TRANNUM = '8393'
+;
+
+-- 0 HKs not matching!!!
+SELECT INVENTORY_TRANSACTION_HK
+FROM tim_wilson.silver.bsat_combined_inventory_transactions
+WHERE SPLIT_PART(RECORD_SOURCE, '.', 1) = 'QUICKBOOKS'
+EXCEPT
+SELECT INVENTORY_TRANSACTION_HK
+FROM tim_wilson.silver.sat_quickbooks_inventory_transactions_360_latest
+;
+
+SELECT *
+FROM tim_wilson.gold_coreview.mart_inventory_transactions
+WHERE PLANT IS NULL
+;
+
+SELECT *
+FROM tim_wilson.bronze.stg_quickbooks_inventory_transactions_pts
+-- WHERE PLANT IS NULL
+WHERE PLANT = '-1'  -- AND NUM = '697'
+;
+
+SELECT *
+FROM tim_wilson.silver.sat_quickbooks_inventory_transactions_pts
+WHERE PLANT IS NULL
+;
+
+SELECT *
+FROM tim_wilson.silver.sat_quickbooks_inventory_transactions_pts_latest
+WHERE PLANT IS NULL
+;
+
+
+SELECT *
+FROM tim_wilson.silver.br_combined_quickbooks_inventory_transactions_step_0
+WHERE PLANT IS NULL
+;
+
+SELECT DISTINCT SPLIT_PART(UNIQUE_KEY, '|', 1)
+FROM tim_wilson.gold_coreview.mart_inventory_transactions
+ORDER BY 1
+;
+
+SELECT DISTINCT COMPANY
+FROM tim_wilson.gold_coreview.mart_inventory_transactions
+ORDER BY 1
+;
+
+-- 2222155
+-- 2223606
+SELECT COUNT(*)
+FROM tim_wilson.gold_coreview.mart_inventory_transactions
+;
+
+-- 2197082
+-- 2197082
+-- COUNT(DISTINCT *) does not work!?
+SELECT COUNT(DISTINCT *)
+FROM tim_wilson.gold_coreview.mart_inventory_transactions
+;
+
+-- 2223606
+SELECT COUNT(*)
+FROM (
+SELECT DISTINCT *
+FROM tim_wilson.gold_coreview.mart_inventory_transactions
+) AS x
+;
+
+-- 111849
+-- 113300
+SELECT COUNT(DISTINCT UNIQUE_KEY)
+FROM tim_wilson.gold_coreview.mart_inventory_transactions
+;
+
+-- 2222141
+-- 2222141
+SELECT COUNT(DISTINCT SPLIT_PART(RECORD_SOURCE, '.', 1), TRANNUM, TRANQTY, TRANDATE)
+FROM tim_wilson.gold_coreview.mart_inventory_transactions
+;
+
+-- 2222155
+-- 2223606
+SELECT COUNT(DISTINCT SPLIT_PART(RECORD_SOURCE, '.', 1), TRANNUM, TRANQTY, TRANDATE, PARTNUM)
+FROM tim_wilson.gold_coreview.mart_inventory_transactions
+;

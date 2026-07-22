@@ -1,0 +1,455 @@
+SELECT *
+FROM production.gold_coreview.mart_outbound_transactions
+WHERE YEAR(INVOICE_DATE) = 2026
+AND MONTH(INVOICE_DATE) = 5
+-- AND ENTITY = 'DRC'
+-- AND LOWER(CUSTOMER) NOT LIKE 'cardinal%'
+ORDER BY UNIQUE_KEY
+;
+
+-- 499785
+SELECT COUNT(*)
+FROM uat.gold_coreview.mart_outbound_transactions
+;
+
+-- 499785
+SELECT COUNT(*)
+FROM (SELECT DISTINCT * FROM uat.gold_coreview.mart_outbound_transactions)
+;
+
+SELECT *
+FROM uat.gold_coreview.mart_outbound_transactions
+WHERE YEAR(INVOICE_DATE) = 2026
+AND MONTH(INVOICE_DATE) = 5
+AND ENTITY = 'DRC'
+AND LOWER(CUSTOMER) NOT LIKE 'cardinal%'
+ORDER BY UNIQUE_KEY
+;
+
+SELECT *
+FROM uat.silver.br_outbound_invoice_sherri
+WHERE YEAR(INVOICE_DATE) = 2026
+AND MONTH(INVOICE_DATE) = 5
+AND ENTITY = 'DRC'
+-- AND LOWER(CUSTOMER) NOT LIKE 'cardinal%'
+ORDER BY UNIQUE_KEY
+;
+
+SELECT *
+FROM uat.silver.sat_outbound_invoice_kinetic
+WHERE YEAR(INVOICEDATE) = 2026
+AND MONTH(INVOICEDATE) = 5
+AND COMPANY = 'DRC'
+AND LOWER(NAME) NOT LIKE 'cardinal%'
+ORDER BY UNIQUE_KEY
+;
+
+SELECT 
+     kin.INVOICE_LINE_LHK
+     , kin.UNIQUE_KEY
+     , kin.INVOICELINE
+     , CAST(kin.INVOICENUM AS string) AS INVOICE_NUMBER
+     , kin.INVOICEDATE AS INVOICE_DATE
+     , kin.NAME AS CUSTOMER
+     , kin.PARTNUM AS PRODUCT_ID
+     , kin.LINEDESC AS PRODUCT_DESCRIPTION
+     , COALESCE(NULLIF(cpm.L2_CATEGORY, ''), 'Uncategorized') AS COREVIEW_PRODUCT_CATEGORY
+     , COALESCE(NULLIF(cpm.L3_STAGE, ''), 'Uncategorized') AS PRODUCT_STAGE
+     , COALESCE(NULLIF(cpm.L4_TYPE, ''), 'Uncategorized') AS PRODUCT_TYPE  
+     , kin.PLANT AS PLANT
+     , COALESCE(NULLIF(plant.CITY, ''), 'Uncategorized') AS SITE
+     , COALESCE(NULLIF(cpm.L1_BU, ''), 'Uncategorized') AS BU
+     , 
+CASE
+  WHEN UPPER(TRIM(kin.COMPANY)) <> 'EII' AND mec.BUSINESS_SEGMENT = 'Materials Business Unit (MBU)' THEN 'MBU'
+  WHEN UPPER(TRIM(kin.COMPANY)) <> 'EII' AND mec.BUSINESS_SEGMENT = 'Outdoor Surfacing'           THEN 'OSG'
+  WHEN UPPER(TRIM(kin.BUSINESS_UNIT_ID)) = 'MTL'                                                                THEN 'MBU'
+  WHEN UPPER(TRIM(kin.COMPANY)) =  'EII' AND (UPPER(TRIM(kin.BUSINESS_UNIT_ID)) IS NULL OR UPPER(TRIM(kin.BUSINESS_UNIT_ID)) <> 'F&I')         THEN 'MBU'
+  WHEN UPPER(TRIM(kin.BUSINESS_UNIT_ID)) IS NULL OR UPPER(TRIM(kin.BUSINESS_UNIT_ID)) IN ('','-1')                                    THEN 'Uncategorized'
+  ELSE UPPER(TRIM(kin.BUSINESS_UNIT_ID))
+END AS BU_LOGICAL
+     , kin.COMPANY AS ENTITY
+     , kin.DOCEXTPRICE AS SALES_DOLLAR
+     , kin.SALESPRICE AS SALES_DOLLAR_WITH_FREIGHT
+     , kin.DOCEXTCOST AS COGS_DOLLAR
+     , kin.DOCUNITCOST AS UNIT_COST
+     , kin.GM AS GROSS_MARGIN_DOLLAR
+     , kin.GMPCT AS GROSS_MARGIN_PCT
+     , kin.SELLINGSHIPQTY as QUANTITY
+     , CASE
+  WHEN UPPER(TRIM(pm.PART_IUM)) IS NULL OR UPPER(TRIM(pm.PART_IUM)) IN ('', '-1', '0', 'NULL') THEN 'Uncategorized'
+  ELSE COALESCE(
+         element_at(
+           map_from_arrays(
+             array('EACH', 'LOAD'),
+             array('EA', 'LD')
+           ),
+           UPPER(TRIM(pm.PART_IUM))
+         ),
+         UPPER(TRIM(pm.PART_IUM))
+       )
+END AS UOM
+     , 
+
+(
+  
+    CAST(COALESCE(TRY_MULTIPLY(kin.SELLINGSHIPQTY, pm.PART_NETWEIGHT) , 0) AS DECIMAL(38,8))
+  
+) AS WEIGHT_LBS
+     , 'NA' AS COGSPC_SOURCE
+     , kin.LOAD_DATETIME
+     , kin.RECORD_SOURCE
+     , kin.HASHDIFF
+FROM `tim_wilson`.`silver`.`sat_outbound_invoice_kinetic_latest` as kin
+
+INNER JOIN (
+    SELECT y.Business_Segment 
+           , y.Company_Code
+    FROM `tim_wilson`.`silver`.`ref_master_ecore_companies` AS y
+) AS mec
+    ON -- Case-insensitive equality for ad-hoc use
+UPPER(kin.COMPANY) = UPPER(mec.company_code)
+
+LEFT OUTER JOIN (
+  SELECT PART_PARTNUM
+    , PART_IUM
+    , PART_NETWEIGHT
+    , PART_COMPANY 
+  FROM `tim_wilson`.`silver`.`ref_sat_kinetic_part_master_latest`
+) AS pm
+    ON -- Case-insensitive equality for ad-hoc use
+UPPER(kin.PARTNUM) = UPPER(pm.PART_PARTNUM)
+    AND -- Case-insensitive equality for ad-hoc use
+UPPER(kin.COMPANY) = UPPER(pm.PART_COMPANY)
+
+LEFT OUTER JOIN `tim_wilson`.`silver`.`sat_plant_kinetic_latest` as plant
+    ON -- Case-insensitive equality for ad-hoc use
+UPPER(kin.COMPANY) = UPPER(plant.COMPANY)
+    AND -- Case-insensitive equality for ad-hoc use
+UPPER(kin.PLANT) = UPPER(plant.PLANT)
+
+LEFT OUTER JOIN `tim_wilson`.`silver`.`ref_consolidated_part_master` AS cpm
+    ON -- Case-insensitive equality for ad-hoc use
+UPPER(kin.PARTNUM) = UPPER(cpm.PART_NUM)
+        AND -- Case-insensitive equality for ad-hoc use
+UPPER(kin.COMPANY) = UPPER(cpm.COMPANY)
+        AND -- Case-insensitive equality for ad-hoc use
+UPPER(cpm.SYSTEM) = UPPER('KINETIC')
+
+WHERE kin.COMPANY = 'DRC'
+ORDER BY UNIQUE_KEY
+;
+
+-- 348745
+SELECT *
+FROM tim_wilson.silver.ref_sat_consolidated_part_master
+WHERE COMPANY = 'DRC'
+AND PART_NUM = '348745'
+ORDER BY PART_NUM
+;
+
+-- 348745
+SELECT *
+FROM tim_wilson.silver.ref_sat_consolidated_part_master_latest
+WHERE COMPANY = 'DRC'
+AND PART_NUM = '348745'
+ORDER BY PART_NUM
+;
+
+SELECT *
+FROM tim_wilson.silver.ref_sat_kinetic_part_master_latest
+WHERE PART_COMPANY = 'DRC'
+AND PART_PARTNUM = '348745'
+ORDER BY PART_PARTNUM
+;
+
+SELECT *
+FROM psa.refs.psa_consolidated_part_master_ref
+WHERE COMPANY = 'DRC'
+AND PART_NUM = '348745'
+;
+
+--
+-- 02/07/2026
+--
+
+-- After Zoe's latest changes not seeing duplicates
+SELECT *
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+WHERE YEAR(INVOICE_DATE) = 2026
+AND MONTH(INVOICE_DATE) = 5
+AND ENTITY = 'DRC'
+AND LOWER(CUSTOMER) NOT LIKE 'cardinal%'
+ORDER BY UNIQUE_KEY
+;
+
+-- 921
+SELECT COUNT(*)
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+WHERE YEAR(INVOICE_DATE) = 2026
+AND MONTH(INVOICE_DATE) = 5
+AND ENTITY = 'DRC'
+AND LOWER(CUSTOMER) NOT LIKE 'cardinal%'
+;
+
+-- 921
+SELECT DISTINCT UNIQUE_KEY
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+WHERE YEAR(INVOICE_DATE) = 2026
+AND MONTH(INVOICE_DATE) = 5
+AND ENTITY = 'DRC'
+AND LOWER(CUSTOMER) NOT LIKE 'cardinal%'
+ORDER BY UNIQUE_KEY
+;
+
+-- 482988
+SELECT COUNT(*)
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+;
+
+-- 482986
+SELECT COUNT(*)
+FROM (
+SELECT DISTINCT UNIQUE_KEY
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+) AS x
+;
+
+-- UNIQUE_KEY	count(1)
+-- SAI-36523-1	2
+-- SAI-36568-1	2
+SELECT UNIQUE_KEY, COUNT(*)
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY
+;
+
+-- Lineage experimentation
+-- 378141 before
+-- 378141 after
+SELECT COUNT(*)
+FROM tim_wilson.silver.br_outbound_invoice_sherri
+;
+
+-- 381188 before
+-- 381188 after
+SELECT COUNT(*)
+FROM tim_wilson.gold_coreview.mart_kinetic_sherri_query
+;
+
+-- 381188 before
+-- 381188 after
+SELECT COUNT(*)
+FROM tim_wilson.silver.br_sherri_adjusted_placeholders
+;
+
+SELECT DISTINCT RECORD_SOURCE
+FROM tim_wilson.silver.hub_customer
+EXCEPT
+SELECT DISTINCT RECORD_SOURCE
+FROM tim_wilson.silver.lnk_outbound_invoice_line
+
+ORDER BY RECORD_SOURCE
+;
+
+SELECT DISTINCT RECORD_SOURCE
+FROM tim_wilson.silver.lnk_outbound_invoice_line
+EXCEPT
+SELECT DISTINCT RECORD_SOURCE
+FROM tim_wilson.silver.hub_customer
+
+ORDER BY RECORD_SOURCE
+;
+
+SELECT DISTINCT RECORD_SOURCE
+FROM tim_wilson.bronze.stg_sales_sherrigmquery_allcompanies
+ORDER BY RECORD_SOURCE
+;
+
+SELECT DISTINCT RECORD_SOURCE
+FROM tim_wilson.silver.lnk_outbound_invoice_line
+ORDER BY RECORD_SOURCE
+;
+
+SELECT DISTINCT RECORD_SOURCE
+FROM tim_wilson.silver.hub_customer
+ORDER BY RECORD_SOURCE
+;
+
+SELECT DISTINCT RECORD_SOURCE
+FROM uat.bronze.stg_sales_sherrigmquery_allcompanies
+ORDER BY RECORD_SOURCE
+;
+
+SELECT DISTINCT RECORD_SOURCE
+FROM uat.silver.lnk_outbound_invoice_line
+ORDER BY RECORD_SOURCE
+;
+
+SELECT DISTINCT RECORD_SOURCE
+FROM uat.silver.hub_customer
+ORDER BY RECORD_SOURCE
+;
+
+-- QUICKBOOKS.STAGING_PTS_V2
+-- QUICKBOOKS.STAGING_PTS_V2
+SELECT DISTINCT RECORD_SOURCE
+FROM uat.silver.sat_outbound_invoice_quickbooks_pts_v2
+ORDER BY RECORD_SOURCE
+;
+
+-- 4683
+SELECT COUNT(*)
+FROM tim_wilson.silver.lnk_outbound_invoice_line
+WHERE RECORD_SOURCE = 'QUICKBOOKS.STAGING_PTS_V2'
+;
+
+-- 4960
+SELECT COUNT(*)
+FROM tim_wilson.silver.sat_outbound_invoice_quickbooks_pts_v2
+WHERE RECORD_SOURCE = 'QUICKBOOKS.STAGING_PTS_V2'
+;
+
+-- 4683
+SELECT COUNT(DISTINCT INVOICE_LINE_LHK)
+FROM tim_wilson.silver.lnk_outbound_invoice_line
+WHERE RECORD_SOURCE = 'QUICKBOOKS.STAGING_PTS_V2'
+;
+
+-- 4663
+SELECT COUNT(DISTINCT INVOICE_LINE_LHK)
+FROM tim_wilson.silver.sat_outbound_invoice_quickbooks_pts_v2
+WHERE RECORD_SOURCE = 'QUICKBOOKS.STAGING_PTS_V2'
+;
+
+SELECT COUNT(*)
+FROM tim_wilson.silver.sat_outbound_invoice_quickbooks_pts_v2 as s
+WHERE NOT EXISTS (SELECT * FROM tim_wilson.silver.lnk_outbound_invoice_line AS l WHERE l.INVOICE_LINE_LHK = s.INVOICE_LINE_LHK)
+;
+
+SELECT COUNT(*)
+FROM uat.silver.sat_outbound_invoice_quickbooks_pts_v2 as s
+WHERE NOT EXISTS (SELECT * FROM uat.silver.lnk_outbound_invoice_line AS l WHERE l.INVOICE_LINE_LHK = s.INVOICE_LINE_LHK)
+;
+
+SELECT COUNT(*)
+FROM production.silver.sat_outbound_invoice_quickbooks_pts_v2 as s
+WHERE NOT EXISTS (SELECT * FROM production.silver.lnk_outbound_invoice_line AS l WHERE l.INVOICE_LINE_LHK = s.INVOICE_LINE_LHK)
+;
+
+-- 500
+SELECT COUNT(*)
+FROM tim_wilson.silver.bsat_combined_outbound_invoice_v2 as s
+WHERE NOT EXISTS (SELECT * FROM tim_wilson.silver.lnk_outbound_invoice_line AS l WHERE l.INVOICE_LINE_LHK = s.INVOICE_LINE_LHK)
+;
+
+-- 998
+SELECT COUNT(*)
+FROM uat.silver.bsat_combined_outbound_invoice_v2 as s
+WHERE NOT EXISTS (SELECT * FROM uat.silver.lnk_outbound_invoice_line AS l WHERE l.INVOICE_LINE_LHK = s.INVOICE_LINE_LHK)
+;
+
+-- 14
+SELECT DISTINCT RECORD_SOURCE
+FROM uat.silver.bsat_combined_outbound_invoice_v2 as s
+ORDER BY RECORD_SOURCE
+;
+
+-- 13
+SELECT DISTINCT RECORD_SOURCE
+FROM uat.silver.lnk_outbound_invoice_line
+ORDER BY RECORD_SOURCE
+;
+
+SELECT DISTINCT RECORD_SOURCE
+FROM uat.silver.bsat_combined_outbound_invoice_v2 as s
+EXCEPT
+SELECT DISTINCT RECORD_SOURCE
+FROM uat.silver.lnk_outbound_invoice_line
+ORDER BY RECORD_SOURCE
+;
+
+SELECT DISTINCT RECORD_SOURCE
+FROM uat.silver.lnk_outbound_invoice_line
+EXCEPT
+SELECT DISTINCT RECORD_SOURCE
+FROM uat.silver.bsat_combined_outbound_invoice_v2 as s
+ORDER BY RECORD_SOURCE
+;
+
+-- 998
+SELECT COUNT(*)
+FROM production.silver.bsat_combined_outbound_invoice_v2 as s
+WHERE NOT EXISTS (SELECT * FROM production.silver.lnk_outbound_invoice_line AS l WHERE l.INVOICE_LINE_LHK = s.INVOICE_LINE_LHK)
+;
+
+-- 503
+-- 477
+SELECT COUNT(*)
+FROM tim_wilson.silver.bsat_combined_outbound_invoice_v2 as s
+WHERE NOT EXISTS (SELECT * FROM tim_wilson.silver.lnk_outbound_invoice_line AS l WHERE l.INVOICE_LINE_LHK = s.INVOICE_LINE_LHK)
+AND RECORD_SOURCE NOT IN ('KINETIC.MATERIAL_TRANSFER','KINETIC.TRANSORDER')
+;
+
+-- QUICKBOOKS.STAGING_PTS_V2
+SELECT DISTINCT RECORD_SOURCE
+FROM tim_wilson.silver.bsat_combined_outbound_invoice_v2 as s
+WHERE NOT EXISTS (SELECT * FROM tim_wilson.silver.lnk_outbound_invoice_line AS l WHERE l.INVOICE_LINE_LHK = s.INVOICE_LINE_LHK)
+AND RECORD_SOURCE NOT IN ('KINETIC.MATERIAL_TRANSFER','KINETIC.TRANSORDER')
+;
+-- 6907
+SELECT COUNT(DISTINCT INVOICE_LINE_LHK)
+FROM tim_wilson.silver.lnk_outbound_invoice_line AS l
+WHERE NOT EXISTS (SELECT * FROM tim_wilson.silver.bsat_combined_outbound_invoice_v2 as s WHERE l.INVOICE_LINE_LHK = s.INVOICE_LINE_LHK)
+;
+
+-- 998
+SELECT COUNT(*)
+FROM uat.silver.bsat_combined_outbound_invoice_v2 as s
+WHERE NOT EXISTS (SELECT * FROM uat.silver.lnk_outbound_invoice_line AS l WHERE l.INVOICE_LINE_LHK = s.INVOICE_LINE_LHK)
+;
+
+--
+-- 03/07/2026
+--
+
+SELECT DISTINCT RECORD_SOURCE
+FROM uat.silver.hub_inventory_item as s
+EXCEPT
+SELECT DISTINCT RECORD_SOURCE
+FROM uat.silver.lnk_inbound_invoice_line
+ORDER BY RECORD_SOURCE
+;
+
+SELECT DISTINCT RECORD_SOURCE
+FROM uat.silver.lnk_inbound_invoice_line
+EXCEPT
+SELECT DISTINCT RECORD_SOURCE
+FROM uat.silver.hub_inventory_item as s
+ORDER BY RECORD_SOURCE
+;
+
+SELECT DISTINCT RECORD_SOURCE
+FROM uat.silver.hub_supplier as s
+EXCEPT
+SELECT DISTINCT RECORD_SOURCE
+FROM uat.silver.lnk_inbound_invoice_line
+ORDER BY RECORD_SOURCE
+;
+
+SELECT DISTINCT RECORD_SOURCE
+FROM uat.silver.lnk_inbound_invoice_line
+EXCEPT
+SELECT DISTINCT RECORD_SOURCE
+FROM uat.silver.hub_supplier as s
+ORDER BY RECORD_SOURCE
+;
+
+-- 67461 before
+-- 67433 after
+-- 67873 before
+-- 67873 after
+SELECT COUNT(*)
+FROM tim_wilson.silver.br_inbound_invoice_kinetic
+;

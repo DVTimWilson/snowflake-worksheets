@@ -1,0 +1,74 @@
+-- SoW6 schemas
+
+CREATE SCHEMA IF NOT EXISTS develop.gold_sow6;
+ALTER SCHEMA develop.gold_sow6 OWNER TO `ahiggs@ecoreintl.com`;
+
+CREATE SCHEMA IF NOT EXISTS uat.gold_sow6;
+ALTER SCHEMA uat.gold_sow6 OWNER TO `ahiggs@ecoreintl.com`;
+
+CREATE SCHEMA IF NOT EXISTS production.gold_sow6;
+ALTER SCHEMA production.gold_sow6 OWNER TO `ahiggs@ecoreintl.com`;
+
+-- SoW6 Groups
+
+-- SoW6 Admin
+
+-- Dev
+GRANT USE CATALOG ON CATALOG develop TO `sow6_admin`;
+GRANT USE SCHEMA ON SCHEMA develop.gold_sow6 TO `sow6_admin`;
+GRANT MANAGE ON SCHEMA develop.gold_sow6 TO `sow6_admin`;
+GRANT SELECT ON SCHEMA develop.gold_sow6 TO `sow6_admin`;
+
+-- UAT
+GRANT USE CATALOG ON CATALOG uat TO `sow6_admin`;
+GRANT USE SCHEMA ON SCHEMA uat.gold_sow6 TO `sow6_admin`;
+GRANT MANAGE ON SCHEMA uat.gold_sow6 TO `sow6_admin`;
+GRANT SELECT ON SCHEMA uat.gold_sow6 TO `sow6_admin`;
+
+-- Prod
+GRANT USE CATALOG ON CATALOG production TO `sow6_admin_prod`;
+GRANT USE SCHEMA ON SCHEMA production.gold_sow6 TO `sow6_admin_prod`;
+GRANT MANAGE ON SCHEMA production.gold_sow6 TO `sow6_admin_prod`;
+GRANT SELECT ON SCHEMA production.gold_sow6 TO `sow6_admin_prod`;
+
+-- SoW6 User
+
+-- Dev
+GRANT USE CATALOG ON CATALOG develop TO `sow6_user`;
+GRANT USE SCHEMA ON SCHEMA develop.gold_sow6 TO `sow6_user`;
+GRANT SELECT ON SCHEMA develop.gold_sow6 TO `sow6_user`;
+
+-- UAT
+GRANT USE CATALOG ON CATALOG uat TO `sow6_user`;
+GRANT USE SCHEMA ON SCHEMA uat.gold_sow6 TO `sow6_user`;
+GRANT SELECT ON SCHEMA uat.gold_sow6 TO `sow6_user`;
+
+-- Production
+GRANT USE CATALOG ON CATALOG production TO `sow6_user_prod`;
+GRANT USE SCHEMA ON SCHEMA production.gold_sow6 TO `sow6_user_prod`;
+GRANT SELECT ON SCHEMA production.gold_sow6 TO `sow6_user_prod`;
+
+
+
+-- Check privileges
+WITH privileges AS (
+  SELECT grantee, catalog_name, NULL AS schema_name, NULL AS table_name, privilege_type
+  FROM system.information_schema.catalog_privileges
+
+  UNION
+
+  SELECT grantee, catalog_name, schema_name, NULL AS table_name, privilege_type
+  FROM system.information_schema.schema_privileges
+
+  UNION
+
+  SELECT grantee, table_catalog as catalog_name, table_schema as schema_name, table_name, privilege_type
+  FROM system.information_schema.table_privileges
+)
+
+SELECT * FROM privileges
+-- WHERE grantee LIKE 'sow4%'
+WHERE grantee LIKE 'sow6%'
+-- WHERE grantee = 'coreview_user_prod'
+ORDER BY grantee, catalog_name, schema_name, table_name, privilege_type
+;

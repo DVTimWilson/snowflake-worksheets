@@ -1,0 +1,756 @@
+SELECT *
+FROM develop.gold_coreview.mart_outbound_transactions
+WHERE INVOICE_NUMBER = '49030'
+;
+
+SELECT *
+FROM uat.gold_coreview.mart_outbound_transactions
+WHERE INVOICE_NUMBER = '49390'
+;
+
+SELECT *
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+WHERE INVOICE_NUMBER = '49390'
+;
+
+-- duplicates present
+SELECT *
+FROM develop.gold_coreview.mart_outbound_transactions
+WHERE INVOICE_NUMBER = '5602'
+AND ENTITY = 'DOS'
+ORDER BY SALES_DOLLAR
+;
+
+-- duplicates present
+SELECT *
+FROM develop.silver.bsat_combined_outbound_invoice_v2
+WHERE INVOICE_NUMBER = '5602'
+AND ENTITY = 'DOS'
+ORDER BY SALES_DOLLAR
+;
+
+-- duplicates present
+SELECT *
+FROM develop.silver.bstg_combined_outbound_invoice_v2
+WHERE INVOICE_NUMBER = '5602'
+AND ENTITY = 'DOS'
+ORDER BY SALES_DOLLAR
+;
+
+-- duplicates present
+SELECT *
+FROM develop.silver.br_post_outbound_combination_v2
+WHERE INVOICE_NUMBER = '5602'
+AND ENTITY = 'DOS'
+ORDER BY SALES_DOLLAR
+;
+
+-- duplicates present
+SELECT *
+FROM develop.silver.br_combined_outbound_invoice_line_v2
+WHERE INVOICE_NUMBER = '5602'
+AND ENTITY = 'DOS'
+ORDER BY SALES_DOLLAR
+;
+
+-- duplicates present
+SELECT *
+FROM develop.silver.br_outbound_invoice_quickbooks_v2
+WHERE INVOICE_NUMBER = '5602'
+AND ENTITY = 'DOS'
+ORDER BY SALES_DOLLAR
+;
+
+-- duplicates present
+SELECT *
+FROM develop.silver.sat_outbound_invoice_quickbooks_dos_v2_latest
+WHERE NUM = '5602'
+AND COMPANY = 'DOS'
+ORDER BY AMOUNT
+;
+
+-- duplicates present
+SELECT *
+FROM develop.silver.sat_outbound_invoice_quickbooks_dos_v2
+WHERE NUM = '5602'
+AND COMPANY = 'DOS'
+ORDER BY AMOUNT
+;
+
+-- DOS: ITEM_DESCRIPTION, etc. has changed bad record corrected)
+SELECT *
+FROM develop.silver.sat_outbound_invoice_quickbooks_dos_v2
+WHERE NUM = '5602'
+AND COMPANY = 'DOS'
+ORDER BY EXTRACT_DATE, AMOUNT
+;
+
+-- DOS: ITEM_DESCRIPTION, etc. has changed bad record corrected)
+SELECT *
+FROM develop.silver.sat_outbound_invoice_quickbooks_dos_v2
+WHERE NUM = '5602'
+AND COMPANY = 'DOS'
+QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY INVOICE_LINE_LHK
+    ORDER BY EXTRACT_DATE DESC
+) = 1
+ORDER BY EXTRACT_DATE, AMOUNT
+;
+
+-- DOS: ITEM_DESCRIPTION, etc. has changed bad record corrected)
+SELECT *
+FROM develop.silver.sat_outbound_invoice_quickbooks_dos_v2
+WHERE NUM = '5590'
+AND COMPANY = 'DOS'
+QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY INVOICE_LINE_LHK
+    ORDER BY EXTRACT_DATE DESC
+) = 1
+ORDER BY EXTRACT_DATE, AMOUNT
+;
+
+-- DOS: ITEM_DESCRIPTION, etc. has changed bad record corrected)
+SELECT *
+FROM develop.silver.sat_outbound_invoice_quickbooks_dos_v2
+WHERE NUM = '5597'
+AND COMPANY = 'DOS'
+QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY INVOICE_LINE_LHK
+    ORDER BY EXTRACT_DATE DESC
+) = 1
+ORDER BY EXTRACT_DATE, AMOUNT
+;
+
+SELECT
+-- COLLISION_KEY
+    COMPANY
+    , NUM
+    , NAME
+    , CONCAT(ITEM,'-',COALESCE(ITEMDESCRIPTION,'-2')) AS PART_NUMBER
+    , CAST('-1' AS STRING) AS BUSINESS_UNIT_ID
+    , NULLIF(CLASS, '') AS PLANT
+    , COMPANY
+    , ROW_NUMBER() OVER(PARTITION BY NUM, EXTRACT_DATE ORDER BY DATE ASC, INDEX ASC) AS INVOICELINE
+    , Extract_Date
+    , Date
+    , Index
+    , ITEM
+    , ITEMDESCRIPTION
+FROM psa.quickbooks.psa_quickbooks_staging_dos_v2
+WHERE NUM = '5602'
+AND COMPANY = 'DOS'
+ORDER BY EXTRACT_DATE, DATE, INDEX
+;
+
+-- 360: PLANT has changed
+SELECT *
+FROM develop.silver.sat_outbound_invoice_quickbooks_360_v2
+WHERE NUM = '49030'
+AND COMPANY = '360'
+QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY INVOICE_LINE_LHK
+    ORDER BY EXTRACT_DATE DESC
+) = 1
+ORDER BY EXTRACT_DATE, AMOUNT
+;
+
+-- 360: PLANT has changed
+SELECT *
+FROM develop.silver.sat_outbound_invoice_quickbooks_360_v2
+WHERE NUM = '49390'
+AND COMPANY = '360'
+QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY INVOICE_LINE_LHK
+    ORDER BY EXTRACT_DATE DESC
+) = 1
+ORDER BY EXTRACT_DATE, AMOUNT
+;
+
+-- 60
+SELECT UNIQUE_KEY, COUNT(*)
+FROM develop.silver.sat_outbound_invoice_quickbooks_360_v2
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY
+;
+
+-- 171
+SELECT UNIQUE_KEY, COUNT(*)
+FROM develop.silver.sat_outbound_invoice_quickbooks_dos_v2
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY
+;
+
+-- 360: UNIQUE_KEY might fix the issue
+SELECT UNIQUE_KEY, COUNT(*)
+FROM (
+SELECT *
+FROM develop.silver.sat_outbound_invoice_quickbooks_360_v2
+QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY UNIQUE_KEY
+    ORDER BY EXTRACT_DATE DESC
+) = 1
+ORDER BY EXTRACT_DATE, AMOUNT
+) AS innerselect
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY
+;
+
+-- DOS: UNIQUE_KEY might fix the issue
+SELECT UNIQUE_KEY, COUNT(*)
+FROM (
+SELECT *
+FROM develop.silver.sat_outbound_invoice_quickbooks_dos_v2
+QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY UNIQUE_KEY
+    ORDER BY EXTRACT_DATE DESC
+) = 1
+ORDER BY EXTRACT_DATE, AMOUNT
+) AS innerselect
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY
+;
+
+-- Any INDEX values missing?
+SELECT *
+FROM psa.quickbooks.psa_quickbooks_staging_360_v2
+WHERE COALESCE(NULLIF(CAST(INDEX AS STRING), ''), '0') = '0'
+;
+
+SELECT *
+FROM psa.quickbooks.psa_quickbooks_staging_dos_v2
+WHERE COALESCE(NULLIF(CAST(INDEX AS STRING), ''), '0') = '0'
+;
+
+--
+-- 02/04/2026
+--
+
+SELECT UNIQUE_KEY, COUNT(*)
+FROM develop.silver.sat_outbound_invoice_quickbooks_dos_v2
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY
+;
+
+SELECT INVOICE_LINE_LHK, COUNT(*)
+FROM develop.silver.sat_outbound_invoice_quickbooks_dos_v2
+GROUP BY INVOICE_LINE_LHK
+HAVING COUNT(*) > 1
+ORDER BY INVOICE_LINE_LHK
+;
+
+-- 72 pairs of duplicates
+SELECT UNIQUE_KEY, COUNT(*)
+FROM (
+SELECT *
+FROM develop.silver.sat_outbound_invoice_quickbooks_dos_v2
+QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY INVOICE_LINE_LHK
+    ORDER BY EXTRACT_DATE DESC
+) = 1
+ORDER BY EXTRACT_DATE, AMOUNT
+) AS innerselect
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY, COUNT(*) DESC
+;
+
+-- 0 records
+SELECT UNIQUE_KEY, COUNT(*)
+FROM (
+SELECT *
+FROM develop.silver.sat_outbound_invoice_quickbooks_dos_v2
+QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY UNIQUE_KEY
+    ORDER BY EXTRACT_DATE DESC
+) = 1
+ORDER BY EXTRACT_DATE, AMOUNT
+) AS innerselect
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY, COUNT(*) DESC
+;
+
+-- 44 pairs of duplicates
+SELECT UNIQUE_KEY, COUNT(*)
+FROM (
+SELECT *
+FROM develop.silver.sat_outbound_invoice_quickbooks_360_v2
+QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY INVOICE_LINE_LHK
+    ORDER BY EXTRACT_DATE DESC
+) = 1
+ORDER BY EXTRACT_DATE, AMOUNT
+) AS innerselect
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY, COUNT(*) DESC
+;
+
+-- 0 records
+SELECT UNIQUE_KEY, COUNT(*)
+FROM (
+SELECT *
+FROM develop.silver.sat_outbound_invoice_quickbooks_360_v2
+QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY UNIQUE_KEY
+    ORDER BY EXTRACT_DATE DESC
+) = 1
+ORDER BY EXTRACT_DATE, AMOUNT
+) AS innerselect
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY, COUNT(*) DESC
+;
+
+-- 2 pairs of duplicates
+SELECT UNIQUE_KEY, COUNT(*)
+FROM (
+SELECT *
+FROM develop.silver.sat_outbound_invoice_quickbooks_crc_v2
+QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY INVOICE_LINE_LHK
+    ORDER BY EXTRACT_DATE DESC
+) = 1
+ORDER BY EXTRACT_DATE, AMOUNT
+) AS innerselect
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY, COUNT(*) DESC
+;
+
+-- 0 records
+SELECT UNIQUE_KEY, COUNT(*)
+FROM (
+SELECT *
+FROM develop.silver.sat_outbound_invoice_quickbooks_crc_v2
+QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY UNIQUE_KEY
+    ORDER BY EXTRACT_DATE DESC
+) = 1
+ORDER BY EXTRACT_DATE, AMOUNT
+) AS innerselect
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY, COUNT(*) DESC
+;
+
+-- 0 pairs of duplicates
+SELECT UNIQUE_KEY, COUNT(*)
+FROM (
+SELECT *
+FROM develop.silver.sat_outbound_invoice_quickbooks_dgh
+QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY INVOICE_LINE_LHK
+    ORDER BY EXTRACT_DATE DESC
+) = 1
+ORDER BY EXTRACT_DATE, AMOUNT
+) AS innerselect
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY, COUNT(*) DESC
+;
+
+-- 0 records
+SELECT UNIQUE_KEY, COUNT(*)
+FROM (
+SELECT *
+FROM develop.silver.sat_outbound_invoice_quickbooks_dgh
+QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY UNIQUE_KEY
+    ORDER BY EXTRACT_DATE DESC
+) = 1
+ORDER BY EXTRACT_DATE, AMOUNT
+) AS innerselect
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY, COUNT(*) DESC
+;
+
+-- 0 pairs of duplicates
+SELECT UNIQUE_KEY, COUNT(*)
+FROM (
+SELECT *
+FROM develop.silver.sat_outbound_invoice_quickbooks_edge
+QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY INVOICE_LINE_LHK
+    ORDER BY EXTRACT_DATE DESC
+) = 1
+ORDER BY EXTRACT_DATE, AMOUNT
+) AS innerselect
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY, COUNT(*) DESC
+;
+
+-- 0 records
+SELECT UNIQUE_KEY, COUNT(*)
+FROM (
+SELECT *
+FROM develop.silver.sat_outbound_invoice_quickbooks_edge
+QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY UNIQUE_KEY
+    ORDER BY EXTRACT_DATE DESC
+) = 1
+ORDER BY EXTRACT_DATE, AMOUNT
+) AS innerselect
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY, COUNT(*) DESC
+;
+
+-- Many pairs of duplicates
+SELECT UNIQUE_KEY, COUNT(*)
+FROM (
+SELECT *
+FROM develop.silver.sat_outbound_invoice_quickbooks_eti_v2
+QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY INVOICE_LINE_LHK
+    ORDER BY EXTRACT_DATE DESC
+) = 1
+ORDER BY EXTRACT_DATE, AMOUNT
+) AS innerselect
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY, COUNT(*) DESC
+;
+
+-- 0 records
+SELECT UNIQUE_KEY, COUNT(*)
+FROM (
+SELECT *
+FROM develop.silver.sat_outbound_invoice_quickbooks_eti_v2
+QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY UNIQUE_KEY
+    ORDER BY EXTRACT_DATE DESC
+) = 1
+ORDER BY EXTRACT_DATE, AMOUNT
+) AS innerselect
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY, COUNT(*) DESC
+;
+
+-- 51 pairs of duplicates
+SELECT UNIQUE_KEY, COUNT(*)
+FROM (
+SELECT *
+FROM develop.silver.sat_outbound_invoice_quickbooks_etr_v2
+QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY INVOICE_LINE_LHK
+    ORDER BY EXTRACT_DATE DESC
+) = 1
+ORDER BY EXTRACT_DATE, AMOUNT
+) AS innerselect
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY, COUNT(*) DESC
+;
+
+-- 0 records
+SELECT UNIQUE_KEY, COUNT(*)
+FROM (
+SELECT *
+FROM develop.silver.sat_outbound_invoice_quickbooks_etr_v2
+QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY UNIQUE_KEY
+    ORDER BY EXTRACT_DATE DESC
+) = 1
+ORDER BY EXTRACT_DATE, AMOUNT
+) AS innerselect
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY, COUNT(*) DESC
+;
+
+-- 0 pairs of duplicates
+SELECT UNIQUE_KEY, COUNT(*)
+FROM (
+SELECT *
+FROM develop.silver.sat_outbound_invoice_quickbooks_hti
+QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY INVOICE_LINE_LHK
+    ORDER BY EXTRACT_DATE DESC
+) = 1
+ORDER BY EXTRACT_DATE, AMOUNT
+) AS innerselect
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY, COUNT(*) DESC
+;
+
+-- 0 records
+SELECT UNIQUE_KEY, COUNT(*)
+FROM (
+SELECT *
+FROM develop.silver.sat_outbound_invoice_quickbooks_hti
+QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY UNIQUE_KEY
+    ORDER BY EXTRACT_DATE DESC
+) = 1
+ORDER BY EXTRACT_DATE, AMOUNT
+) AS innerselect
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY, COUNT(*) DESC
+;
+
+-- 0 pairs of duplicates
+SELECT UNIQUE_KEY, COUNT(*)
+FROM (
+SELECT *
+FROM develop.silver.sat_outbound_invoice_quickbooks_prc_v2
+QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY INVOICE_LINE_LHK
+    ORDER BY EXTRACT_DATE DESC
+) = 1
+ORDER BY EXTRACT_DATE, AMOUNT
+) AS innerselect
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY, COUNT(*) DESC
+;
+
+-- 0 records
+SELECT UNIQUE_KEY, COUNT(*)
+FROM (
+SELECT *
+FROM develop.silver.sat_outbound_invoice_quickbooks_prc_v2
+QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY UNIQUE_KEY
+    ORDER BY EXTRACT_DATE DESC
+) = 1
+ORDER BY EXTRACT_DATE, AMOUNT
+) AS innerselect
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY, COUNT(*) DESC
+;
+
+-- 0 pairs of duplicates
+SELECT UNIQUE_KEY, COUNT(*)
+FROM (
+SELECT *
+FROM develop.silver.sat_outbound_invoice_quickbooks_pts_v2
+QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY INVOICE_LINE_LHK
+    ORDER BY EXTRACT_DATE DESC
+) = 1
+ORDER BY EXTRACT_DATE, AMOUNT
+) AS innerselect
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY, COUNT(*) DESC
+;
+
+-- 0 records
+SELECT UNIQUE_KEY, COUNT(*)
+FROM (
+SELECT *
+FROM develop.silver.sat_outbound_invoice_quickbooks_pts_v2
+QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY UNIQUE_KEY
+    ORDER BY EXTRACT_DATE DESC
+) = 1
+ORDER BY EXTRACT_DATE, AMOUNT
+) AS innerselect
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY, COUNT(*) DESC
+;
+
+-- 5 pairs of duplicates
+SELECT UNIQUE_KEY, COUNT(*)
+FROM (
+SELECT *
+FROM develop.silver.sat_outbound_invoice_quickbooks_tss_v2
+QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY INVOICE_LINE_LHK
+    ORDER BY EXTRACT_DATE DESC
+) = 1
+ORDER BY EXTRACT_DATE, AMOUNT
+) AS innerselect
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY, COUNT(*) DESC
+;
+
+-- 0 records
+SELECT UNIQUE_KEY, COUNT(*)
+FROM (
+SELECT *
+FROM develop.silver.sat_outbound_invoice_quickbooks_tss_v2
+QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY UNIQUE_KEY
+    ORDER BY EXTRACT_DATE DESC
+) = 1
+ORDER BY EXTRACT_DATE, AMOUNT
+) AS innerselect
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY, COUNT(*) DESC
+;
+
+--
+-- After making changes
+--
+
+-- 44 pairs of duplicates in develop
+-- 44 pairs of duplicates in tim_wilson
+-- 0  pairs of duplicates in tim_wilson
+SELECT UNIQUE_KEY, COUNT(*)
+FROM (
+SELECT *
+FROM tim_wilson.silver.sat_outbound_invoice_quickbooks_360_v2_latest
+ORDER BY EXTRACT_DATE, AMOUNT
+) AS innerselect
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY, COUNT(*) DESC
+;
+
+-- 2 pairs of duplicates in develop
+-- 491  pairs of duplicates in tim_wilson
+-- 0  pairs of duplicates in tim_wilson
+SELECT UNIQUE_KEY, COUNT(*)
+FROM (
+SELECT *
+FROM tim_wilson.silver.sat_outbound_invoice_quickbooks_crc_v2_latest
+ORDER BY EXTRACT_DATE, AMOUNT
+) AS innerselect
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY, COUNT(*) DESC
+;
+
+-- 72 pairs of duplicates in develop
+-- 72  pairs of duplicates in tim_wilson
+-- 0  pairs of duplicates in tim_wilson
+SELECT UNIQUE_KEY, COUNT(*)
+FROM (
+SELECT *
+FROM tim_wilson.silver.sat_outbound_invoice_quickbooks_dos_v2_latest
+ORDER BY EXTRACT_DATE, AMOUNT
+) AS innerselect
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY, COUNT(*) DESC
+;
+
+-- Many pairs of duplicates in develop
+-- Many  pairs of duplicates in tim_wilson
+-- 0  pairs of duplicates in tim_wilson
+SELECT UNIQUE_KEY, COUNT(*)
+FROM (
+SELECT *
+FROM tim_wilson.silver.sat_outbound_invoice_quickbooks_eti_v2_latest
+ORDER BY EXTRACT_DATE, AMOUNT
+) AS innerselect
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY, COUNT(*) DESC
+;
+
+-- 51 pairs of duplicates in develop
+-- 72  pairs of duplicates in tim_wilson
+-- 0  pairs of duplicates in tim_wilson
+SELECT UNIQUE_KEY, COUNT(*)
+FROM (
+SELECT *
+FROM tim_wilson.silver.sat_outbound_invoice_quickbooks_etr_v2_latest
+ORDER BY EXTRACT_DATE, AMOUNT
+) AS innerselect
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY, COUNT(*) DESC
+;
+
+-- 0 pairs of duplicates in develop
+-- 3  pairs of duplicates in tim_wilson
+-- 0  pairs of duplicates in tim_wilson
+SELECT UNIQUE_KEY, COUNT(*)
+FROM (
+SELECT *
+FROM tim_wilson.silver.sat_outbound_invoice_quickbooks_prc_v2_latest
+ORDER BY EXTRACT_DATE, AMOUNT
+) AS innerselect
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY, COUNT(*) DESC
+;
+
+-- 0 pairs of duplicates in develop
+-- 0  pairs of duplicates in tim_wilson
+-- 0  pairs of duplicates in tim_wilson
+SELECT UNIQUE_KEY, COUNT(*)
+FROM (
+SELECT *
+FROM tim_wilson.silver.sat_outbound_invoice_quickbooks_pts_v2_latest
+ORDER BY EXTRACT_DATE, AMOUNT
+) AS innerselect
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY, COUNT(*) DESC
+;
+
+-- 5 pairs of duplicates in develop
+-- 64  pairs of duplicates in tim_wilson
+-- 0  pairs of duplicates in tim_wilson
+SELECT UNIQUE_KEY, COUNT(*)
+FROM (
+SELECT *
+FROM tim_wilson.silver.sat_outbound_invoice_quickbooks_tss_v2_latest
+ORDER BY EXTRACT_DATE, AMOUNT
+) AS innerselect
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY, COUNT(*) DESC
+;
+
+-- 5 pairs of duplicates in develop
+-- 64  pairs of duplicates in tim_wilson
+-- 0  pairs of duplicates in tim_wilson
+SELECT UNIQUE_KEY, COUNT(*)
+FROM (
+SELECT *
+FROM develop.silver.sat_outbound_invoice_kinetic_latest
+ORDER BY EXTRACT_DATE, GM
+) AS innerselect
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY, COUNT(*) DESC
+;
+
+-- DGI, HTI, EDGE all OK
+
+-- MTLTR-2025-02-13-MfgSys-SBR-000001, MTLTR-2025-02-13-MfgSys-SBR-000006, MTLTR-2025-03-18-MfgSys-SBR-000023, MTLTR-2025-06-18-YORK-SBA-000005-B
+SELECT UNIQUE_KEY, SUM(SALES_DOLLAR), COUNT(*)
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY
+;
+
+-- UNIQUE_KEY = 'MTLTR-2025-02-13-MfgSys-SBR-000001'
+SELECT *
+FROM tim_wilson.silver.sat_kinetic_material_transfer
+WHERE PART_NUMBER = 'SBR-000001'
+ORDER BY TRANSFER_DATE
+;
+
+SELECT DISTINCT ENTITY
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+;
+
+SELECT YEAR(INVOICE_DATE) AS YEAR, MONTH(INVOICE_DATE) AS MONTH, CAST(SUM(SALES_DOLLAR) AS DECIMAL(10,2)) AS TOTAL_SALES_DOLLAR
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+WHERE ENTITY = 'DOS'
+GROUP BY YEAR(INVOICE_DATE), MONTH(INVOICE_DATE)
+ORDER BY YEAR(INVOICE_DATE), MONTH(INVOICE_DATE)
+;
+
+

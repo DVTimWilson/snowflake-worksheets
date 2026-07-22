@@ -1,0 +1,168 @@
+SELECT
+  Plant_Name,
+  PartBin_WarehouseCode,
+  PartBin_BinNum,
+  PartBin_PartNum,
+  Part_PartDescription,
+  Part_ClassID,
+  Part_ProdCode,
+  PartClass_BU_c,
+  Part_CostMethod,
+  PartCost_CostID,
+  PartBin_LotNum,
+  PartBin_OnhandQty,
+  PartBin_DimCode,
+  PartCost_StdMaterialCost,
+  PartCost_StdLaborCost,
+  PartCost_StdBurdenCost,
+  PartCost_StdSubContCost,
+  PartCost_StdMtlBurCost,
+  Calculated_TotalCost,
+  Calculated_ExtMtl,
+  Calculated_ExtLbr,
+  Calculated_ExtBdn,
+  Calculated_ExtSubCon,
+  Calculated_ExtMtlBdn,
+  Calculated_ExtTotal,
+  Plant_Plant,
+  Part_IUM,
+  PartClass_Description,
+  PartWhse_OnHandQty,
+  PartWhse_WarehouseCode,
+  WhseBin_NonNettable,
+  PartWhse_DemandQty,
+  PartWhse_AllocatedQty,
+  PartBin_Company,
+  Extract_Date
+FROM landing.kinetic.stockstat
+ORDER BY Extract_Date, UPPER(Plant_Name), UPPER(PartBin_WarehouseCode), UPPER(PartBin_PartNum)
+;
+
+-- 497329
+SELECT COUNT(*)
+FROM landing.kinetic.stockstat
+;
+
+SELECT Extract_date, COUNT(*) AS record_count, COUNT(DISTINCT PartBin_PartNum) AS part_count
+FROM landing.kinetic.stockstat
+GROUP BY Extract_date
+ORDER BY Extract_Date
+;
+
+-- min(record_count)	max(record_count)	min(part_count)	max(part_count)
+-- 15523	17677	7519	7714
+SELECT
+  MIN(record_count)
+  , MAX(record_count)
+  , MIN(part_count)
+  , MAX(part_count)
+FROM
+(
+  SELECT Extract_date, COUNT(*) AS record_count, COUNT(DISTINCT PartBin_PartNum) AS part_count
+FROM landing.kinetic.stockstat
+GROUP BY Extract_date
+) AS x
+;
+
+SELECT
+  PartTran_Company,
+  PartTran_TranNum,
+  PartTran_PartNum,
+  PartTran_WareHouseCode,
+  PartTran_BinNum,
+  PartTran_TranClass,
+  PartTran_TranType,
+  PartTran_InventoryTrans,
+  PartTran_TranDate,
+  PartTran_TranQty,
+  PartTran_UM,
+  PartTran_JobNum,
+  PartTran_PackLine,
+  PartTran_PONum,
+  PartTran_PackNum,
+  PartTran_POLine,
+  PartTran_PORelNum,
+  PartTran_OrderNum,
+  PartTran_OrderLine,
+  PartTran_OrderRelNum,
+  PartTran_BinNum2,
+  PartTran_PartDescription,
+  PartTran_RevisionNum,
+  PartTran_VendorNum,
+  PartTran_InvoiceNum,
+  PartTran_InvoiceLine,
+  PartTran_FiscalYear,
+  PartTran_FiscalPeriod,
+  Warehse_Description,
+  Part_ClassID
+FROM landing.raw_baq_explore.inventoryusage_test
+;
+
+-- 1935243
+SELECT COUNT(*)
+FROM landing.raw_baq_explore.inventoryusage_test
+;
+
+-- 21732
+SELECT COUNT(DISTINCT PartTran_PartNum) AS part_count
+FROM landing.raw_baq_explore.inventoryusage_test
+;
+
+-- 21732
+SELECT COUNT(*)
+FROM(
+SELECT DISTINCT PartTran_PartNum
+FROM landing.raw_baq_explore.inventoryusage_test
+) AS x
+;
+
+WITH starting_balances AS (
+  SELECT *
+  FROM landing.kinetic.stockstat
+  WHERE DATE(Extract_Date) = '2025-09-23'
+),
+
+movements AS (
+  SELECT *
+    , DATE(PartTran_TranDate) AS movement_date
+    , PartTran_TranQty * -1 AS movement_qty_reversed
+  FROM landing.raw_baq_explore.inventoryusage_test
+),
+
+calculations AS (
+  SELECT *
+    , SUM(movement_qty_reversed) OVER (PARTITION BY PartTran_PartNum ORDER BY movement_date ASC RANGE BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) AS total_movement_to_date
+  FROM movements
+)
+
+SELECT *
+  , movement_date
+  , COALESCE(PartBin_OnhandQty, 0) AS starting_balance
+  , total_movement_to_date
+  , COALESCE(PartBin_OnhandQty, 0) + total_movement_to_date AS onhand_qty
+FROM calculations AS c
+
+LEFT OUTER JOIN starting_balances AS s
+ON c.PartTran_PartNum = s.PartBin_PartNum
+AND c.PartTran_Company = s.PartBin_Company
+AND c.PartTran_WareHouseCode = s.PartBin_WarehouseCode
+AND DATE(s.Extract_Date) = '2025-09-23'
+
+ORDER BY movement_date, parttran_partnum
+;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

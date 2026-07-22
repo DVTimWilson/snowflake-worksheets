@@ -1,0 +1,97 @@
+SELECT *
+FROM landing.information_schema.tables
+WHERE table_owner = 'emphyillaier@ecoreintl.com'
+;
+
+
+SELECT *
+FROM landing_workato_test.information_schema.tables
+WHERE table_owner = 'emphyillaier@ecoreintl.com'
+;
+
+
+SELECT *
+FROM develop.information_schema.tables
+WHERE table_owner = 'emphyillaier@ecoreintl.com'
+;
+
+
+SELECT *
+FROM uat.information_schema.tables
+WHERE table_owner = 'emphyillaier@ecoreintl.com'
+;
+
+
+SELECT *
+FROM production.information_schema.tables
+WHERE table_owner = 'emphyillaier@ecoreintl.com'
+;
+
+
+SELECT *
+FROM landing.information_schema.tables
+WHERE table_owner = 'workato_admin'
+;
+
+
+SELECT *
+FROM landing_workato_test.information_schema.tables
+WHERE table_owner = 'workato_admin'
+;
+
+
+SELECT *
+FROM production.information_schema.tables
+WHERE table_schema ILIKE 'gold%'
+;
+
+--
+-- 27/04/2026
+--
+
+-- developer
+SHOW GROUPS WITH USER `emphyillaier@ecoreintl.com`
+;
+
+-- developer, sow4_user
+SHOW GROUPS WITH USER `belongo@ecoreintl.com`
+;
+
+-- [workato_admin], coreview_user, mfg_user, developer
+SHOW GROUPS WITH USER `skrchappidi@ecoreintl.com`
+;
+
+-- developer, prod_developer
+SHOW GROUPS WITH USER `kmintram@ecoreintl.com`
+;
+
+--
+-- 28/04/2026
+--
+
+SELECT *
+FROM psa_prod.information_schema.tables
+ORDER BY table_schema, table_name
+;
+
+SELECT *
+FROM psa_prod.information_schema.tables
+ORDER BY created DESC
+;
+
+SELECT *
+FROM psa.information_schema.tables
+ORDER BY table_schema, table_name
+;
+
+SELECT *
+FROM psa.information_schema.tables
+WHERE table_name NOT IN (SELECT table_name
+FROM psa_prod.information_schema.tables)
+AND table_schema != 'backup'
+ORDER BY table_schema, table_name
+;
+
+SELECT MIN(DATE), MAX(DATE)
+FROM landing.quickbooks.outbound_sales_360_v2
+;

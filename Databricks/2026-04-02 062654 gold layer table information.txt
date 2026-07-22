@@ -1,0 +1,5 @@
+SELECT table_catalog, table_schema, table_name, column_name, ordinal_position, full_data_type, comment
+FROM system.information_schema.columns
+WHERE table_catalog = 'uat'
+AND table_schema LIKE ('gold%')
+ORDER BY table_catalog ASC, table_schema ASC, table_name ASC, ordinal_position ASC;

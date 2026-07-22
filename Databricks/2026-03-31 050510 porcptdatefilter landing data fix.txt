@@ -1,0 +1,198 @@
+-- 71247 records
+SELECT COUNT(*)
+FROM landing.kinetic.porcptdatefilter
+;
+
+-- Check for current duplicate records in landing
+-- 13
+SELECT *
+FROM landing.kinetic.porcptdatefilter
+    QUALIFY ROW_NUMBER() OVER (
+        PARTITION BY 
+              RCVDTL_PACKSLIP
+            , RCVDTL_COMPANY
+            , VENDOR_NAME
+            , RCVHEAD_PLANT
+            , CALCULATED_BU
+            , RCVDTL_PARTNUM
+        ORDER BY EXTRACT_DATE DESC
+    ) != 1
+    AND  EXTRACT_DATE = MAX(EXTRACT_DATE) OVER ()
+ORDER BY RcvDtl_PONum
+;
+
+-- Check for previous duplicate records in landing
+SELECT *
+FROM landing.kinetic.porcptdatefilter
+    QUALIFY ROW_NUMBER() OVER (
+        PARTITION BY 
+              RCVDTL_PACKSLIP
+            , RCVDTL_COMPANY
+            , VENDOR_NAME
+            , RCVHEAD_PLANT
+            , CALCULATED_BU
+            , RCVDTL_PARTNUM
+        ORDER BY EXTRACT_DATE DESC
+    ) != 1
+    AND TO_DATE(EXTRACT_DATE) = '2026-03-29'
+    -- AND TO_DATE(EXTRACT_DATE) = '2026-03-30'
+    -- AND TO_DATE(EXTRACT_DATE) = '2026-03-31'
+;
+
+CREATE OR REPLACE TABLE landing.backup.porcptdatefilter_20260331 AS
+SELECT *
+FROM landing.kinetic.porcptdatefilter
+;
+
+-- 71247
+SELECT COUNT(*)
+FROM landing.backup.porcptdatefilter_20260331
+;
+
+SELECT *
+FROM landing.kinetic.porcptdatefilter
+WHERE Calculated_EIIGLCode = '10-2810-000'
+AND TO_DATE(EXTRACT_DATE) = '2026-03-31'
+    QUALIFY ROW_NUMBER() OVER (
+        PARTITION BY 
+              RCVDTL_PACKSLIP
+            , RCVDTL_COMPANY
+            , VENDOR_NAME
+            , RCVHEAD_PLANT
+            , CALCULATED_BU
+            , RCVDTL_PARTNUM
+        ORDER BY EXTRACT_DATE DESC
+    ) != 1
+    AND  EXTRACT_DATE = MAX(EXTRACT_DATE) OVER ()
+;
+
+CREATE OR REPLACE TABLE landing.backup.porcptdatefilter_repair_20260331 AS
+SELECT *
+, ROW_NUMBER() OVER (
+        PARTITION BY 
+              RCVDTL_PACKSLIP
+            , RCVDTL_COMPANY
+            , VENDOR_NAME
+            , RCVHEAD_PLANT
+            , CALCULATED_BU
+            , RCVDTL_PARTNUM
+        ORDER BY EXTRACT_DATE DESC
+    ) AS rn
+FROM landing.kinetic.porcptdatefilter
+WHERE TO_DATE(EXTRACT_DATE) = '2026-03-31'
+;
+
+-- 151
+SELECT COUNT(*)
+FROM landing.backup.porcptdatefilter_repair_20260331
+;
+
+-- 138
+SELECT COUNT(*)
+FROM landing.backup.porcptdatefilter_repair_20260331
+WHERE rn = 1
+;
+
+-- 151
+SELECT COUNT(*)
+FROM landing.kinetic.porcptdatefilter
+WHERE TO_DATE(EXTRACT_DATE) = '2026-03-31'
+;
+
+-- DELETE FROM landing.kinetic.porcptdatefilter
+-- WHERE TO_DATE(EXTRACT_DATE) = '2026-03-31'
+-- ;
+
+INSERT INTO landing.kinetic.porcptdatefilter
+SELECT RcvDtl_Company
+         , RcvDtl_ReceiptDate
+         , Part_ClassID
+         , Part_ProdCode
+         , Calculated_EIIGLCode
+         , Vendor_Name
+         , RcvDtl_PONum
+         , RcvDtl_POLine
+         , RcvDtl_PORelNum
+         , RcvDtl_PackLine
+         , RcvDtl_PartNum
+         , RcvDtl_PartDescription
+         , RcvHead_Plant
+         , RcvDtl_WareHouseCode
+         , RcvDtl_BinNum
+         , RcvDtl_OurQty
+         , RcvDtl_IUM
+         , RcvDtl_JobNum
+         , RcvDtl_OurUnitCost
+         , RcvDtl_PackSlip
+         , RcvDtl_Invoiced
+         , RcvDtl_ReceivedTo
+         , RcvDtl_ReceivedComplete
+         , RcvDtl_LotNum
+         , RcvDtl_InspectionReq
+         , RcvDtl_InspectionPending
+         , RcvHead_EntryDate
+         , UserFile_Name
+         , PODetail_XOrderQty
+         , RcvHead_EntryPerson
+         , Calculated_BU
+         , EXTRACT_DATE
+FROM landing.backup.porcptdatefilter_repair_20260331
+WHERE rn = 1
+;
+
+SELECT * 
+FROM (
+SELECT l.*
+, ROW_NUMBER() OVER (
+        PARTITION BY 
+              l.RCVDTL_PACKSLIP
+            , l.RCVDTL_COMPANY
+            , l.VENDOR_NAME
+            , l.RCVHEAD_PLANT
+            , l.CALCULATED_BU
+            , l.RCVDTL_PARTNUM
+        ORDER BY l.EXTRACT_DATE DESC
+    ) AS rn
+    , p.EXTRACT_DATE
+FROM landing.kinetic.porcptdatefilter AS l
+INNER JOIN psa.kinetic.psa_porcptdatefilter AS p
+ON l.RCVDTL_PACKSLIP = p.RCVDTL_PACKSLIP
+  AND l.RCVDTL_COMPANY = p.RCVDTL_COMPANY
+  AND l.VENDOR_NAME = p.VENDOR_NAME
+  AND l.RCVHEAD_PLANT = p.RCVHEAD_PLANT
+  AND l.CALCULATED_BU = p.CALCULATED_BU
+  AND l.RCVDTL_PARTNUM = p.RCVDTL_PARTNUM
+WHERE TO_DATE(l.EXTRACT_DATE) = '2026-03-31'
+) AS innerselect
+WHERE rn != 1
+ORDER BY RcvDtl_PONum, rn
+;
+
+SELECT EXTRACT_DATE, COUNT(*)
+FROM psa.kinetic.psa_porcptdatefilter
+GROUP BY EXTRACT_DATE
+ORDER BY EXTRACT_DATE DESC
+;
+
+SELECT *
+FROM landing.kinetic.porcptdatefilter AS l
+WHERE RcvDtl_PONum = '85921'
+AND TO_DATE(l.EXTRACT_DATE) = '2026-03-31'
+;
+
+SELECT *
+FROM landing.backup.porcptdatefilter_repair_20260331
+WHERE RcvDtl_PONum = '85921'
+AND TO_DATE(EXTRACT_DATE) = '2026-03-31'
+;
+
+SELECT *
+FROM psa.kinetic.psa_porcptdatefilter
+WHERE RcvDtl_PONum = '85921'
+-- AND TO_DATE(EXTRACT_DATE) = '2026-03-31'
+;
+
+-- DELETE FROM landing.kinetic.porcptdatefilter
+-- WHERE RcvDtl_PONum = '85921'
+-- AND TO_DATE(EXTRACT_DATE) = '2026-03-31'
+-- ;

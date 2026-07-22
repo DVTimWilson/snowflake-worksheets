@@ -1,0 +1,16 @@
+ALTER TABLE tim_wilson.meta.waterlevels
+ADD COLUMN full_refresh_flag STRING
+;
+
+SELECT *
+FROM tim_wilson.meta.waterlevels
+;
+
+ALTER TABLE tim_wilson.meta.waterlevels
+SET TBLPROPERTIES ('delta.columnMapping.mode' = 'name')
+;
+
+ALTER TABLE tim_wilson.meta.waterlevels
+DROP COLUMN full_refresh_flag
+;
+

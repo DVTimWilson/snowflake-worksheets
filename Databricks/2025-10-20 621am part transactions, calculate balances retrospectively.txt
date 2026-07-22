@@ -1,0 +1,65 @@
+SELECT *
+FROM landing.raw_baq_explore.inventoryusage_test
+LIMIT 10
+;
+
+SELECT *
+FROM landing.raw_baq_explore.inventoryusage_test
+WHERE PartTran_PartNum = 'RMF-000003'
+ORDER BY PartTran_TranDate
+;
+
+--2024-01-02T05:00:00.000+00:00
+--2025-10-16T04:00:00.000+00:00
+SELECT -- MIN(PartTran_TranDate), MAX(PartTran_TranDate)
+PartTran_TranDate
+, DATE(PartTran_TranDate)
+, PartTran_PartNum
+, PartTran_TranQty * -1
+, SUM(PartTran_TranQty * -1) OVER (PARTITION BY PartTran_PartNum ORDER BY DATE(PartTran_TranDate) ASC RANGE BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) AS total_movement_to_date
+FROM landing.raw_baq_explore.inventoryusage_test
+WHERE 1 = 1
+AND UPPER(PartTran_PartNum) = 'RMF-000003'
+AND DATE(PartTran_TranDate) BETWEEN '2024-01-02' AND '2024-01-08'
+-- AND DATE(PartTran_TranDate) = '2024-01-02'
+-- ORDER BY PartTran_TranDate, PartTran_PartNum
+;
+
+
+
+SELECT
+PartTran_TranDate
+, DATE(PartTran_TranDate)
+, PartTran_PartNum
+, PartTran_TranQty * -1
+
+-- testing.....
+-- , SUM(PartTran_TranQty * -1) OVER (PARTITION BY PartTran_PartNum ORDER BY DATE(PartTran_TranDate) ASC RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS total_movement_to_date
+
+-- JOIN and add the "final" balance on 23rd September ( ? ) to the following SUM() to get the end of day balance for DATE(PartTran_TranDate) + part number
+, SUM(PartTran_TranQty * -1) OVER (PARTITION BY PartTran_PartNum ORDER BY DATE(PartTran_TranDate) ASC RANGE BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) AS total_movement_to_date
+FROM landing.raw_baq_explore.inventoryusage_test
+WHERE 1 = 1
+AND PartTran_TranDate IS NOT NULL
+-- AND UPPER(PartTran_PartNum) = 'RMF-000003'
+-- AND DATE(PartTran_TranDate) BETWEEN '2024-01-02' AND '2024-01-04'
+-- AND DATE(PartTran_TranDate) = '2024-01-02'
+ORDER BY PartTran_TranDate DESC, PartTran_PartNum
+;
+
+SELECT DISTINCT PartTran_Company
+FROM landing.raw_baq_explore.inventoryusage_test
+ORDER BY 1
+;
+
+SELECT *
+FROM landing.raw_baq_explore.inventoryusage_test
+ORDER BY 1
+;
+
+SELECT *
+FROM landing.raw_baq_explore.inventoryusage_test
+WHERE PartTran_TranDate IS NULL
+ORDER BY 1
+;
+

@@ -1,0 +1,15 @@
+CREATE OR REPLACE TABLE develop.gold_sow6.lead_2026_02_19 AS
+SELECT * FROM landing.salesforce.lead_2026_02_19
+;
+
+CREATE OR REPLACE TABLE develop.gold_sow6.opportunity_2026_02_19 AS
+SELECT * FROM landing.salesforce.opportunity_2026_02_19
+;
+
+CREATE OR REPLACE TABLE uat.gold_sow6.lead_2026_02_19 AS
+SELECT * FROM landing.salesforce.lead_2026_02_19
+;
+
+CREATE OR REPLACE TABLE uat.gold_sow6.opportunity_2026_02_19 AS
+SELECT * FROM landing.salesforce.opportunity_2026_02_19
+;

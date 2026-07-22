@@ -1,0 +1,63 @@
+SELECT *
+FROM LANDING.dayforce.allocatedhoursandearnings
+-- WHERE Home_Department LIKE '%mnt%'
+WHERE Allocated_Department LIKE '%main%'
+;
+
+--
+-- Labor Hours
+--
+
+-- Labor Hours by Date Range
+SELECT YEAR(date), MONTH(date), ROUND(SUM(TOTAL_LABOUR_HOURS), 0)
+FROM tim_wilson.gold_mfg.mart_labor
+GROUP BY YEAR(date), MONTH(date)
+ORDER BY YEAR(date), MONTH(date)
+;
+
+-- Labor Hours by Department
+SELECT department, ROUND(SUM(TOTAL_LABOUR_HOURS), 0)
+FROM tim_wilson.gold_mfg.mart_labor
+GROUP BY department
+ORDER BY SUM(TOTAL_LABOUR_HOURS) DESC
+;
+
+-- Total Labor Cost
+SELECT YEAR, MONTH, ROUND(SUM(COST), 0)
+FROM tim_wilson.gold_mfg.mart_costs_per_pounds_labor
+GROUP BY YEAR, MONTH
+ORDER BY YEAR, MONTH
+;
+
+-- Detailed table
+
+
+SELECT
+    date
+    , plant
+    , department
+    , ROUND(SUM(net_hours), 0) AS total_labor_hours
+    , ROUND(SUM(CASE WHEN pay_category_name = 'Regular' THEN net_hours ELSE 0 END), 0) AS regular_labor_hours
+    , ROUND(SUM(CASE WHEN pay_category_name LIKE '%OT%' OR pay_category_name LIKE '%DT%'THEN net_hours ELSE 0 END), 0) AS overtime_labor_hours
+FROM `tim_wilson`.`silver`.`br_labor_step_0`
+WHERE MONTH(date) IN (7,8,9)
+GROUP BY date, plant, department
+ORDER BY date, plant, department
+;
+
+SELECT *
+FROM `tim_wilson`.`gold_mfg`.`mart_labor_details`
+WHERE date = '2025-09-22'
+ORDER BY date, plant, department
+;
+
+CREATE OR REPLACE TABLE develop.gold_mfg.mart_labor_details AS
+SELECT * FROM `tim_wilson`.`gold_mfg`.`mart_labor_details`
+;
+
+SELECT *
+FROM `develop`.`gold_mfg`.`mart_labor_details`
+WHERE date = '2025-09-22'
+ORDER BY date, plant, department
+;
+

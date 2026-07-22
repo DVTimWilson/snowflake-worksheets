@@ -1,0 +1,102 @@
+-- 30636
+SELECT COUNT(DISTINCT PARTNUM)
+FROM tim_wilson.gold_coreview.mart_inventory_transactions
+;
+
+-- 10031
+SELECT COUNT(DISTINCT INVENTORY_ITEM_ID)
+FROM tim_wilson.gold_coreview.mart_inventory_stock_levels_v2
+;
+
+-- 23533
+SELECT COUNT(*)
+FROM (
+SELECT DISTINCT PARTNUM
+FROM tim_wilson.gold_coreview.mart_inventory_transactions
+EXCEPT
+SELECT DISTINCT INVENTORY_ITEM_ID
+FROM tim_wilson.gold_coreview.mart_inventory_stock_levels_v2
+) AS x
+;
+
+-- 2928
+SELECT COUNT(*)
+FROM (
+SELECT DISTINCT INVENTORY_ITEM_ID
+FROM tim_wilson.gold_coreview.mart_inventory_stock_levels_v2
+EXCEPT
+SELECT DISTINCT PARTNUM
+FROM tim_wilson.gold_coreview.mart_inventory_transactions
+ORDER BY INVENTORY_ITEM_ID
+) AS x
+;
+
+-- 1514789
+SELECT COUNT(*)
+FROM tim_wilson.gold_coreview.mart_inventory_stock_levels
+;
+
+-- 1573885
+SELECT COUNT(*)
+FROM tim_wilson.gold_coreview.mart_inventory_stock_levels_v2
+;
+
+-- 10031
+SELECT COUNT(DISTINCT INVENTORY_ITEM_ID)
+FROM tim_wilson.gold_coreview.mart_inventory_stock_levels
+;
+
+-- 10031
+SELECT COUNT(DISTINCT INVENTORY_ITEM_ID)
+FROM tim_wilson.gold_coreview.mart_inventory_stock_levels_v2
+;
+
+-- 14971177968.0508819
+SELECT SUM(QUANTITY)
+FROM tim_wilson.gold_coreview.mart_inventory_stock_levels
+;
+
+-- 14973976119.7994675
+SELECT SELECT SUM(QUANTITY)
+FROM tim_wilson.gold_coreview.mart_inventory_stock_levels_v2
+;
+
+WITH old AS (
+SELECT INVENTORY_ITEM_ID, DATE, SUM(QUANTITY) AS OLD_SUM_QUANTITY
+FROM tim_wilson.gold_coreview.mart_inventory_stock_levels
+GROUP BY INVENTORY_ITEM_ID, DATE
+),
+
+new AS (
+SELECT INVENTORY_ITEM_ID, DATE, SUM(QUANTITY) AS NEW_SUM_QUANTITY
+FROM tim_wilson.gold_coreview.mart_inventory_stock_levels_v2
+GROUP BY INVENTORY_ITEM_ID, DATE
+)
+
+SELECT old.INVENTORY_ITEM_ID, old.DATE, old.OLD_SUM_QUANTITY, new.NEW_SUM_QUANTITY
+FROM old
+LEFT OUTER JOIN new
+ON old.INVENTORY_ITEM_ID = new.inventory_item_id
+AND old.DATE = new.date
+WHERE old.OLD_SUM_QUANTITY != new.NEW_SUM_QUANTITY
+ORDER BY old.INVENTORY_ITEM_ID, old.DATE
+;
+
+WITH old AS (
+SELECT INVENTORY_ITEM_ID, DATE, SUM(QUANTITY) AS OLD_SUM_QUANTITY
+FROM tim_wilson.gold_coreview.mart_inventory_stock_levels
+GROUP BY INVENTORY_ITEM_ID, DATE
+),
+
+new AS (
+SELECT INVENTORY_ITEM_ID, DATE, SUM(QUANTITY) AS NEW_SUM_QUANTITY
+FROM tim_wilson.gold_coreview.mart_inventory_stock_levels_v2
+GROUP BY INVENTORY_ITEM_ID, DATE
+)
+
+SELECT SUM(old.OLD_SUM_QUANTITY), SUM(new.NEW_SUM_QUANTITY), SUM(new.NEW_SUM_QUANTITY) - SUM(old.OLD_SUM_QUANTITY)
+FROM old
+LEFT OUTER JOIN new
+ON old.INVENTORY_ITEM_ID = new.inventory_item_id
+AND old.DATE = new.date
+;

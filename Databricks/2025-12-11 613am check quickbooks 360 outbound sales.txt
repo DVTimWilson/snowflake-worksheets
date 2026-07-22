@@ -1,0 +1,47 @@
+SELECT *
+FROM landing.quickbooks.outbound_sales_360_v2
+WHERE DATE = '2025-11-30'
+AND NUM = 'MLN'
+ORDER BY AMOUNT, Export_Date_From_QB
+;
+
+SELECT DISTINCT EXTRACT_DATE
+FROM landing.quickbooks.outbound_sales_360_v2
+ORDER BY EXTRACT_DATE DESC
+;
+
+SELECT *
+,ROW_NUMBER() OVER (
+        PARTITION BY 
+              UPPER(COMPANY)
+            , UPPER(NUM)
+            , UPPER(NAME)
+            , UPPER(ITEM)
+            , UPPER(MEMO)
+            , QTY
+            , INDEX
+        ORDER BY EXTRACT_DATE DESC)
+FROM psa.quickbooks.psa_quickbooks_staging_360_v2
+WHERE DATE = '2025-11-30'
+AND NUM = 'MLN'
+ORDER BY AMOUNT, Export_Date_From_QB
+;
+
+SELECT *
+FROM develop.silver.sat_outbound_invoice_quickbooks_360_v2_latest
+WHERE DATE = '2025-11-30'
+AND NUM = 'MLN'
+;
+
+SELECT *
+FROM develop.silver.br_outbound_invoice_quickbooks_v2
+WHERE INVOICE_DATE = '2025-11-30'
+AND INVOICE_NUMBER = 'MLN'
+;
+
+SELECT *
+FROM develop.gold_coreview.mart_outbound_transactions_v2
+WHERE INVOICE_DATE = '2025-11-30'
+AND INVOICE_NUMBER = 'MLN'
+;
+

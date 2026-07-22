@@ -1,0 +1,205 @@
+-- ==========================================================
+-- Check max EXTRACT_DATE in all psa tables
+-- ==========================================================
+
+DECLARE OR REPLACE VARIABLE v_catalog STRING DEFAULT 'psa';
+
+DECLARE OR REPLACE VARIABLE v_sql STRING;
+
+-- Build the SQL (one SELECT per column; UNION ALL)
+SET VAR v_sql = (
+--  SELECT CONCAT_WS(' UNION ALL ', ARRAY_AGG(stmt))
+  SELECT CONCAT(CONCAT_WS(' UNION ALL ', ARRAY_AGG(stmt)), ' ORDER BY max_extract_date ASC')
+  FROM (
+    SELECT 
+      CONCAT("SELECT '", table_catalog, "' AS table_catalog, '", table_name, "' AS table_name, MAX(EXTRACT_DATE) AS max_extract_date FROM ", table_catalog, ".", table_schema, ".", table_name) AS stmt
+    FROM (
+     SELECT table_catalog
+     , table_schema
+     , table_name
+      FROM system.information_schema.columns
+      WHERE table_catalog = 'psa'
+      AND table_schema != 'backup'
+      AND table_name ILIKE 'psa_%'
+      AND NOT table_name ILIKE '%_bak'
+      GROUP BY table_catalog, table_schema, table_name
+      ORDER BY table_catalog, table_schema, table_name
+      )
+  )
+)
+;
+-- Optional: preview the generated SQL if you need to debug
+-- SELECT substring(v_sql, 1, 2048) AS sql_prefix;
+
+EXECUTE IMMEDIATE v_sql;
+
+
+-- ==========================================================
+-- Check max EXTRACT_DATE in all landing tables
+-- ==========================================================
+
+DECLARE OR REPLACE VARIABLE v_catalog STRING DEFAULT 'landing';
+
+DECLARE OR REPLACE VARIABLE v_sql STRING;
+
+-- Build the SQL (one SELECT per column; UNION ALL)
+SET VAR v_sql = (
+--  SELECT CONCAT_WS(' UNION ALL ', ARRAY_AGG(stmt))
+  SELECT CONCAT(CONCAT_WS(' UNION ALL ', ARRAY_AGG(stmt)), ' ORDER BY max_extract_date ASC')
+  FROM (
+    SELECT 
+      CONCAT("SELECT '", table_catalog, "' AS table_catalog, '", table_name, "' AS table_name, MAX(EXTRACT_DATE) AS max_extract_date FROM ", table_catalog, ".", table_schema, ".", table_name) AS stmt
+    FROM (
+     SELECT c1.table_catalog
+     , c1.table_schema
+     , c1.table_name
+      FROM system.information_schema.columns AS c1
+      LEFT OUTER JOIN system.information_schema.columns AS c2
+      ON c1.table_catalog = c2.table_catalog
+      AND c1.table_schema = c2.table_schema
+      AND c1.table_name = c2.table_name
+      AND UPPER(c2.column_name) = 'EXTRACT_DATE'
+      WHERE c1.table_catalog = v_catalog
+      AND c1.table_schema  NOT IN ('backup', 'default', 'information_schema', 'load_test', 'raw_baq_explore')
+      AND c2.column_name IS NOT NULL
+      GROUP BY c1.table_catalog, c1.table_schema, c1.table_name
+      ORDER BY c1.table_catalog, c1.table_schema, c1.table_name
+      )
+  )
+)
+;
+-- Optional: preview the generated SQL if you need to debug
+-- SELECT substring(v_sql, 1, 2048) AS sql_prefix;
+
+EXECUTE IMMEDIATE v_sql;
+
+-- landing tables with an EXTRACT_DATE column
+SELECT DISTINCT c1.table_catalog, c1.table_schema, c1.table_name
+FROM system.information_schema.columns AS c1
+
+LEFT OUTER JOIN system.information_schema.columns AS c2
+ON c1.table_catalog = c2.table_catalog
+AND c1.table_schema = c2.table_schema
+AND c1.table_name = c2.table_name
+AND UPPER(c2.column_name) = 'EXTRACT_DATE'
+WHERE c1.table_catalog = 'landing'
+AND c1.table_schema  NOT IN ('backup', 'default', 'information_schema', 'load_test', 'raw_baq_explore')
+AND c2.column_name IS NULL
+ORDER BY table_schema, table_name
+;
+
+--
+-- 23/01/2026
+--
+
+-- ==========================================================
+-- Check max EXTRACT_DATE in all landing and psa tables
+-- ==========================================================
+
+DECLARE OR REPLACE VARIABLE v_sql STRING;
+
+-- Build the SQL (one SELECT per column; UNION ALL)
+SET VAR v_sql = (
+--  SELECT CONCAT_WS(' UNION ALL ', ARRAY_AGG(stmt))
+  SELECT CONCAT(CONCAT_WS(' UNION ALL ', ARRAY_AGG(stmt)), ' ORDER BY table_catalog ASC, max_extract_date ASC, table_name ASC')
+  FROM (
+    SELECT 
+      CONCAT("SELECT '", table_catalog, "' AS table_catalog, '", table_schema, "' AS table_schema, '", table_name, "' AS table_name, MAX(EXTRACT_DATE) AS max_extract_date FROM ", table_catalog, ".", table_schema, ".", table_name) AS stmt
+    FROM (
+      SELECT table_catalog, table_schema, table_name
+      FROM (
+        -- psa tables
+        SELECT table_catalog
+        , table_schema
+        , table_name
+        FROM system.information_schema.columns
+        WHERE table_catalog = 'psa'
+        AND table_schema != 'backup'
+        AND table_name ILIKE 'psa_%'
+        AND NOT table_name ILIKE '%_bak'
+
+        UNION ALL
+        
+        -- landing tables with an EXTRACT_DATE column
+        SELECT c1.table_catalog, c1.table_schema, c1.table_name
+        FROM system.information_schema.columns AS c1
+
+        LEFT OUTER JOIN system.information_schema.columns AS c2
+        ON c1.table_catalog = c2.table_catalog
+        AND c1.table_schema = c2.table_schema
+        AND c1.table_name = c2.table_name
+        AND UPPER(c2.column_name) = 'EXTRACT_DATE'
+        WHERE c1.table_catalog = 'landing'
+        AND c1.table_schema  NOT IN ('backup', 'default', 'information_schema', 'load_test', 'raw_baq_explore')
+        AND c2.column_name IS NOT NULL
+      ) AS innerselect
+      GROUP BY table_catalog, table_schema, table_name
+      ORDER BY table_catalog, table_schema, table_name
+      )
+  )
+)
+;
+
+-- Optional: preview the generated SQL if you need to debug
+-- SELECT substring(v_sql, 1, 2048) AS sql_prefix;
+
+EXECUTE IMMEDIATE v_sql;
+
+-- Check for tables without an EXTRACT_DATE column
+SELECT DISTINCT c1.table_catalog, c1.table_schema, c1.table_name
+FROM system.information_schema.columns AS c1
+WHERE 1=1
+AND c1.table_catalog = 'landing'
+AND c1.table_schema  NOT IN ('backup', 'default', 'information_schema', 'load_test', 'raw_baq_explore')
+AND NOT EXISTS (SELECT 1 FROM system.information_schema.columns AS c2 WHERE c1.table_catalog = c2.table_catalog AND c1.table_schema = c2.table_schema AND c1.table_name = c2.table_name AND UPPER(c2.column_name) = 'EXTRACT_DATE')
+ORDER BY table_catalog, table_schema, table_name
+;
+
+-- 30/01/2026 result set
+-- table_catalog	table_schema	table_name
+-- landing	kinetic	trialbalance_lastmonth
+-- landing	kinetic	trialbalance_lastmonth_drc
+-- landing	kinetic	trialbalance_thismonth
+-- landing	kinetic	trialbalance_thismonth_drc
+-- landing	reftables	budget_seed_table
+-- landing	reftables	contra_cogs_for_coreview
+-- landing	reftables	gl_accounts
+-- landing	reftables	master_ecore_companies
+-- landing	reftables	master_product_category_kinetic
+-- landing	reftables	master_product_category_kinetic_archive
+-- landing	reftables	master_product_category_kinetic_new
+-- landing	reftables	master_product_category_non_kinetic
+-- landing	reftables	master_product_category_non_kinetic_archive
+-- landing	reftables	master_product_category_non_kinetic_new
+-- landing	reftables	natural_id_mapping
+-- landing	reftables	porcptdatefilter_inbound_kinetic_sample
+-- landing	reftables	product_category_mapping
+-- landing	sage	aturf_contact_list
+-- landing	sage	aturf_customer_list
+-- landing	sage	aturf_general_ledger
+-- landing	sage	aturf_item_list_table
+-- landing	sage	aturf_job_list
+-- landing	sage	aturf_purchase_journal
+-- landing	sage	aturf_sales_journal
+-- landing	sage	aturf_sales_orders
+
+--
+-- 02/02/2026
+--
+
+-- Check for tables without an EXTRACT_DATE column
+SELECT DISTINCT c1.table_catalog, c1.table_schema, c1.table_name
+FROM system.information_schema.columns AS c1
+
+LEFT ANTI JOIN system.information_schema.columns AS c2
+ON c1.table_catalog = c2.table_catalog
+AND c1.table_schema = c2.table_schema
+AND c1.table_name = c2.table_name
+AND UPPER(c2.column_name) = 'EXTRACT_DATE'
+
+WHERE 1=1
+AND c1.table_catalog = 'landing'
+AND c1.table_schema  NOT IN ('backup', 'default', 'information_schema', 'load_test', 'raw_baq_explore')
+
+ORDER BY table_catalog, table_schema, table_name
+;

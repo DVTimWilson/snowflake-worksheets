@@ -1,0 +1,374 @@
+-- Give SELECT access to all tables in the schema
+GRANT USAGE ON CATALOG uat TO `sow4_user`;
+
+GRANT USAGE ON SCHEMA uat.gold_sow4 TO `sow4_user`;
+GRANT SELECT ON SCHEMA uat.gold_sow4 TO `sow4_user`;
+GRANT SELECT ON TABLE uat.gold_sow4.mart_material_yield TO `sow4_user`;
+
+
+SHOW GRANTS ON TABLE uat.gold_sow4.mart_material_yield
+;
+
+
+
+-- Give SELECT access to all tables in the schema
+GRANT USAGE ON CATALOG uat TO `mfg_user`;
+GRANT USAGE ON SCHEMA uat.gold_sow4 TO `sow4_user`;
+GRANT SELECT ON TABLE uat.gold_sow4.mart_material_yield TO `sow4_user`;
+
+
+SHOW GRANTS ON SCHEMA uat.gold_mfg;
+
+SELECT grantee, catalog_name, schema_name, privilege_type
+FROM system.information_schema.schema_privileges
+WHERE grantee LIKE '%mfg%'
+ORDER BY grantee, schema_name, privilege_type
+;
+
+SELECT grantee, catalog_name, privilege_type
+FROM system.information_schema.catalog_privileges
+WHERE grantee LIKE 'sow4%'
+ORDER BY grantee, catalog_name, privilege_type
+;
+
+SELECT *
+FROM system.information_schema.table_privileges
+WHERE grantee LIKE '%mfg%'
+ORDER BY grantee, table_catalog, table_schema, table_name, privilege_type
+;
+
+
+
+SHOW GRANTS `twilson@ecoreintl.com` ON CATALOG uat;
+
+
+
+
+CREATE CATALOG IF NOT EXISTS anthony_fornaris
+MANAGED LOCATION 'abfss://unity-catalog-storage@ecoreucdatastorageacct01.dfs.core.windows.net/';
+
+GRANT ALL PRIVILEGES ON CATALOG anthony_fornaris TO `afornaris@ecoreintl.com`
+;
+
+CREATE SCHEMA IF NOT EXISTS anthony_fornaris.anthony_fornaris
+;
+
+CREATE CATALOG IF NOT EXISTS ryan_watters
+MANAGED LOCATION 'abfss://unity-catalog-storage@ecoreucdatastorageacct01.dfs.core.windows.net/';
+
+GRANT ALL PRIVILEGES ON CATALOG ryan_watters TO `rwatters@ecoreintl.com`
+;
+
+CREATE SCHEMA IF NOT EXISTS ryan_watters.ryan_watters
+;
+
+CREATE CATALOG IF NOT EXISTS kinsey_duwa
+MANAGED LOCATION 'abfss://unity-catalog-storage@ecoreucdatastorageacct01.dfs.core.windows.net/';
+
+GRANT ALL PRIVILEGES ON CATALOG kinsey_duwa TO `kduwa@ecoreintl.com`
+;
+
+CREATE SCHEMA IF NOT EXISTS kinsey_duwa.kinsey_duwa
+;
+
+SELECT grantee, catalog_name, schema_name, privilege_type
+FROM system.information_schema.schema_privileges
+WHERE grantee LIKE '%mfg%'
+ORDER BY grantee, schema_name, privilege_type
+;
+
+SELECT grantee, catalog_name, privilege_type
+FROM system.information_schema.catalog_privileges
+WHERE grantee LIKE '%mfg%'
+ORDER BY grantee, catalog_name, privilege_type
+;
+
+SELECT *
+FROM system.information_schema.table_privileges
+WHERE grantee LIKE '%mfg%'
+ORDER BY grantee, table_catalog, table_schema, table_name, privilege_type
+;
+
+WITH priviledges AS (
+  SELECT grantee, catalog_name, NULL AS schema_name, NULL AS table_name, privilege_type
+  FROM system.information_schema.catalog_privileges
+
+  UNION
+
+  SELECT grantee, catalog_name, schema_name, NULL AS table_name, privilege_type
+  FROM system.information_schema.schema_privileges
+
+  UNION
+
+  SELECT grantee, table_catalog as catalog_name, table_schema as schema_name, table_name, privilege_type
+  FROM system.information_schema.table_privileges
+)
+
+SELECT * FROM priviledges
+WHERE grantee = 'workato_admin'
+-- WHERE grantee = 'coreview_user_prod'
+ORDER BY grantee, catalog_name, schema_name, table_name, privilege_type
+;
+
+SHOW GROUPS WITH USER `jpemery@ecoreintl.com`
+;
+
+-- MFG
+
+-- MFG Prod Admin
+GRANT USE CATALOG ON CATALOG production TO `mfg_admin_prod`;
+GRANT USE SCHEMA ON SCHEMA production.gold_mfg TO `mfg_admin_prod`;
+GRANT MANAGE ON SCHEMA production.gold_mfg TO `mfg_admin_prod`;
+
+-- MFG Prod User
+GRANT USE CATALOG ON CATALOG production TO `mfg_user_prod`;
+GRANT USE SCHEMA ON SCHEMA production.gold_mfg TO `mfg_user_prod`;
+GRANT SELECT ON SCHEMA production.gold_mfg TO `mfg_user_prod`;
+
+-- MFG UAT/Dev Admin
+GRANT USE CATALOG ON CATALOG develop TO `mfg_admin`;
+GRANT USE SCHEMA ON SCHEMA develop.gold_mfg TO `mfg_admin`;
+GRANT MANAGE ON SCHEMA develop.gold_mfg TO `mfg_admin`;
+
+GRANT USE CATALOG ON CATALOG uat TO `mfg_admin`;
+GRANT USE SCHEMA ON SCHEMA uat.gold_mfg TO `mfg_admin`;
+GRANT MANAGE ON SCHEMA uat.gold_mfg TO `mfg_admin`;
+
+-- MFG UAT/Dev User
+GRANT USE CATALOG ON CATALOG develop TO `mfg_user`;
+GRANT USE SCHEMA ON SCHEMA develop.gold_mfg TO `mfg_user`;
+GRANT SELECT ON SCHEMA develop.gold_mfg TO `mfg_user`;
+
+GRANT USE CATALOG ON CATALOG uat TO `mfg_user`;
+GRANT USE SCHEMA ON SCHEMA uat.gold_mfg TO `mfg_user`;
+GRANT SELECT ON SCHEMA uat.gold_mfg TO `mfg_user`;
+
+-- CoreView
+
+-- CoreView Prod Admin
+GRANT USE CATALOG ON CATALOG production TO `coreview_admin_prod`;
+GRANT USE SCHEMA ON SCHEMA production.gold_coreview TO `coreview_admin_prod`;
+GRANT MANAGE ON SCHEMA production.gold_coreview TO `coreview_admin_prod`;
+
+-- CoreView Prod User
+GRANT USE CATALOG ON CATALOG production TO `coreview_user_prod`;
+GRANT USE SCHEMA ON SCHEMA production.gold_coreview TO `coreview_user_prod`;
+GRANT SELECT ON SCHEMA production.gold_coreview TO `coreview_user_prod`;
+
+-- PowerBI
+GRANT USE CATALOG ON CATALOG production TO `9ca7df66-bfac-4108-bd9a-a4ec80c03da3`;
+GRANT USE SCHEMA ON SCHEMA production.gold_coreview TO `9ca7df66-bfac-4108-bd9a-a4ec80c03da3`;
+GRANT SELECT ON SCHEMA production.gold_coreview TO `9ca7df66-bfac-4108-bd9a-a4ec80c03da3`;
+
+
+
+-- CoreView UAT/Dev Admin
+-- Dev
+GRANT USE CATALOG ON CATALOG develop TO `coreview_admin`;
+GRANT USE SCHEMA ON SCHEMA develop.gold_coreview TO `coreview_admin`;
+GRANT MANAGE ON SCHEMA develop.gold_coreview TO `coreview_admin`;
+-- UAT
+GRANT USE CATALOG ON CATALOG uat TO `coreview_admin`;
+GRANT USE SCHEMA ON SCHEMA uat.gold_coreview TO `coreview_admin`;
+GRANT MANAGE ON SCHEMA uat.gold_coreview TO `coreview_admin`;
+
+-- CoreView UAT/Dev User
+-- Dev
+GRANT USE CATALOG ON CATALOG develop TO `coreview_user`;
+GRANT USE SCHEMA ON SCHEMA develop.gold_coreview TO `coreview_user`;
+GRANT SELECT ON SCHEMA develop.gold_coreview TO `coreview_user`;
+-- UAT
+GRANT USE CATALOG ON CATALOG uat TO `coreview_user`;
+GRANT USE SCHEMA ON SCHEMA uat.gold_coreview TO `coreview_user`;
+GRANT SELECT ON SCHEMA uat.gold_coreview TO `coreview_user`;
+
+-- SoW4
+
+-- SoW4 UAT/Dev Admin
+-- Dev
+GRANT USE CATALOG ON CATALOG develop TO `sow4_admin`;
+GRANT USE SCHEMA ON SCHEMA develop.gold_sow4 TO `sow4_admin`;
+GRANT MANAGE ON SCHEMA develop.gold_sow4 TO `sow4_admin`;
+-- UAT
+GRANT USE CATALOG ON CATALOG uat TO `sow4_admin`;
+GRANT USE SCHEMA ON SCHEMA uat.gold_sow4 TO `sow4_admin`;
+GRANT MANAGE ON SCHEMA uat.gold_sow4 TO `sow4_admin`;
+
+-- SoW4 UAT/Dev User
+-- Dev
+GRANT USE CATALOG ON CATALOG develop TO `sow4_user`;
+GRANT USE SCHEMA ON SCHEMA develop.gold_sow4 TO `sow4_user`;
+GRANT SELECT ON SCHEMA develop.gold_sow4 TO `sow4_user`;
+-- UAT
+GRANT USE CATALOG ON CATALOG uat TO `sow4_user`;
+GRANT USE SCHEMA ON SCHEMA uat.gold_sow4 TO `sow4_user`;
+GRANT SELECT ON SCHEMA uat.gold_sow4 TO `sow4_user`;
+
+
+-- PowerBI Service Grants
+
+-- develop
+GRANT USAGE ON CATALOG develop TO `9ca7df66-bfac-4108-bd9a-a4ec80c03da3`
+;
+GRANT USAGE ON SCHEMA develop.gold_mfg TO `9ca7df66-bfac-4108-bd9a-a4ec80c03da3`
+;
+GRANT SELECT ON SCHEMA develop.gold_mfg TO `9ca7df66-bfac-4108-bd9a-a4ec80c03da3`
+;
+GRANT USAGE ON SCHEMA develop.gold_coreview TO `9ca7df66-bfac-4108-bd9a-a4ec80c03da3`
+;
+GRANT SELECT ON SCHEMA develop.gold_coreview TO `9ca7df66-bfac-4108-bd9a-a4ec80c03da3`
+;
+GRANT USAGE ON SCHEMA develop.gold_sow4 TO `9ca7df66-bfac-4108-bd9a-a4ec80c03da3`
+;
+GRANT SELECT ON SCHEMA develop.gold_sow4 TO `9ca7df66-bfac-4108-bd9a-a4ec80c03da3`
+;
+
+-- uat
+GRANT USAGE ON CATALOG uat TO `9ca7df66-bfac-4108-bd9a-a4ec80c03da3`
+;
+GRANT USAGE ON SCHEMA uat.gold_mfg TO `9ca7df66-bfac-4108-bd9a-a4ec80c03da3`
+;
+GRANT SELECT ON SCHEMA uat.gold_mfg TO `9ca7df66-bfac-4108-bd9a-a4ec80c03da3`
+;
+GRANT USAGE ON SCHEMA uat.gold_coreview TO `9ca7df66-bfac-4108-bd9a-a4ec80c03da3`
+;
+GRANT SELECT ON SCHEMA uat.gold_coreview TO `9ca7df66-bfac-4108-bd9a-a4ec80c03da3`
+;
+GRANT USAGE ON SCHEMA uat.gold_sow4 TO `9ca7df66-bfac-4108-bd9a-a4ec80c03da3`
+;
+GRANT SELECT ON SCHEMA uat.gold_sow4 TO `9ca7df66-bfac-4108-bd9a-a4ec80c03da3`
+;
+
+-- prod
+GRANT USAGE ON CATALOG production TO `9ca7df66-bfac-4108-bd9a-a4ec80c03da3`
+;
+GRANT USAGE ON SCHEMA production.gold_mfg TO `9ca7df66-bfac-4108-bd9a-a4ec80c03da3`
+;
+GRANT SELECT ON SCHEMA production.gold_mfg TO `9ca7df66-bfac-4108-bd9a-a4ec80c03da3`
+;
+
+
+
+GRANT USAGE ON CATALOG landing_workato_test TO `892b5cc2-d1cb-4684-b3a0-071eec212c17`;
+
+GRANT USAGE ON SCHEMA landing_workato_test.dayforce TO `892b5cc2-d1cb-4684-b3a0-071eec212c17`;
+GRANT SELECT ON SCHEMA landing_workato_test.dayforce TO `892b5cc2-d1cb-4684-b3a0-071eec212c17`;
+
+GRANT USAGE ON SCHEMA landing_workato_test.kinetic TO `892b5cc2-d1cb-4684-b3a0-071eec212c17`;
+GRANT SELECT ON SCHEMA landing_workato_test.kinetic TO `892b5cc2-d1cb-4684-b3a0-071eec212c17`;
+
+GRANT USAGE ON SCHEMA landing_workato_test.operations_files TO `892b5cc2-d1cb-4684-b3a0-071eec212c17`;
+GRANT SELECT ON SCHEMA landing_workato_test.operations_files TO `892b5cc2-d1cb-4684-b3a0-071eec212c17`;
+
+GRANT USAGE ON SCHEMA landing_workato_test.quickbooks TO `892b5cc2-d1cb-4684-b3a0-071eec212c17`;
+GRANT SELECT ON SCHEMA landing_workato_test.quickbooks TO `892b5cc2-d1cb-4684-b3a0-071eec212c17`;
+
+GRANT USAGE ON SCHEMA landing_workato_test.reftables TO `892b5cc2-d1cb-4684-b3a0-071eec212c17`;
+GRANT SELECT ON SCHEMA landing_workato_test.reftables TO `892b5cc2-d1cb-4684-b3a0-071eec212c17`;
+
+GRANT USAGE ON SCHEMA landing_workato_test.sage TO `892b5cc2-d1cb-4684-b3a0-071eec212c17`;
+GRANT SELECT ON SCHEMA landing_workato_test.sage TO `892b5cc2-d1cb-4684-b3a0-071eec212c17`;
+
+GRANT USAGE ON SCHEMA landing_workato_test.test TO `892b5cc2-d1cb-4684-b3a0-071eec212c17`;
+GRANT SELECT ON SCHEMA landing_workato_test.test TO `892b5cc2-d1cb-4684-b3a0-071eec212c17`;
+
+
+GRANT OWNER TO ON CATALOG landing TO `892b5cc2-d1cb-4684-b3a0-071eec212c17`;
+
+
+SELECT
+  'ALTER SCHEMA landing.' || schema_name || ' OWNER TO `892b5cc2-d1cb-4684-b3a0-071eec212c17`;' AS sql
+FROM landing.information_schema.schemata;
+
+-- ALTER SCHEMA landing.information_schema OWNER TO `892b5cc2-d1cb-4684-b3a0-071eec212c17`;
+ALTER SCHEMA landing.dayforce OWNER TO `892b5cc2-d1cb-4684-b3a0-071eec212c17`;
+ALTER SCHEMA landing.load_test OWNER TO `892b5cc2-d1cb-4684-b3a0-071eec212c17`;
+ALTER SCHEMA landing.reftables OWNER TO `892b5cc2-d1cb-4684-b3a0-071eec212c17`;
+ALTER SCHEMA landing.raw_baq_explore OWNER TO `892b5cc2-d1cb-4684-b3a0-071eec212c17`;
+ALTER SCHEMA landing.kinetic OWNER TO `892b5cc2-d1cb-4684-b3a0-071eec212c17`;
+ALTER SCHEMA landing.default OWNER TO `892b5cc2-d1cb-4684-b3a0-071eec212c17`;
+ALTER SCHEMA landing.static_backup OWNER TO `892b5cc2-d1cb-4684-b3a0-071eec212c17`;
+ALTER SCHEMA landing.backup OWNER TO `892b5cc2-d1cb-4684-b3a0-071eec212c17`;
+ALTER SCHEMA landing.operations_files OWNER TO `892b5cc2-d1cb-4684-b3a0-071eec212c17`;
+ALTER SCHEMA landing.sage OWNER TO `892b5cc2-d1cb-4684-b3a0-071eec212c17`;
+ALTER SCHEMA landing.quickbooks OWNER TO `892b5cc2-d1cb-4684-b3a0-071eec212c17`;
+
+SELECT
+  'ALTER TABLE landing.' || table_schema || '.' || table_name ||
+  ' OWNER TO `892b5cc2-d1cb-4684-b3a0-071eec212c17`;' AS sql
+FROM landing.information_schema.tables
+WHERE table_type = 'MANAGED';
+
+SELECT * 
+FROM landing.information_schema.tables;
+
+
+-- SoW4 Groups
+
+-- SoW4 Admin
+
+-- Dev
+GRANT USE CATALOG ON CATALOG develop TO `sow4_admin`;
+GRANT USE SCHEMA ON SCHEMA develop.gold_sow4 TO `sow4_admin`;
+GRANT MANAGE ON SCHEMA develop.gold_sow4 TO `sow4_admin`;
+GRANT SELECT ON SCHEMA develop.gold_sow4 TO `sow4_admin`;
+
+-- UAT
+GRANT USE CATALOG ON CATALOG uat TO `sow4_admin`;
+GRANT USE SCHEMA ON SCHEMA uat.gold_sow4 TO `sow4_admin`;
+GRANT MANAGE ON SCHEMA uat.gold_sow4 TO `sow4_admin`;
+GRANT SELECT ON SCHEMA uat.gold_sow4 TO `sow4_admin`;
+
+-- Prod
+GRANT USE CATALOG ON CATALOG production TO `sow4_admin_prod`;
+GRANT USE SCHEMA ON SCHEMA production.gold_sow4 TO `sow4_admin_prod`;
+GRANT MANAGE ON SCHEMA production.gold_sow4 TO `sow4_admin_prod`;
+GRANT SELECT ON SCHEMA production.gold_sow4 TO `sow4_admin_prod`;
+
+-- SoW4 User
+
+-- Dev
+GRANT USE CATALOG ON CATALOG develop TO `sow4_user`;
+GRANT USE SCHEMA ON SCHEMA develop.gold_sow4 TO `sow4_user`;
+GRANT SELECT ON SCHEMA develop.gold_sow4 TO `sow4_user`;
+
+-- UAT
+GRANT USE CATALOG ON CATALOG uat TO `sow4_user`;
+GRANT USE SCHEMA ON SCHEMA uat.gold_sow4 TO `sow4_user`;
+GRANT SELECT ON SCHEMA uat.gold_sow4 TO `sow4_user`;
+
+-- Production
+GRANT USE CATALOG ON CATALOG production TO `sow4_user_prod`;
+GRANT USE SCHEMA ON SCHEMA production.gold_sow4 TO `sow4_user_prod`;
+GRANT SELECT ON SCHEMA production.gold_sow4 TO `sow4_user_prod`;
+
+
+-- Check priviledges
+WITH priviledges AS (
+  SELECT grantee, catalog_name, NULL AS schema_name, NULL AS table_name, privilege_type
+  FROM system.information_schema.catalog_privileges
+
+  UNION
+
+  SELECT grantee, catalog_name, schema_name, NULL AS table_name, privilege_type
+  FROM system.information_schema.schema_privileges
+
+  UNION
+
+  SELECT grantee, table_catalog as catalog_name, table_schema as schema_name, table_name, privilege_type
+  FROM system.information_schema.table_privileges
+)
+
+SELECT * FROM priviledges
+WHERE grantee LIKE 'sow4%'
+-- WHERE grantee = 'coreview_user_prod'
+ORDER BY grantee, catalog_name, schema_name, table_name, privilege_type
+;
+
+-- 360_grants
+
+GRANT CREATE CATALOG ON METASTORE TO 360_admin
+;
+
+GRANT CREATE CONNECTION ON METASTORE TO 360_admin
+;

@@ -1,0 +1,139 @@
+-- 15600
+SELECT COUNT(*)
+FROM landing.reftables.master_product_category_kinetic_archive
+;
+
+RESTORE TABLE landing.reftables.master_product_category_kinetic_archive TO VERSION AS OF 0
+;
+
+-- 5345
+SELECT COUNT(*)
+FROM landing.reftables.master_product_category_kinetic
+;
+
+-- 5345
+SELECT COUNT(*)
+FROM (
+SELECT DISTINCT PartNum, CoreView_Product_Category
+FROM landing.reftables.master_product_category_kinetic
+) AS x
+;
+
+-- 5345
+SELECT COUNT(*)
+FROM landing.reftables.master_product_category_kinetic
+
+EXCEPT
+
+-- 5345
+SELECT COUNT(*)
+FROM (
+SELECT DISTINCT PartNum, CoreView_Product_Category
+FROM landing.reftables.master_product_category_kinetic
+) AS x
+;
+
+-- 941
+SELECT COUNT(*)
+FROM landing.reftables.master_product_category_non_kinetic_archive
+;
+
+-- 741
+SELECT COUNT(*)
+FROM landing.reftables.master_product_category_non_kinetic
+;
+
+SELECT *
+FROM landing.reftables.master_product_category_non_kinetic_archive
+;
+
+SELECT *
+FROM landing.reftables.master_product_category_non_kinetic
+;
+
+-- 165
+SELECT COUNT(*)
+FROM landing.quickbooks.contra_cogs_for_coreview
+;
+
+-- 2232 NULL join
+-- 33311 NOT NULL join
+SELECT 
+qb.*
+,lookup.item
+,lookup.Pounds_per_sold_by_unit
+FROM landing.quickbooks.quickbooksstaging AS qb
+
+LEFT OUTER JOIN landing.reftables.master_product_category_non_kinetic AS lookup
+ON qb.item = lookup.item
+
+-- WHERE lookup.item IS NOT NULL
+;
+
+--280535
+SELECT COUNT(*)
+FROM landing.kinetic.sales_sherrigmquery_allcompanies AS 
+;
+--29119183
+--280535
+WITH rge AS (
+  SELECT
+rge.JobAsmbl_PartNum
+,rge.LaborDtl_ClockInDate
+,LEAD(rge.LaborDtl_ClockInDate, 1, CAST('9999-12-31 00:00:00.000000' AS TIMESTAMP)) OVER (PARTITION BY rge.JobAsmbl_PartNum ORDER BY rge.LaborDtl_ClockInDate ASC) AS next_date
+,rge.LaborDtl_LaborQty
+,rge.JobOper_RunQty
+,rge.Calculated_Weight
+,rge.Calculated_WeightLbs
+,rge.Calculated_WeightLbs2
+,rge.LABORDTL_OPCODE
+,rge.JOBOPER_IUM
+    , CASE 
+        WHEN UPPER(rge.LABORDTL_OPCODE) = 'LAM' AND rge.JobAsmbl_PartNum not in ('LMNT-000700', 'LMNT-000751', 'LMNT-000650', 'LMNT-000642', 'LMNT-000698', 'LMNT-000702', 'LMNT-000862', 'LMNT-000604', 'LMNT-000605', 'LMNTC-000178', 'LMNT-000586', 'LMNT-000644', 'LMNT-000609', 'LMNT-000581', 'LMNT-000494', 'LMNT-000584', 'LMNT-000701', 'LMNT-000705', 'LMNT-000696', 'LMNTC-000202', 'LMNT-000577', 'LMNT-000699', 'LMNT-000648', 'LMNT-000859', 'LMNTC-000305', 'LMNT-000562', 'LMNT-000703', 'LMNT-000697', 'LMNT-000591', 'LMNT-000594', 'LMNT-000318', 'LMNT-000656', 'LMNT-000640', 'LMNT-000597', 'LMNT-000585', 'LMNTC-000225', 'LMNT-000879', 'LMNT-000602', 'LMNT-000768', 'LMNT-000880', 'LMNTC-000081', 'LMNT-000707', 'LMNT-000860', 'LMNT-000882', 'LMNT-000757', 'LMNT-000881', 'LMNTC-000221', 'LMNT-000711', 'RBRL1-000479', 'LMNT-000710', 'LMNTC-000303', 'LMNT-000595', 'LMNT-000587', 'LMNT-000590', 'LMNT-000601', 'LMNT-000861', 'LMNT-000658', 'LMNT-000641', 'LMNT-000645', 'LMNT-000885', 'LMNT-000884', 'LMNT-000643', 'LMNT-000322', 'LMNT-000588', 'LMNT-000709', 'LMNT-000761', 'LMNT-000853', 'LMNT-000695', 'LMNT-000889', 'LMNT-000883', 'LMNT-000646')
+            THEN 0 
+            -- Filter out unwanted LAM part numbers
+        WHEN UPPER(rge.JOBOPER_IUM) = 'LF' THEN COALESCE(rge.CALCULATED_WEIGHTLBS2, 0)
+        WHEN UPPER(rge.JOBOPER_IUM) = 'LB' THEN COALESCE(rge.LABORDTL_LABORQTY, 0)
+        WHEN UPPER(rge.JOBOPER_IUM) = 'EA' THEN COALESCE(rge.CALCULATED_WEIGHTLBS2, 0)
+           ELSE 0
+      END AS weight
+FROM landing.kinetic.resgrpeff AS rge
+)
+
+SELECT
+--COUNT(*)
+sh.*
+-- ,lookup.partnum
+,sh.SellingShipQty
+,rge.JobAsmbl_PartNum
+,rge.LaborDtl_LaborQty
+,rge.JobOper_RunQty
+,rge.Calculated_Weight
+,rge.Calculated_WeightLbs
+,rge.Calculated_WeightLbs2
+,rge.LABORDTL_OPCODE
+,rge.JOBOPER_IUM
+,rge.weight
+FROM landing.kinetic.sales_sherrigmquery_allcompanies AS sh
+
+-- LEFT OUTER JOIN landing.reftables.master_product_category_kinetic AS lookup
+-- ON sh.PartNum = lookup.PartNum
+
+LEFT OUTER JOIN  rge
+ON sh.PartNum = rge.JobAsmbl_PartNum
+AND sh.InvoiceDate >= rge.LaborDtl_ClockInDate
+AND sh.InvoiceDate < next_date
+AND COALESCE(sh.PartNum, '') != ''
+;
+
+SELECT
+rge.JobAsmbl_PartNum
+,rge.LaborDtl_ClockInDate
+,LEAD(rge.LaborDtl_ClockInDate, 1, CAST('9999-12-31 00:00:00.000000' AS TIMESTAMP)) OVER (PARTITION BY rge.JobAsmbl_PartNum ORDER BY rge.LaborDtl_ClockInDate ASC)
+FROM landing.kinetic.resgrpeff AS rge
+;
+
+SELECT DISTINCT BusinessUnit_c
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+;
+

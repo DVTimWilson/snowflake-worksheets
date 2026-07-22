@@ -1,0 +1,101 @@
+-- Including Extract_Date because the problem is only happening for one extract date
+
+-- 1304037
+-- 1170468 DISTINCT
+-- 133569 diff
+SELECT COUNT(*)
+FROM (SELECT DISTINCT
+Company, InvoiceNum, InvoiceDate, InvoiceType, CreditMemo, CustNum, CustID, Name, InvoiceLine, PartNum, LineDesc, ProdCode, SellingShipQty, SalesUm, DocUnitPrice, DocExtPrice, DocDiscount, DocTotalMiscChrg, SalesPrice, DocUnitCost, DocExtCost, GM, GMpct, ShipToCustNum, ShipToNum, OTS, NULL AS AddressID, ShipToName, ShipToAddress1, ShipToAddress2, ShipToAddress3, ShipToCity, ShipToState, ShipToZIP, ShipToCountry, SalesRepList, BusinessUnit, SoldToState, GroupCode, TerritoryID, Character03, MasterKey, Plant, Formula, Width, Thick, Area, SFSold, BaseForula, RouteToMarketCode, RouteToMarket, CustPlatformCode, CustPlatform, CustDescriptionCode, CustDescription, Branded, Market_c, Application_c, Form_c, Format_c, Brand_c, BusinessUnit_c, Market2_c, Platform_c, ProjectName_c, OrderNum, NtlAccount, Assist, BillToCountry, RequestDate, NeedByDate, CustSegment_c, OrderDate, TestMarketID, TestMarket, NULL AS Pounds, Extract_Date FROM landing.kinetic.sales_sherrigmquery_allcompanies)
+;
+
+SELECT *
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+GROUP BY Company, InvoiceNum, InvoiceDate, InvoiceType, CreditMemo, CustNum, CustID, Name, InvoiceLine, PartNum, LineDesc, ProdCode, SellingShipQty, SalesUm, DocUnitPrice, DocExtPrice, DocDiscount, DocTotalMiscChrg, SalesPrice, DocUnitCost, DocExtCost, GM, GMpct, ShipToCustNum, ShipToNum, OTS, AddressID, ShipToName, ShipToAddress1, ShipToAddress2, ShipToAddress3, ShipToCity, ShipToState, ShipToZIP, ShipToCountry, SalesRepList, BusinessUnit, SoldToState, GroupCode, TerritoryID, Character03, MasterKey, Plant, Formula, Width, Thick, Area, SFSold, BaseForula, RouteToMarketCode, RouteToMarket, CustPlatformCode, CustPlatform, CustDescriptionCode, CustDescription, Branded, Market_c, Application_c, Form_c, Format_c, Brand_c, BusinessUnit_c, Market2_c, Platform_c, ProjectName_c, OrderNum, NtlAccount, Assist, BillToCountry, RequestDate, NeedByDate, CustSegment_c, OrderDate, TestMarketID, TestMarket, Pounds, Extract_Date
+HAVING COUNT(*) > 1
+;
+
+-- 2025-10-24T12:00:00.000+00:00
+SELECT EXTRACT_DATE, COUNT(*)
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+GROUP BY Company, InvoiceNum, InvoiceDate, InvoiceType, CreditMemo, CustNum, CustID, Name, InvoiceLine, PartNum, LineDesc, ProdCode, SellingShipQty, SalesUm, DocUnitPrice, DocExtPrice, DocDiscount, DocTotalMiscChrg, SalesPrice, DocUnitCost, DocExtCost, GM, GMpct, ShipToCustNum, ShipToNum, OTS, AddressID, ShipToName, ShipToAddress1, ShipToAddress2, ShipToAddress3, ShipToCity, ShipToState, ShipToZIP, ShipToCountry, SalesRepList, BusinessUnit, SoldToState, GroupCode, TerritoryID, Character03, MasterKey, Plant, Formula, Width, Thick, Area, SFSold, BaseForula, RouteToMarketCode, RouteToMarket, CustPlatformCode, CustPlatform, CustDescriptionCode, CustDescription, Branded, Market_c, Application_c, Form_c, Format_c, Brand_c, BusinessUnit_c, Market2_c, Platform_c, ProjectName_c, OrderNum, NtlAccount, Assist, BillToCountry, RequestDate, NeedByDate, CustSegment_c, OrderDate, TestMarketID, TestMarket, Pounds, Extract_Date
+HAVING COUNT(*) > 1
+ORDER BY COUNT(*) DESC
+;
+
+-- 1170468
+SELECT COUNT(*)
+FROM (
+SELECT *
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+QUALIFY ROW_NUMBER() OVER (PARTITION BY Company, InvoiceNum, InvoiceDate, InvoiceType, CreditMemo, CustNum, CustID, Name, InvoiceLine, PartNum, LineDesc, ProdCode, SellingShipQty, SalesUm, DocUnitPrice, DocExtPrice, DocDiscount, DocTotalMiscChrg, SalesPrice, DocUnitCost, DocExtCost, GM, GMpct, ShipToCustNum, ShipToNum, OTS, AddressID, ShipToName, ShipToAddress1, ShipToAddress2, ShipToAddress3, ShipToCity, ShipToState, ShipToZIP, ShipToCountry, SalesRepList, BusinessUnit, SoldToState, GroupCode, TerritoryID, Character03, MasterKey, Plant, Formula, Width, Thick, Area, SFSold, BaseForula, RouteToMarketCode, RouteToMarket, CustPlatformCode, CustPlatform, CustDescriptionCode, CustDescription, Branded, Market_c, Application_c, Form_c, Format_c, Brand_c, BusinessUnit_c, Market2_c, Platform_c, ProjectName_c, OrderNum, NtlAccount, Assist, BillToCountry, RequestDate, NeedByDate, CustSegment_c, OrderDate, TestMarketID, TestMarket, Pounds, Extract_Date ORDER BY EXTRACT_DATE DESC) = 1
+) AS x
+;
+
+CREATE TABLE landing.kinetic.sales_sherrigmquery_allcompanies_dedupe_20260623 AS
+SELECT *
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+QUALIFY ROW_NUMBER() OVER (PARTITION BY Company, InvoiceNum, InvoiceDate, InvoiceType, CreditMemo, CustNum, CustID, Name, InvoiceLine, PartNum, LineDesc, ProdCode, SellingShipQty, SalesUm, DocUnitPrice, DocExtPrice, DocDiscount, DocTotalMiscChrg, SalesPrice, DocUnitCost, DocExtCost, GM, GMpct, ShipToCustNum, ShipToNum, OTS, AddressID, ShipToName, ShipToAddress1, ShipToAddress2, ShipToAddress3, ShipToCity, ShipToState, ShipToZIP, ShipToCountry, SalesRepList, BusinessUnit, SoldToState, GroupCode, TerritoryID, Character03, MasterKey, Plant, Formula, Width, Thick, Area, SFSold, BaseForula, RouteToMarketCode, RouteToMarket, CustPlatformCode, CustPlatform, CustDescriptionCode, CustDescription, Branded, Market_c, Application_c, Form_c, Format_c, Brand_c, BusinessUnit_c, Market2_c, Platform_c, ProjectName_c, OrderNum, NtlAccount, Assist, BillToCountry, RequestDate, NeedByDate, CustSegment_c, OrderDate, TestMarketID, TestMarket, Pounds, Extract_Date ORDER BY EXTRACT_DATE DESC) = 1
+;
+
+-- 1170468
+SELECT COUNT(*)
+FROM landing.kinetic.sales_sherrigmquery_allcompanies_dedupe_20260623
+;
+
+-- TRUNCATE TABLE landing.kinetic.sales_sherrigmquery_allcompanies
+-- ;
+
+-- 1170468
+-- INSERT INTO landing.kinetic.sales_sherrigmquery_allcompanies
+-- SELECT * FROM landing.kinetic.sales_sherrigmquery_allcompanies_dedupe_20260623
+-- ;
+
+-- 148747
+SELECT COUNT(*)
+FROM landing_workato_test.kinetic.sales_sherrigmquery_allcompanies
+;
+
+-- 8934
+SELECT COUNT(*)
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE Extract_Date = '2026-06-22 13:00:00.000000'
+;
+
+-- 12558
+SELECT COUNT(*)
+FROM (
+SELECT *
+FROM landing_workato_test.kinetic.sales_sherrigmquery_allcompanies
+QUALIFY ROW_NUMBER() OVER (PARTITION BY Company, InvoiceNum, InvoiceDate, InvoiceType, CreditMemo, CustNum, CustID, Name, InvoiceLine, PartNum, LineDesc, ProdCode, SellingShipQty, SalesUm, DocUnitPrice, DocExtPrice, DocDiscount, DocTotalMiscChrg, SalesPrice, DocUnitCost, DocExtCost, GM, GMpct, ShipToCustNum, ShipToNum, OTS, ShipToName, ShipToAddress1, ShipToAddress2, ShipToAddress3, ShipToCity, ShipToState, ShipToZIP, ShipToCountry, SalesRepList, BusinessUnit, SoldToState, GroupCode, TerritoryID, Character03, MasterKey, Plant, Formula, Width, Thick, Area, SFSold, BaseForula, RouteToMarketCode, RouteToMarket, CustPlatformCode, CustPlatform, CustDescriptionCode, CustDescription, Branded, Market_c, Application_c, Form_c, Format_c, Brand_c, BusinessUnit_c, Market2_c, Platform_c, ProjectName_c, OrderNum, NtlAccount, Assist, BillToCountry, RequestDate, NeedByDate, CustSegment_c, OrderDate, TestMarketID, TestMarket ORDER BY EXTRACT_DATE DESC) = 1
+) AS x
+;
+
+--
+-- 24/06/2026
+--
+
+-- 2026-06-23T11:00:11.000+00:00	6829
+-- 2026-06-22T22:49:05.000+00:00	6270
+-- 2026-06-22T13:00:00.000+00:00	8934
+-- 2026-06-22T11:00:11.000+00:00	4068
+-- 2026-06-22T02:51:41.000+00:00	3709
+-- 2026-06-21T11:00:07.000+00:00	3709
+-- 2026-06-20T11:00:09.000+00:00	4192
+-- 2026-06-18T11:00:11.000+00:00	4812
+SELECT Extract_Date, COUNT(*)
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+GROUP BY Extract_Date
+ORDER BY 1 DESC
+;
+
+-- 2026-06-23	540
+-- 2026-06-22	1014
+-- 2026-06-20	156
+-- 2026-06-19	2476
+-- 2026-06-18	3377
+SELECT InvoiceDate, COUNT(*)
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+GROUP BY InvoiceDate
+ORDER BY 1 DESC
+;
+

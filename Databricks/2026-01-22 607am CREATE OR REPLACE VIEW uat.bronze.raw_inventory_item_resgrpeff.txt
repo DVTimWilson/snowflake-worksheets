@@ -1,0 +1,96 @@
+CREATE OR REPLACE VIEW uat.bronze.raw_inventory_item_resgrpeff AS
+(
+  SELECT
+    JobAsmbl_PartNum,
+    Part_PartDescription,
+    Part_ShortChar01,
+    Part_Number01,
+    Part_Number03,
+    Part_ShortChar06,
+    Part_PartWidth,
+    Part_ShortChar07,
+    Part_PartLength,
+    Part_ShortChar08,
+    Part_PartHeight,
+    Part_ShortChar05,
+    Calculated_IUM,
+    Calculated_StdEA2LF,
+    Calculated_ThicknessInches,
+    Calculated_LengthInches,
+    Calculated_VolumeCubicInch,
+    Calculated_Weight,
+    Calculated_ThicknessMMtoFT,
+    Calculated_WidthConvINtoFT,
+    Calculated_LinearFeetConv,
+    Calculated_CubicFTJob,
+    Calculated_WeightLbs,
+    Calculated_CubicFTJobV2,
+    Calculated_WeightLbs2,
+    EXTRACT_DATE
+  FROM
+    (
+      SELECT
+        JobAsmbl_PartNum,
+        Part_PartDescription,
+        Part_ShortChar01,
+        Part_Number01,
+        Part_Number03,
+        Part_ShortChar06,
+        Part_PartWidth,
+        Part_ShortChar07,
+        Part_PartLength,
+        Part_ShortChar08,
+        Part_PartHeight,
+        Part_ShortChar05,
+        Calculated_IUM,
+        Calculated_StdEA2LF,
+        Calculated_ThicknessInches,
+        Calculated_LengthInches,
+        Calculated_VolumeCubicInch,
+        Calculated_Weight,
+        Calculated_ThicknessMMtoFT,
+        Calculated_WidthConvINtoFT,
+        Calculated_LinearFeetConv,
+        Calculated_CubicFTJob,
+        Calculated_WeightLbs,
+        Calculated_CubicFTJobV2,
+        Calculated_WeightLbs2,
+        COALESCE(
+          TO_TIMESTAMP(EXTRACT_DATE), TO_TIMESTAMP('1900-01-01 00:00:00.000000')
+        ) AS EXTRACT_DATE,
+        ROW_NUMBER() OVER (
+            PARTITION BY
+              JobAsmbl_PartNum,
+              Part_PartDescription,
+              Part_ShortChar01,
+              Part_Number01,
+              Part_Number03,
+              Part_ShortChar06,
+              Part_PartWidth,
+              Part_ShortChar07,
+              Part_PartLength,
+              Part_ShortChar08,
+              Part_PartHeight,
+              Part_ShortChar05,
+              Calculated_IUM,
+              Calculated_StdEA2LF,
+              Calculated_ThicknessInches,
+              Calculated_LengthInches,
+              Calculated_VolumeCubicInch,
+              Calculated_Weight,
+              Calculated_ThicknessMMtoFT,
+              Calculated_WidthConvINtoFT,
+              Calculated_LinearFeetConv,
+              Calculated_CubicFTJob,
+              Calculated_WeightLbs,
+              Calculated_CubicFTJobV2,
+              Calculated_WeightLbs2
+            ORDER BY Extract_Date ASC
+          ) AS rn
+      FROM
+        `psa`.`kinetic`.`psa_resgrpeff`
+    ) AS rnselect
+  WHERE
+    rnselect.rn = 1
+)
+;

@@ -1,0 +1,129 @@
+-- 12/08/2025
+
+-- 2025-08-12T08:00:10.000+00:00	151
+SELECT EXTRACTDATE, COUNT(*)
+FROM landing_workato_test.kinetic.coparts
+GROUP BY EXTRACTDATE
+;
+
+-- 2025-08-12 01:00:18 -0700	673
+-- 2025-08-12 01:00:19 -0700	20
+-- 2025-08-11 17:34:22 -0700	610
+SELECT EXTRACT_DATE, COUNT(*)
+FROM landing_workato_test.kinetic.resgrpeff
+GROUP BY EXTRACT_DATE
+;
+
+-- No rows returned
+SELECT EXTRACT_DATE, COUNT(*)
+FROM landing_workato_test.kinetic.sales_sherrigmquery_allcompanies
+GROUP BY EXTRACT_DATE
+;
+
+-- Joe testing
+
+SELECT DISTINCT businessunit
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+;
+
+SELECT DISTINCT businessunit_c
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+;
+
+SELECT *
+FROM tim_wilson.gold_mfg.mart_labor
+WHERE DATE BETWEEN '2025-06-01' AND '2025-06-30'
+;
+
+SELECT SUM(TOTAL_LABOUR_HOURS)
+FROM tim_wilson.gold_mfg.mart_labor
+WHERE DATE BETWEEN '2025-06-01' AND '2025-06-30'
+;
+
+SELECT SUM(TOTAL_LABOUR_HOURS)
+FROM uat.gold_mfg.mart_labor
+WHERE DATE BETWEEN '2025-06-01' AND '2025-06-30'
+;
+
+DROP SCHEMA tim_wilson.gold_mfg CASCADE
+;
+
+-- 693
+SELECT COUNT(*)
+FROM landing_workato_test.kinetic.resgrpeff
+;
+
+-- 14/08/2025
+
+-- 497428
+SELECT COUNT(*)
+FROM landing_workato_test.kinetic.resgrpeff
+;
+
+-- 350009
+SELECT COUNT(*)
+FROM landing.kinetic.resgrpeff
+;
+
+-- 483
+SELECT DISTINCT EXTRACT_DATE
+FROM landing.kinetic.resgrpeff
+ORDER BY EXTRACT_DATE DESC
+;
+
+-- 73315
+SELECT COUNT(*)
+FROM landing.kinetic.coparts
+;
+
+-- 52
+SELECT DISTINCT EXTRACT_DATE
+FROM landing.kinetic.coparts
+ORDER BY EXTRACT_DATE DESC
+;
+
+-- 87376
+SELECT COUNT(*)
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+;
+
+-- 0
+-- 2439
+SELECT COUNT(*)
+FROM landing.kinetic.trialbalance_lastmonth
+;
+
+-- 0
+-- 2443
+SELECT COUNT(*)
+FROM landing.kinetic.trialbalance_thismonth
+;
+-- 1556861
+SELECT COUNT(*)
+FROM landing.dayforce.allocatedhoursandearnings
+;
+
+-- 845
+SELECT DISTINCT EXTRACT_DATE
+FROM landing.dayforce.allocatedhoursandearnings
+ORDER BY EXTRACT_DATE ASC
+;
+
+-- 35543
+SELECT COUNT(*)
+FROM landing.quickbooks.quickbooksstaging
+;
+
+-- 33
+SELECT COUNT(*)
+FROM landing.reftables.departmentmapping
+;
+
+
+SELECT CAST('2025-08-14 05:00:00.000000' AS TIMESTAMP)
+;
+
+UPDATE landing_workato_test.kinetic.resgrpeff_xxx
+SET EXTRACT_DATE = CAST('2025-08-14 05:00:00.000000' AS TIMESTAMP)
+;
+

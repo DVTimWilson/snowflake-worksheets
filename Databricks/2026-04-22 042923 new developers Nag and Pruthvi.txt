@@ -1,0 +1,45 @@
+-- Developer nag_ramkumar
+CREATE CATALOG IF NOT EXISTS nag_ramkumar
+MANAGED LOCATION 'abfss://unity-catalog-storage@ecoreucdatastorageacct01.dfs.core.windows.net/';
+
+GRANT ALL PRIVILEGES ON CATALOG nag_ramkumar TO `nramkumar@ecoreintl.com`
+;
+
+CREATE SCHEMA IF NOT EXISTS nag_ramkumar.nag_ramkumar
+;
+
+CREATE SCHEMA IF NOT EXISTS nag_ramkumar.meta
+;
+CREATE SCHEMA IF NOT EXISTS nag_ramkumar.bronze
+;
+CREATE SCHEMA IF NOT EXISTS nag_ramkumar.silver
+;
+CREATE SCHEMA IF NOT EXISTS nag_ramkumar.gold_mfg
+;
+CREATE SCHEMA IF NOT EXISTS nag_ramkumar.gold_coreview
+;
+CREATE SCHEMA IF NOT EXISTS nag_ramkumar.gold_sow4
+;
+
+-- Developer pruthvi_kaleru
+CREATE CATALOG IF NOT EXISTS pruthvi_kaleru
+MANAGED LOCATION 'abfss://unity-catalog-storage@ecoreucdatastorageacct01.dfs.core.windows.net/';
+
+GRANT ALL PRIVILEGES ON CATALOG pruthvi_kaleru TO `pkaleru@ecoreintl.com`
+;
+
+CREATE SCHEMA IF NOT EXISTS pruthvi_kaleru.pruthvi_kaleru
+;
+
+CREATE SCHEMA IF NOT EXISTS pruthvi_kaleru.meta
+;
+CREATE SCHEMA IF NOT EXISTS pruthvi_kaleru.bronze
+;
+CREATE SCHEMA IF NOT EXISTS pruthvi_kaleru.silver
+;
+CREATE SCHEMA IF NOT EXISTS pruthvi_kaleru.gold_mfg
+;
+CREATE SCHEMA IF NOT EXISTS pruthvi_kaleru.gold_coreview
+;
+CREATE SCHEMA IF NOT EXISTS pruthvi_kaleru.gold_sow4
+;

@@ -1,0 +1,279 @@
+CREATE OR REPLACE TABLE landing.sage.aturf_item_list_table(
+ ItemID string,
+ ItemDescription string,
+ ItemClass int,
+ Inactive int,
+ SubjectToCommission int,
+ DescriptionForSales string,
+ DescriptionForPurchases string,
+ LastUnitCost double,
+ GLSalesAccount string,
+ GLInventoryAccount string,
+ GLCOGSSalaryAcct string,
+ StockingUOM string,
+ VendorID string
+)
+;
+
+COPY INTO landing.sage.aturf_item_list_table
+FROM '/Volumes/landing/default/raw_data/sage/aturf_item_list_table.tsv'
+FILEFORMAT = CSV
+FORMAT_OPTIONS ("header" = "true",  "delimiter" = "\t", "inferSchema" = "true")
+;
+
+CREATE OR REPLACE TABLE landing.sage.aturf_contact_list(
+ Customer_ID string,
+ Contact_First_Name string,
+ Contact_Middle_Initial string,
+ Contact_Last_Name string,
+ Company_Name string,
+ Job_Title string,
+ Telephone_1 string,
+ Telephone_2 string,
+ Fax string,
+ E_mail string,
+ Gender int,
+ Bill_to_Contact int,
+ Address int,
+ Default_Ship_To_Contact int,
+ Display_Name string
+)
+;
+
+-- Empty table, there is no data for landing.sage.aturf_contact_list
+
+CREATE OR REPLACE TABLE landing.sage.aturf_customer_list(
+ CustomerID string,
+ CustomerName string,
+ Prospect int,
+ Inactive int,
+ BillToContactFirstName string,
+ BillToContactLastName string,
+ BillToAddressLineOne string,
+ BillToAddressLineTwo string,
+ BillToCity string,
+ BillToState string,
+ BillToZip string,
+ BillToCountry string,
+ ShipToAddressLineOne string,
+ ShipToAddressLineTwo string,
+ ShipToCity string,
+ ShipToState string,
+ ShipToZip string,
+ ShipToCountry string,
+ Telephone1 string,
+ Telephone2 string,
+ FaxNumber string,
+ CustomerEmail string,
+ SalesRepresentativeID string,
+ GLSalesAccount string,
+ CustomerSinceDate date,
+ CustomerWebSite string
+)
+;
+
+COPY INTO landing.sage.aturf_customer_list
+FROM '/Volumes/landing/default/raw_data/sage/aturf_customer_list.tsv'
+FILEFORMAT = CSV
+FORMAT_OPTIONS ("header" = "true",  "delimiter" = "\t", "inferSchema" = "true")
+;
+
+CREATE OR REPLACE TABLE landing.sage.aturf_general_ledger(
+ CompanyCode string,
+ Date date,
+ Reference string,
+ NumberOfDistributions int,
+ GLAccount string,
+ Description string,
+ Amount double,
+ JobID string
+)
+;
+
+COPY INTO landing.sage.aturf_general_ledger
+FROM '/Volumes/landing/default/raw_data/sage/aturf_general_ledger.tsv'
+FILEFORMAT = CSV
+FORMAT_OPTIONS ("header" = "true",  "delimiter" = "\t", "inferSchema" = "true")
+;
+
+CREATE OR REPLACE TABLE landing.sage.aturf_item_list_table(
+ ItemID string,
+ ItemDescription string,
+ ItemClass int,
+ Inactive int,
+ SubjectToCommission int,
+ DescriptionForSales string,
+ DescriptionForPurchases string,
+ LastUnitCost double,
+ GLSalesAccount string,
+ GLInventoryAccount string,
+ GLCOGSSalaryAcct string,
+ StockingUOM string,
+ VendorID string
+)
+;
+
+COPY INTO landing.sage.aturf_item_list_table
+FROM '/Volumes/landing/default/raw_data/sage/aturf_item_list_table.tsv'
+FILEFORMAT = CSV
+FORMAT_OPTIONS ("header" = "true",  "delimiter" = "\t", "inferSchema" = "true")
+;
+
+CREATE OR REPLACE TABLE landing.sage.aturf_job_list(
+ JobID string,
+ JobDescription string,
+ Inactive int,
+ Supervisor string,
+ CustomerID string,
+ AddressLine1 string,
+ AddressLine2 string,
+ City string,
+ State string,
+ Zip string,
+ Country string,
+ StartDate date,
+ ProjectedEndDate date,
+ ActualEndDate date,
+ JobStatus string,
+ JobType string,
+ PONumber string,
+ PercentComplete int,
+ SecondContact string,
+ JobNote string
+)
+;
+
+COPY INTO landing.sage.aturf_job_list
+FROM '/Volumes/landing/default/raw_data/sage/aturf_job_list.tsv'
+FILEFORMAT = CSV
+FORMAT_OPTIONS ("header" = "true",  "delimiter" = "\t", "inferSchema" = "true")
+;
+
+CREATE OR REPLACE TABLE landing.sage.aturf_purchase_journal(
+ CompanyCode string,
+ VendorID string,
+ VendorName string,
+ InvoiceCMNum string,
+ ApplyToInvoiceNum string,
+ CreditMemo int,
+ Date date,
+ CustomerSONum string,
+ CustomerID string,
+ CustomerInvoiceNum int,
+ ShipToName string,
+ ShipToAddressLine1 string,
+ ShipToAddressLine2 string,
+ ShipToCity string,
+ ShipToState string,
+ ShipToZip string,
+ ShipToCountry string,
+ DateDue date,
+ DiscountDate date,
+ DiscountAmount bigint,
+ APAccount string,
+ APAmount double,
+ ShipVia string,
+ NumDistributions int,
+ PONum string,
+ Quantity double,
+ ItemID string,
+ UOM string,
+ Description string,
+ GLAccount string,
+ UnitPrice double,
+ Weight double,
+ Amount double,
+ JobID string
+)
+;
+
+COPY INTO landing.sage.aturf_purchase_journal
+FROM '/Volumes/landing/default/raw_data/sage/aturf_purchase_journal.tsv'
+FILEFORMAT = CSV
+FORMAT_OPTIONS ("header" = "true",  "delimiter" = "\t", "inferSchema" = "true")
+;
+
+CREATE OR REPLACE TABLE landing.sage.aturf_sales_journal(
+ CompanyCode string,
+ CustomerID string,
+ InvoiceCMNum string,
+ ApplyToInvoiceNum string,
+ CreditMemo int,
+ ProgressBillingInvoice int,
+ Date date,
+ ShipBy date,
+ Quote int,
+ QuoteNum string,
+ QuoteGoodThruDate date,
+ DropShip int,
+ ShipToName string,
+ ShipToAddressLine1 string,
+ ShipToAddressLine2 string,
+ ShipToCity string,
+ ShipToState string,
+ ShipToZip string,
+ ShipToCountry string,
+ CustomerPO string,
+ ShipVia string,
+ ShipDate date,
+ DateDue date,
+ DiscountAmount bigint,
+ DiscountDate date,
+ DisplayedTerms string,
+ SalesRepresentativeID string,
+ InvoiceNote string,
+ StatementNote string,
+ Quantity decimal(10, 2),
+ Description string,
+ GLAccount string,
+ UnitPrice decimal(20, 2),
+ Weight decimal(20, 8),
+ Amount decimal(20, 2),
+ UOM string
+)
+;
+
+COPY INTO landing.sage.aturf_sales_journal
+FROM '/Volumes/landing/default/raw_data/sage/aturf_sales_journal.tsv'
+FILEFORMAT = CSV
+FORMAT_OPTIONS ("header" = "true",  "delimiter" = "\t", "inferSchema" = "true")
+;
+
+CREATE OR REPLACE TABLE landing.sage.aturf_sales_orders(
+ CompanyCode string,
+ CustomerID string,
+ Date date,
+ ShipBy date,
+ QuoteNum string,
+ DropShip int,
+ ShipToName string,
+ ShipToAddressLine1 string,
+ ShipToAddressLine2 string,
+ ShipToCity string,
+ ShipToState string,
+ ShipToZip string,
+ ShipToCountry string,
+ CustomerPO string,
+ ShipVia string,
+ DiscountAmount bigint,
+ DisplayedTerms string,
+ SalesRepresentativeID string,
+ InvoiceNote string,
+ StatementNote string,
+ Quantity decimal(10, 2),
+ Description string,
+ GLAccount string,
+ UnitPrice decimal(20, 2),
+ Weight decimal(20, 8),
+ Amount decimal(20, 2),
+ UOM string
+)
+;
+
+COPY INTO landing.sage.aturf_sales_orders
+FROM '/Volumes/landing/default/raw_data/sage/aturf_sales_orders.tsv'
+FILEFORMAT = CSV
+FORMAT_OPTIONS ("header" = "true",  "delimiter" = "\t", "inferSchema" = "true")
+;
+
+ 

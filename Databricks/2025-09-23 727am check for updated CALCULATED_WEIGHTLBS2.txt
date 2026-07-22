@@ -1,0 +1,68 @@
+SELECT 'old', SUM(Calculated_WeightLbs), SUM(Calculated_WeightLbs2), SUM(LaborDtl_LaborQty), SUM(Calculated_LaborQtyLF), COUNT(*)
+FROM (SELECT DISTINCT * FROM landing.static_backup.resgrpeff_new_20250901)
+WHERE LaborDtl_ClockInDate = '2025-07-29'
+
+UNION ALL
+
+SELECT 'landing', SUM(Calculated_WeightLbs), SUM(Calculated_WeightLbs2), SUM(LaborDtl_LaborQty), SUM(Calculated_LaborQtyLF), COUNT(*)
+FROM (SELECT DISTINCT * FROM landing.kinetic.resgrpeff)
+WHERE LaborDtl_ClockInDate = '2025-07-29'
+
+UNION ALL
+
+SELECT 'psa_single_extract_date', SUM(Calculated_WeightLbs), SUM(Calculated_WeightLbs2), SUM(LaborDtl_LaborQty), SUM(Calculated_LaborQtyLF), COUNT(*)
+FROM (SELECT DISTINCT * FROM psa.kinetic.psa_resgrpeff WHERE DATE(Extract_Date) = '2025-09-19')
+WHERE LaborDtl_ClockInDate = '2025-07-29'
+
+UNION ALL
+
+SELECT 'psa_all_extract_dates', SUM(Calculated_WeightLbs), SUM(Calculated_WeightLbs2), SUM(LaborDtl_LaborQty), SUM(Calculated_LaborQtyLF), COUNT(*)
+FROM (SELECT DISTINCT CALCULATED_JCDEPT
+            , CALCULATED_JCDEPTDESC
+            , CALCULATED_WEIGHTLBS
+            , CALCULATED_WEIGHTLBS2
+            , CALCULATED_LABORQTYLF
+            , JCDEPT_DESCRIPTION
+            , JCDEPT_JCDEPT
+            , JOBASMBL_PARTNUM
+            , JOBOPER_IUM
+            , JOBOPER_RUNQTY
+            , LABORDTL_ASSEMBLYSEQ
+            , LABORDTL_CLOCKINDATE
+            , LABORDTL_DSPCLOCKINTIME
+            , LABORDTL_DSPCLOCKOUTTIME
+            , UPPER(LABORDTL_EMPLOYEENUM)
+            , LABORDTL_INDIRECTCODE
+            , LABORDTL_JCDEPT
+            , UPPER(LABORDTL_JOBNUM)
+            , LABORDTL_LABORHRS
+            , LABORDTL_LABORNOTE
+            , LABORDTL_LABORQTY
+            , LABORDTL_LABORTYPE
+            , LABORDTL_OPCODE
+            , LABORDTL_OPRSEQ
+            , LABORDTL_RESOURCEGRPID
+            , LABORDTL_RESOURCEID
+            , LABORDTL_SCRAPQTY
+            , LABORDTL_SCRAPREASONCODE
+            , LABORDTL_SHIFT
+            , LABORHED_CLOCKINDATE
+            , PART_PARTDESCRIPTION
+            , PLANT_NAME
+            , PLANT_PLANT
+            , REASON_DESCRIPTION
+            , RESGRPDEPT_DESCRIPTION
+            , RESGRPDEPT_JCDEPT
+            , RESOURCE_DESCRIPTION
+            , RESOURCEGROUP_DESCRIPTION FROM psa.kinetic.psa_resgrpeff)
+WHERE LaborDtl_ClockInDate = '2025-07-29'
+;
+
+SELECT *
+FROM landing.kinetic.resgrpeff
+WHERE LaborDtl_ClockInDate = '2025-07-29'
+;
+
+SELECT MIN(LaborDtl_ClockInDate)
+FROM landing.kinetic.resgrpeff
+;

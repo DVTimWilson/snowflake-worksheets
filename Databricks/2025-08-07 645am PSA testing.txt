@@ -1,0 +1,26 @@
+SELECT MD5('999')
+;
+
+SELECT COMPANY_HK, HEX(COMPANY_HK)
+FROM tim_wilson.bronze.stg_company
+;
+
+SELECT COUNT(*)
+FROM tim_wilson.bronze.src_sales_sherrigmquery_allcompanies
+;
+
+SELECT COUNT(*)
+FROM tim_wilson.psa_kinetic.psa_sales_sherrigmquery_allcompanies
+;
+
+TRUNCATE TABLE tim_wilson.psa_kinetic.psa_sales_sherrigmquery_allcompanies
+;
+
+DROP TABLE tim_wilson.psa_kinetic.psa_sales_sherrigmquery_allcompanies
+;
+
+TRUNCATE TABLE tim_wilson.psa_quickbooks.psa_quickbooksstaging
+;
+
+DROP TABLE tim_wilson.psa_quickbooks.psa_quickbooksstaging
+;

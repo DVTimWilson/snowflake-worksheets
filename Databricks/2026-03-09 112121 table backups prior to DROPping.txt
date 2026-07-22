@@ -1,0 +1,40 @@
+-- Table backups
+
+-- develop.gold_coreview. mart_outbound_transactions_v1
+-- develop.gold_coreview. mart_outbound_transactions_v2
+-- uat.gold_coreview. mart_outbound_transactions_v1
+-- uat.gold_coreview. mart_outbound_transactions_v2
+
+CREATE SCHEMA develop.backup
+;
+
+ALTER SCHEMA develop.backup SET OWNER TO `ahiggs@ecoreintl.com`
+;
+
+CREATE TABLE develop.backup.mart_outbound_transactions_v1_20260309
+SELECT *
+FROM develop.gold_coreview. mart_outbound_transactions_v1
+;
+
+CREATE TABLE develop.backup.mart_outbound_transactions_v2_20260309
+SELECT *
+FROM develop.gold_coreview. mart_outbound_transactions_v2
+;
+
+CREATE SCHEMA uat.backup
+;
+
+ALTER SCHEMA uat.backup SET OWNER TO `ahiggs@ecoreintl.com`
+;
+
+CREATE TABLE uat.backup.mart_outbound_transactions_v1_20260309
+SELECT *
+FROM uat.gold_coreview. mart_outbound_transactions_v1
+;
+
+CREATE TABLE uat.backup.mart_outbound_transactions_v2_20260309
+SELECT *
+FROM uat.gold_coreview. mart_outbound_transactions_v2
+;
+
+

@@ -1,0 +1,58 @@
+-- landing.reftables.consolidated_part_master
+-- landing.reftables.consolidated_part_master_2026_07_16
+
+ALTER TABLE landing.reftables.consolidated_part_master_2026_07_16
+SET TBLPROPERTIES ('delta.columnMapping.mode' = 'name')
+;
+
+ALTER TABLE landing.reftables.consolidated_part_master_2026_07_16
+ADD COLUMN EXTRACT_DATE TIMESTAMP
+;
+
+-- 62155
+UPDATE landing.reftables.consolidated_part_master_2026_07_16
+SET EXTRACT_DATE = TIMESTAMP('2026-07-17T10:00:00.000000+00:00')
+;
+
+-- 2026-07-13T12:00:08.118+00:00
+SELECT MAX(EXTRACT_DATE)
+FROM landing.reftables.consolidated_part_master
+;
+
+-- 49999
+SELECT COUNT(*)
+FROM landing.reftables.consolidated_part_master
+;
+
+-- System	Company	Part_Num	Part_Description	Part_IUM	Class_ID	Type_Code	Part_PUM	Part_Sales_UM	Part_Inactive	LBs_Per_IUM	L0_Super_BU	L1_BU	L2_Category	L3_Stage	L4_Type	Comment	DD_Note_0212	Reviewer	Extract_Date
+SELECT *
+FROM landing.reftables.consolidated_part_master
+LIMIT 1
+;
+
+SELECT *
+FROM landing.reftables.consolidated_part_master_2026_07_16
+LIMIT 1
+;
+
+INSERT INTO landing.reftables.consolidated_part_master
+(System, Company, Part_Num, Part_Description, Part_IUM, Class_ID, Type_Code, Part_PUM, Part_Sales_UM, Part_Inactive, LBs_Per_IUM, L0_Super_BU, L1_BU, L2_Category, L3_Stage, L4_Type, Comment, DD_Note_0212, Reviewer, Extract_Date)
+SELECT System, Company, PartNum, `Part Description`, Part_IUM, `Class ID`, `Type Code`, Part_PUM, Part_SalesUM, Part_Inactive, ` LBs per IUM `, `L0 - Super BU`, `L1 - BU`, `L2 - Category`, `L3 - Stage`, `L4 - Type`, Comment, `DD Note 02/12`, Reviewer, Extract_Date
+FROM landing.reftables.consolidated_part_master_2026_07_16
+;
+
+-- 112154
+SELECT COUNT(*)
+FROM landing.reftables.consolidated_part_master
+;
+
+SELECT *
+FROM uat.silver.sat_outbound_invoice_kinetic_latest
+WHERE INVOICENUM = '716824'
+;
+
+SELECT *
+FROM uat.silver.br_outbound_invoice_sherri
+-- WHERE INVOICE_NUMBER = '716824'
+WHERE INVOICE_NUMBER = '230465'
+;

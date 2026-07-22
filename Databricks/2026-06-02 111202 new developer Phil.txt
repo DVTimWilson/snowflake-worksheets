@@ -1,0 +1,24 @@
+-- Developer ellis_mordecai
+CREATE CATALOG IF NOT EXISTS ellis_mordecai
+MANAGED LOCATION 'abfss://unity-catalog-storage@ecoreucdatastorageacct01.dfs.core.windows.net/';
+
+GRANT ALL PRIVILEGES ON CATALOG ellis_mordecai TO `ejmordecai@ecoreintl.com`
+;
+
+CREATE SCHEMA IF NOT EXISTS ellis_mordecai.ellis_mordecai
+;
+
+CREATE SCHEMA IF NOT EXISTS ellis_mordecai.meta
+;
+CREATE SCHEMA IF NOT EXISTS ellis_mordecai.bronze
+;
+CREATE SCHEMA IF NOT EXISTS ellis_mordecai.silver
+;
+CREATE SCHEMA IF NOT EXISTS ellis_mordecai.gold_mfg
+;
+CREATE SCHEMA IF NOT EXISTS ellis_mordecai.gold_coreview
+;
+CREATE SCHEMA IF NOT EXISTS ellis_mordecai.gold_sow4
+;
+CREATE SCHEMA IF NOT EXISTS ellis_mordecai.gold_sow6
+;

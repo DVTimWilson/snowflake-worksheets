@@ -1,0 +1,84 @@
+ALTER TABLE tim_wilson.silver.sat_orderdtl_kinetic
+SET TBLPROPERTIES ('delta.columnMapping.mode' = 'name')
+;
+
+ALTER TABLE tim_wilson.silver.sat_orderdtl_kinetic
+RENAME COLUMN `ORDER_LINE_HK` TO `ORDERDTL_HK`
+;
+
+ALTER TABLE tim_wilson.silver.sat_orderrel_kinetic
+SET TBLPROPERTIES ('delta.columnMapping.mode' = 'name')
+;
+
+ALTER TABLE tim_wilson.silver.sat_orderrel_kinetic
+RENAME COLUMN `ORDER_LINE_HK` TO `ORDERREL_HK`
+;
+
+
+ALTER TABLE tim_wilson.silver.sat_orderdtl_kinetic
+RENAME COLUMN `ORDERDTL_HK` TO `ORDER_LINE_HK`
+;
+
+ALTER TABLE tim_wilson.silver.sat_orderrel_kinetic
+RENAME COLUMN `ORDERREL_HK` TO `ORDER_LINE_HK`
+;
+
+--
+-- DEVELOP
+--
+
+ALTER TABLE develop.silver.sat_orderdtl_kinetic
+SET TBLPROPERTIES ('delta.columnMapping.mode' = 'name')
+;
+
+ALTER TABLE develop.silver.sat_orderdtl_kinetic
+RENAME COLUMN `ORDER_LINE_HK` TO `ORDERDTL_HK`
+;
+
+ALTER TABLE develop.silver.sat_orderrel_kinetic
+SET TBLPROPERTIES ('delta.columnMapping.mode' = 'name')
+;
+
+ALTER TABLE develop.silver.sat_orderrel_kinetic
+RENAME COLUMN `ORDER_LINE_HK` TO `ORDERREL_HK`
+;
+
+--
+-- UAT
+--
+
+ALTER TABLE uat.silver.sat_orderdtl_kinetic
+SET TBLPROPERTIES ('delta.columnMapping.mode' = 'name')
+;
+
+ALTER TABLE uat.silver.sat_orderdtl_kinetic
+RENAME COLUMN `ORDER_LINE_HK` TO `ORDERDTL_HK`
+;
+
+ALTER TABLE uat.silver.sat_orderrel_kinetic
+SET TBLPROPERTIES ('delta.columnMapping.mode' = 'name')
+;
+
+ALTER TABLE uat.silver.sat_orderrel_kinetic
+RENAME COLUMN `ORDER_LINE_HK` TO `ORDERREL_HK`
+;
+
+--
+-- PRODUCTION
+--
+
+ALTER TABLE production.silver.sat_orderdtl_kinetic
+SET TBLPROPERTIES ('delta.columnMapping.mode' = 'name')
+;
+
+ALTER TABLE production.silver.sat_orderdtl_kinetic
+RENAME COLUMN `ORDER_LINE_HK` TO `ORDERDTL_HK`
+;
+
+ALTER TABLE production.silver.sat_orderrel_kinetic
+SET TBLPROPERTIES ('delta.columnMapping.mode' = 'name')
+;
+
+ALTER TABLE production.silver.sat_orderrel_kinetic
+RENAME COLUMN `ORDER_LINE_HK` TO `ORDERREL_HK`
+;

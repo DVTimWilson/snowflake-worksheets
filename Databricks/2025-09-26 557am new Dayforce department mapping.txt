@@ -1,0 +1,83 @@
+-- 137
+SELECT *
+FROM landing.reftables.dayforce_with_kinetic_department_mapping
+;
+
+-- 81
+SELECT *
+FROM landing.reftables.departmentmapping
+;
+
+-- 137 - 81 = 56
+
+-- 56
+SELECT HOME_DEPARTMENT
+FROM landing.reftables.dayforce_with_kinetic_department_mapping
+EXCEPT
+SELECT ALLOCATED_DEPARTMENT
+FROM landing.reftables.departmentmapping
+ORDER BY 1
+;
+
+-- 15
+SELECT ALLOCATED_DEPARTMENT
+FROM landing.reftables.departmentmapping
+EXCEPT
+SELECT HOME_DEPARTMENT
+FROM landing.reftables.dayforce_with_kinetic_department_mapping
+ORDER BY 1
+;
+
+-- 58
+SELECT *
+FROM landing.reftables.dayforce_with_kinetic_department_mapping AS new
+LEFT OUTER JOIN landing.reftables.departmentmapping AS old
+ON new.HOME_DEPARTMENT = old.ALLOCATED_DEPARTMENT
+WHERE old.ALLOCATED_DEPARTMENT IS NULL
+ORDER BY HOME_DEPARTMENT
+;
+
+SELECT *
+FROM landing.dayforce.allocatedhoursandearnings
+WHERE UPPER(Home_Department) != UPPER(Allocated_Department)
+;
+
+-- 254
+SELECT DISTINCT UPPER(Home_Department), UPPER(Allocated_Department)
+FROM landing.dayforce.allocatedhoursandearnings
+;
+
+-- 137
+SELECT DISTINCT UPPER(Home_Department)
+FROM landing.dayforce.allocatedhoursandearnings
+ORDER BY 1
+;
+
+-- 47
+SELECT DISTINCT UPPER(Home_Ledger_Code)
+FROM landing.dayforce.allocatedhoursandearnings
+ORDER BY 1
+;
+
+-- 165
+SELECT DISTINCT UPPER(Allocated_Department)
+FROM landing.dayforce.allocatedhoursandearnings
+ORDER BY 1
+;
+
+-- 68
+SELECT DISTINCT UPPER(Allocated_Ledger_Code)
+FROM landing.dayforce.allocatedhoursandearnings
+ORDER BY 1
+;
+
+-- 86 are these home_ledger_code s?
+SELECT DISTINCT CODE
+FROM landing.reftables.department_trial_balance_reference
+;
+
+-- 81
+SELECT *
+FROM landing.reftables.departmentmapping
+ORDER BY ALLOCATED_DEPARTMENT
+;

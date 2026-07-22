@@ -1,0 +1,34 @@
+-- 0. Create groups and service principals either via Databricks account pages or via Databricks CLI or Python script
+-- dbt_service (service principal, `362892eb-ea7e-4ba2-a7d8-dd555707a02a`)
+-- vault_admin (group)
+-- developer (group)
+-- mfg_user (group)
+
+-- 1. Create the Unity Catalog
+CREATE CATALOG IF NOT EXISTS develop
+MANAGED LOCATION 'abfss://unity-catalog-storage@dbstoragehqjgibie3qise.dfs.core.windows.net/4248501107399994'
+;
+
+-- 2. Create Schemas
+CREATE SCHEMA IF NOT EXISTS develop.landing
+;
+CREATE SCHEMA IF NOT EXISTS develop.bronze
+;
+CREATE SCHEMA IF NOT EXISTS develop.silver
+;
+CREATE SCHEMA IF NOT EXISTS develop.gold_mfg
+;
+
+-- 3. Create Roles
+-- See 0. above: 'use Databricks built in access control features'
+
+-- 4. GRANT privileges
+GRANT ALL PRIVILEGES ON CATALOG develop TO vault_admin
+;
+
+GRANT APPLY TAG, BROWSE, CREATE SCHEMA, USE CATALOG, CREATE FUNCTION, CREATE TABLE, CREATE MATERIALIZED VIEW, CREATE MODEL, CREATE VOLUME, EXTERNAL USE SCHEMA, READ VOLUME, REFRESH, WRITE VOLUME, EXECUTE, MANAGE, MODIFY, SELECT, USE SCHEMA ON CATALOG develop TO `362892eb-ea7e-4ba2-a7d8-dd555707a02a`
+;
+
+GRANT APPLY TAG, BROWSE, CREATE SCHEMA, USE CATALOG, CREATE FUNCTION, CREATE TABLE, CREATE MATERIALIZED VIEW, CREATE MODEL, CREATE VOLUME, EXTERNAL USE SCHEMA, READ VOLUME, REFRESH, WRITE VOLUME, EXECUTE, MANAGE, MODIFY, SELECT, USE SCHEMA ON CATALOG develop TO developer
+;
+

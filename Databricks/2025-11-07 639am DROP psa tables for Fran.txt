@@ -1,0 +1,52 @@
+CREATE TABLE psa.backup.psa_resgrpeff_20251105
+AS SELECT * FROM psa.kinetic.psa_resgrpeff_20251105
+;
+
+-- DROP TABLE psa.kinetic.psa_resgrpeff_20251105
+;
+
+-- DROP TABLE psa.kinetic.psa_resgrpeff
+;
+
+CREATE TABLE psa.backup.psa_master_product_categories_kinetic_ref_20251107
+AS SELECT * FROM psa.refs.psa_master_product_categories_kinetic_ref
+;
+
+-- DROP TABLE psa.refs.psa_master_product_categories_kinetic_ref
+;
+
+CREATE TABLE psa.backup.psa_master_product_categories_kinetic_ref_20251119
+AS SELECT * FROM psa.refs.psa_master_product_categories_kinetic_ref
+;
+
+-- DROP TABLE psa.refs.psa_master_product_categories_kinetic_ref
+;
+
+CREATE TABLE psa.backup.psa_master_product_categories_non_kinetic_ref_20251119
+AS SELECT * FROM psa.refs.psa_master_product_categories_non_kinetic_ref
+;
+
+-- DROP TABLE psa.refs.psa_master_product_categories_non_kinetic_ref
+;
+
+CREATE TABLE psa.backup.psa_orderhed_20251204
+AS SELECT * FROM psa.kinetic.psa_orderhed
+;
+
+--DROP TABLE psa.kinetic.psa_orderhed
+;
+
+CREATE TABLE psa.backup.psa_quickbooks_staging_etr_v2_20251208
+AS SELECT * FROM psa.quickbooks.psa_quickbooks_staging_etr_v2
+;
+
+--DROP TABLE psa.quickbooks.psa_quickbooks_staging_etr_v2
+;
+
+CREATE TABLE psa.backup.psa_master_product_categories_non_kinetic_ref_20251210
+AS SELECT * FROM psa.refs.psa_master_product_categories_non_kinetic_ref
+;
+
+-- DROP TABLE psa.refs.psa_master_product_categories_non_kinetic_ref
+;
+

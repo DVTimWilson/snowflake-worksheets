@@ -1,0 +1,34 @@
+SELECT DISTINCT EXTRACT_DATE
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+ORDER BY EXTRACT_DATE DESC;
+
+-- 2025-12-10T15:16:19.000+00:00
+-- 2025-12-10T15:07:59.000+00:00
+
+-- 10876
+SELECT COUNT(*)
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE EXTRACT_DATE = '2025-12-10T15:16:19.000+00:00'
+;
+
+-- 9560
+SELECT COUNT(*)
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE EXTRACT_DATE = '2025-12-10T15:07:59.000+00:00'
+;
+
+UPDATE landing.kinetic.sales_sherrigmquery_allcompanies
+SET EXTRACT_DATE = '2025-12-10T15:16:19.000+00:00'
+WHERE EXTRACT_DATE = '2025-12-10T15:07:59.000+00:00'
+;
+
+SELECT *
+FROM develop.meta.waterlevels
+WHERE TABLE_NAME LIKE '%sales_sherrigmquery_allcompanies%'
+ORDER BY WATERLEVEL_TS DESC, STARTED_AT_TS DESC
+;
+
+SELECT DISTINCT Extract_Date
+FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+ORDER BY Extract_Date DESC
+;

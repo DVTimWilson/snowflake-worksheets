@@ -1,0 +1,258 @@
+SELECT *
+FROM landing.information_schema.columns
+WHERE table_name = 'parttran'
+ORDER BY ordinal_position
+;
+
+
+Company
+TranNum
+PartNum
+WareHouseCode
+BinNum
+TranClass
+TranType
+InventoryTrans
+TranDate
+TranQty
+UM
+JobNum
+PackLine
+PONum
+PackNum
+POLine
+PORelNum
+OrderNum
+OrderLine
+OrderRelNum
+BinNum2
+PartDescription
+RevisionNum
+VendorNum
+InvoiceNum
+InvoiceLine
+FiscalYear
+FiscalPeriod
+SysDate
+SysRowID
+MtlUnitCost
+LbrUnitCost
+BurUnitCost
+SubUnitCost
+MtlBurUnitCost
+ExtCost
+CostMethod
+InvAdjSrc
+InvAdjReason
+Plant
+GLTrans
+PostedToGL
+
+;
+
+-- 2197104
+SELECT COUNT(*)
+FROM landing.kinetic.parttran
+;
+
+-- 2197082
+SELECT COUNT(*)
+FROM (
+SELECT DISTINCT *
+FROM landing.kinetic.parttran
+) AS x
+;
+
+-- 2197082
+SELECT COUNT(DISTINCT TranNum)
+FROM landing.kinetic.parttran
+;
+
+-- 2197082
+SELECT TranNum, COUNT(*)
+FROM landing.kinetic.parttran
+GROUP BY TranNum
+HAVING COUNT(*) > 1
+;
+
+SELECT *
+FROM landing.kinetic.parttran
+WHERE TranNum = 15575100
+;
+
+-- 2197082
+SELECT COUNT(*)
+FROM (
+SELECT DISTINCT Company, TranNum, PartNum, WareHouseCode, BinNum, JobNum
+FROM landing.kinetic.parttran
+) AS x
+;
+
+DROP TABLE tim_wilson.psa_kinetic.psa_inventory_transactions
+;
+
+-- 2197082
+SELECT COUNT(*)
+FROM tim_wilson.psa_kinetic.psa_inventory_transactions
+;
+
+--
+-- 26/02/2026
+--
+
+-- 2197082
+SELECT COUNT(*)
+FROM tim_wilson.silver.sat_inventory_transactions
+;
+
+-- 2197082
+SELECT COUNT(*)
+FROM tim_wilson.silver.sat_inventory_transactions_latest
+;
+
+--
+-- 27/02/2026
+--
+
+SELECT *
+FROM tim_wilson.gold_coreview.mart_inventory_transactions
+;
+
+SELECT *
+FROM tim_wilson.bronze.stg_inventory_transactions
+-- WHERE WAREHOUSECODE = ''
+-- WHERE BINNUM = ''
+-- WHERE LOTNUM = ''
+-- WHERE PLANT = ''
+-- WHERE PARTNUM = ''
+WHERE LEN(PARTNUM) < 3;
+
+--
+-- 02/03/2026
+--
+
+CREATE TABLE landing.backup.parttran_20260302 AS
+SELECT * FROM landing.kinetic.parttran
+;
+
+SELECT DISTINCT RECORD_SOURCE
+FROM tim_wilson.silver.hub_warehouse_location
+;
+
+with left_table as (
+
+  select
+    WAREHOUSE_LOCATION_HK as id
+
+  from `tim_wilson`.`silver`.`lnk_inventory_stock_levels`
+
+  where WAREHOUSE_LOCATION_HK is not null
+    and RECORD_SOURCE = 'KINETIC.STOCKSTAT'
+
+),
+
+right_table as (
+
+  select
+    WAREHOUSE_LOCATION_HK as id
+
+  from `tim_wilson`.`silver`.`hub_warehouse_location`
+
+  where WAREHOUSE_LOCATION_HK is not null
+    and RECORD_SOURCE = 'KINETIC.STOCKSTAT'
+
+),
+
+exceptions as (
+
+  select
+    left_table.id
+
+  from left_table
+
+  left outer join right_table
+         on left_table.id = right_table.id
+
+         where right_table.id is null
+
+)
+
+select * from exceptions
+LEFT OUTER JOIN `tim_wilson`.`silver`.`lnk_inventory_stock_levels` AS x
+ON exceptions.id = x.WAREHOUSE_LOCATION_HK
+
+;
+
+SELECT *
+FROM `tim_wilson`.`silver`.`hub_warehouse_location`
+WHERE WAREHOUSE_LOCATION_HK = UNBASE64('N4KyM2UolTkhcP4ptO3Qyg==')
+;
+
+SELECT *
+FROM `tim_wilson`.`silver`.`lnk_inventory_stock_levels`
+WHERE WAREHOUSE_LOCATION_HK = UNBASE64('N4KyM2UolTkhcP4ptO3Qyg==')
+;
+
+SELECT *
+FROM `tim_wilson`.`silver`.`lnk_inventory_transactions`
+WHERE WAREHOUSE_LOCATION_HK = UNBASE64('N4KyM2UolTkhcP4ptO3Qyg==')
+;
+
+SELECT *
+FROM `tim_wilson`.`bronze`.`stg_inventory_stockstat`
+WHERE WAREHOUSE_LOCATION_HK = UNBASE64('N4KyM2UolTkhcP4ptO3Qyg==')
+;
+
+SELECT *
+FROM `tim_wilson`.`bronze`.`stg_inventory_transactions`
+WHERE WAREHOUSE_LOCATION_HK = UNBASE64('N4KyM2UolTkhcP4ptO3Qyg==')
+;
+
+-- 2412640
+  select
+COUNT(*)
+
+  from `tim_wilson`.`silver`.`lnk_inventory_stock_levels`
+
+  where WAREHOUSE_LOCATION_HK is not null
+    and RECORD_SOURCE = 'KINETIC.STOCKSTAT'
+    ;
+
+-- 50965
+select
+COUNT(DISTINCT WAREHOUSE_LOCATION_HK)
+
+  from `tim_wilson`.`silver`.`lnk_inventory_stock_levels`
+
+  where WAREHOUSE_LOCATION_HK is not null
+    and RECORD_SOURCE = 'KINETIC.STOCKSTAT'
+    ;
+
+-- 52729
+ select
+    COUNT(*)
+
+  from `tim_wilson`.`silver`.`hub_warehouse_location`
+
+  where WAREHOUSE_LOCATION_HK is not null
+    and RECORD_SOURCE = 'KINETIC.STOCKSTAT'
+;
+
+-- 52729
+ select
+    COUNT(DISTINCT WAREHOUSE_LOCATION_HK)
+
+  from `tim_wilson`.`silver`.`hub_warehouse_location`
+
+  where WAREHOUSE_LOCATION_HK is not null
+    and RECORD_SOURCE = 'KINETIC.STOCKSTAT'
+;
+
+SELECT *
+FROM tim_wilson.information_schema.columns
+WHERE table_name = 'sat_inventory_transactions_latest'
+;
+
+SELECT DISTINCT RECORD_SOURCE
+FROM tim_wilson.gold_coreview.mart_inventory_transactions
+;

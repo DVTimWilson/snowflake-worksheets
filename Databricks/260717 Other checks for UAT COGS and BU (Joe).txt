@@ -1,0 +1,40 @@
+SELECT SITE, ENTITY, BU, count(*)
+FROM joe_barter.gold_coreview.mart_outbound_transactions
+WHERE 1=1
+-- AND PRODUCT_ID = 'SBR-000031'
+---AND ENTITY = 'DRC'
+-- AND UNIQUE_KEY LIKE '%-FI'
+AND RECORD_SOURCE LIKE 'KINETIC.%'
+-- AND SITE = 'Uncategorized'
+GROUP by 1,2,3
+ORDER BY BU 
+;
+
+SELECT *
+FROM joe_barter.gold_coreview.mart_outbound_transactions
+WHERE COREVIEW_PRODUCT_CATEGORY = 'Uncategorized'
+;
+SELECT *
+FROM joe_barter.gold_coreview.mart_outbound_transactions
+WHERE ENTITY IN ('DRC', 'SAI', 'STI')
+AND INVOICE_DATE >= '2026-06-01'
+ORDER BY INVOICE_DATE DESC
+;
+
+SELECT *
+FROM uat.gold_coreview.mart_outbound_transactions
+WHERE ENTITY IN ('DRC', 'SAI', 'STI')
+AND INVOICE_DATE >= '2026-06-01'
+ORDER BY INVOICE_DATE DESC
+;
+
+SELECT *
+FROM joe_barter.gold_coreview.mart_outbound_transactions
+WHERE 1=1
+AND SITE IN ('Greenville', 'Mexia',  'Barberton')
+;
+SELECT *
+FROM uat.gold_coreview.mart_outbound_transactions
+WHERE 1=1
+AND SITE IN ('Greenville', 'Mexia', 'Barberton')
+;

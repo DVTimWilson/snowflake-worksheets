@@ -1,0 +1,36 @@
+SELECT UNIQUE_KEY, SUM(TOTAL_COST), COUNT(*)
+FROM tim_wilson.gold_coreview.mart_inbound_transactions
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY UNIQUE_KEY
+;
+
+SELECT *
+FROM tim_wilson.gold_coreview.mart_inbound_transactions
+WHERE UNIQUE_KEY = '360-041525-20250415'
+;
+
+-- 3
+SELECT *
+FROM tim_wilson.silver.sat_quickbooks_inbound_purchases_360
+WHERE NUM = '041525'
+;
+
+-- 3
+SELECT *
+FROM tim_wilson.silver.sat_quickbooks_inbound_purchases_360_latest
+WHERE NUM = '041525'
+;
+
+-- 8
+SELECT *
+FROM tim_wilson.silver.sat_quickbooks_inbound_purchases_360
+WHERE NUM = '0619'
+ORDER BY EXTRACT_DATE
+;
+
+-- 8
+SELECT *
+FROM tim_wilson.silver.sat_quickbooks_inbound_purchases_360_latest
+WHERE NUM = '0619'
+;

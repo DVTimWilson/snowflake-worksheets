@@ -1,1 +1,2 @@
-# Archive of personal Snowflake worksheets
+# Archive of personal Databricks and Snowflake worksheets
+

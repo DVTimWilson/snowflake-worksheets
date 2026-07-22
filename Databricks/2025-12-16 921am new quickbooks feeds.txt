@@ -1,0 +1,140 @@
+-- landing.quickbooks.outbound_sales_360_v2
+-- landing.quickbooks.outbound_sales_PRC_v2
+-- landing.quickbooks.outbound_sales_CRC_v2
+-- landing.quickbooks.outbound_sales_TSS_v2
+
+CREATE SCHEMA landing.backup
+;
+
+CREATE TABLE landing.backup.outbound_sales_360_v2_20251216
+AS SELECT * FROM landing.quickbooks.outbound_sales_360_v2
+;
+
+CREATE TABLE landing.backup.outbound_sales_prc_v2_20251216
+AS SELECT * FROM landing.quickbooks.outbound_sales_prc_v2
+;
+
+CREATE TABLE landing.backup.outbound_sales_crc_v2_20251216
+AS SELECT * FROM landing.quickbooks.outbound_sales_crc_v2
+;
+
+CREATE TABLE landing.backup.outbound_sales_tss_v2_20251216
+AS SELECT * FROM landing.quickbooks.outbound_sales_tss_v2
+;
+
+-- 360
+-- EXTRACT_DATE	count(1)
+-- 2025-11-19T00:00:00.000+00:00	3858
+-- 2025-11-26T09:30:03.000+00:00	2500
+-- 2025-12-03T09:30:02.000+00:00	3961
+-- 2025-12-05T20:37:50.000+00:00	3091
+-- 2025-12-08T09:30:04.000+00:00	6954
+-- 2025-12-09T09:30:02.000+00:00	7006
+-- 2025-12-10T09:30:03.000+00:00	7006
+-- 2025-12-15T15:19:00.000+00:00	7188
+-- 2025-12-16T09:30:03.000+00:00	7188
+
+SELECT EXTRACT_DATE, COUNT(*)
+FROM landing.quickbooks.outbound_sales_360_v2
+GROUP BY EXTRACT_DATE
+ORDER BY EXTRACT_DATE
+;
+
+-- prc
+-- EXTRACT_DATE	count(1)
+-- 2025-11-19T00:00:00.000+00:00	3680
+-- 2025-11-26T09:30:02.000+00:00	2500
+-- 2025-12-03T09:30:02.000+00:00	3838
+-- 2025-12-10T09:30:03.000+00:00	3875
+-- 2025-12-15T15:18:55.000+00:00	3906
+-- 2025-12-16T09:30:03.000+00:00	3906
+
+SELECT EXTRACT_DATE, COUNT(*)
+FROM landing.quickbooks.outbound_sales_prc_v2
+GROUP BY EXTRACT_DATE
+ORDER BY EXTRACT_DATE
+;
+
+-- crc
+-- EXTRACT_DATE	count(1)
+-- 2025-11-19T00:00:00.000+00:00	8072
+-- 2025-11-26T09:30:02.000+00:00	7500
+-- 2025-12-03T09:30:02.000+00:00	8217
+-- 2025-12-10T09:30:03.000+00:00	8274
+-- 2025-12-15T15:18:58.000+00:00	4401
+-- 2025-12-16T09:30:03.000+00:00	4401
+
+SELECT EXTRACT_DATE, COUNT(*)
+FROM landing.quickbooks.outbound_sales_crc_v2
+GROUP BY EXTRACT_DATE
+ORDER BY EXTRACT_DATE
+;
+
+-- tss
+-- EXTRACT_DATE	count(1)
+-- 2025-11-19T00:00:00.000+00:00	8073
+-- 2025-11-26T09:30:02.000+00:00	7500
+-- 2025-12-03T09:30:02.000+00:00	8157
+-- 2025-12-10T09:30:02.000+00:00	8585
+-- 2025-12-15T15:16:58.000+00:00	7764
+-- 2025-12-16T09:30:03.000+00:00	7764
+
+SELECT EXTRACT_DATE, COUNT(*)
+FROM landing.quickbooks.outbound_sales_tss_v2
+GROUP BY EXTRACT_DATE
+ORDER BY EXTRACT_DATE
+;
+
+CREATE TABLE psa.backup.psa_quickbooks_staging_360_v2_20251216
+AS SELECT * FROM psa.quickbooks.psa_quickbooks_staging_360_v2
+;
+
+-- DROP TABLE psa.quickbooks.psa_quickbooks_staging_360_v2
+-- ;
+
+CREATE TABLE psa.backup.psa_quickbooks_staging_prc_v2_20251216
+AS SELECT * FROM psa.quickbooks.psa_quickbooks_staging_prc_v2
+;
+
+-- DROP TABLE psa.quickbooks.psa_quickbooks_staging_prc_v2
+-- ;
+
+CREATE TABLE psa.backup.psa_quickbooks_staging_crc_v2_20251216
+AS SELECT * FROM psa.quickbooks.psa_quickbooks_staging_crc_v2
+;
+
+-- DROP TABLE psa.quickbooks.psa_quickbooks_staging_crc_v2
+-- ;
+
+CREATE TABLE psa.backup.psa_quickbooks_staging_tss_v2_20251216
+AS SELECT * FROM psa.quickbooks.psa_quickbooks_staging_tss_v2
+;
+
+-- DROP TABLE psa.quickbooks.psa_quickbooks_staging_tss_v2
+-- ;
+
+-- DROP TABLE psa.kinetic.psa_plant
+-- ;
+
+-- DROP TABLE psa.kinetic.psa_udcodes
+-- ;
+
+
+
+Select sum(sales_dollar), month(invoice_date)
+From develop.gold_coreview.mart_outbound_transactions
+Where 1=1
+And year(invoice_date) = '2025'
+AND ENTITY = 'CRC'
+Group by month(invoice_date)
+ORDER BY month(invoice_date) DESC
+;
+
+Select sum(sales_dollar), month(invoice_date)
+From uat.gold_coreview.mart_outbound_transactions
+Where 1=1
+And year(invoice_date) = '2025'
+AND ENTITY = 'CRC'
+Group by month(invoice_date)
+ORDER BY month(invoice_date) DESC
+;

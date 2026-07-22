@@ -1,0 +1,746 @@
+-- psa_dana_adjustments_ref
+
+-- 138461
+SELECT COUNT(*)
+FROM (
+select
+        SEGMENT,
+        REGION_FULL,
+        SALESPERSON_CREDIT_PRE_SPLIT,
+        APPLICATION_C,
+        AREA,
+        ASSIST,
+        BASEFORULA,
+        BILLTOCOUNTRY,
+        BRAND_C,
+        BRANDED,
+        BUSINESSUNIT,
+        BUSINESSUNIT_C,
+        CHARACTER03,
+        COLLECTION_DD,
+        COMPANY,
+        CREDITMEMO,
+        CUSTDESCRIPTION,
+        CUSTDESCRIPTIONCODE,
+        CUSTID,
+        CUSTNUM,
+        CUSTPLATFORM,
+        CUSTPLATFORMCODE,
+        DOCDISCOUNT,
+        DOCEXTCOST,
+        DOCEXTPRICE,
+        DOCTOTALMISCCHRG,
+        DOCUNITCOST,
+        DOCUNITPRICE,
+        ECOSURFACES_NO_SPLIT,
+        FORM_C,
+        FORMAT_C,
+        FORMULA,
+        FUSION_BONDED_DD,
+        GM,
+        GMPCT,
+        GROUPCODE,
+        HOSP_BRAND,
+        HOSP_SUBBRAND,
+        INVOICEDATE,
+        INVOICELINE,
+        INVOICENUM,
+        INVOICETYPE,
+        LINEDESC,
+        MARKET_C,
+        MARKET2_C,
+        MASTERKEY,
+        MONTH,
+        NAME,
+        NPD_DD,
+        NTLACCOUNT,
+        ORDER_DATE,
+        ORDERNUM,
+        OTS,
+        PARTNUM,
+        PLANT,
+        PLATFORM_C,
+        PRODCODE,
+        PRODUCT_DD,
+        PROJECTNAME_C,
+        ROUTETOMARKET,
+        ROUTETOMARKETCODE,
+        S_AND_OP,
+        SALESPRICE,
+        SALESREPLIST,
+        SALESUM,
+        SELLINGSHIPQTY,
+        SFSOLD,
+        SHIPTOADDRESS1,
+        SHIPTOADDRESS2,
+        SHIPTOADDRESS3,
+        SHIPTOCITY,
+        SHIPTOCOUNTRY,
+        SHIPTOCUSTNUM,
+        SHIPTONAME,
+        SHIPTONUM,
+        SHIPTOSTATE,
+        SHIPTOZIP,
+        SOLDTOSTATE,
+        TERRITORYID,
+        TEST_MARKET,
+        THICK,
+        WIDTH,
+        YEAR,
+        SOURCETABLE,
+        STRATEGIC_ACCOUNTS,
+        STRATEGIC_FITNESS,
+        ECOSURFACES_BY_REP,
+        SPORTS_SURFACES_DIRECTOR_PRODUCT,
+        SPORTS_SURFACES_WEST,
+        SPORTS_SURFACES_NORTHEAST_AND_SOUTHEAST,
+        STRATEGIC_PARTNERSHIPS,
+        QT_AND_OTHER_SCOREBOARD,
+        LEAD_TIME,
+        DANA_EDITS,
+        SALESPERSON_1_NAME,
+        SALESPERSON_1_RATE,
+        SALESPERSON_2_NAME,
+        SALESPERSON_2_RATE,
+        SALESPERSON_3_NAME,
+        SALESPERSON_3_RATE,
+        EXTRACT_DATE
+--        {{ var('load_datetime') }} AS psa_loaded_at
+    FROM uat.bronze.src_dana_adjustments
+    QUALIFY ROW_NUMBER() OVER (
+        PARTITION BY COMPANY
+         , INVOICENUM
+         , INVOICELINE
+        ORDER BY EXTRACT_DATE DESC
+    ) = 1
+) AS x
+;
+
+-- 138461
+-- 138462
+SELECT COUNT(*)
+FROM (
+select
+        SEGMENT,
+        REGION_FULL,
+        SALESPERSON_CREDIT_PRE_SPLIT,
+        APPLICATION_C,
+        AREA,
+        ASSIST,
+        BASEFORULA,
+        BILLTOCOUNTRY,
+        BRAND_C,
+        BRANDED,
+        BUSINESSUNIT,
+        BUSINESSUNIT_C,
+        CHARACTER03,
+        COLLECTION_DD,
+        COMPANY,
+        CREDITMEMO,
+        CUSTDESCRIPTION,
+        CUSTDESCRIPTIONCODE,
+        CUSTID,
+        CUSTNUM,
+        CUSTPLATFORM,
+        CUSTPLATFORMCODE,
+        DOCDISCOUNT,
+        DOCEXTCOST,
+        DOCEXTPRICE,
+        DOCTOTALMISCCHRG,
+        DOCUNITCOST,
+        DOCUNITPRICE,
+        ECOSURFACES_NO_SPLIT,
+        FORM_C,
+        FORMAT_C,
+        FORMULA,
+        FUSION_BONDED_DD,
+        GM,
+        GMPCT,
+        GROUPCODE,
+        HOSP_BRAND,
+        HOSP_SUBBRAND,
+        INVOICEDATE,
+        INVOICELINE,
+        INVOICENUM,
+        INVOICETYPE,
+        LINEDESC,
+        MARKET_C,
+        MARKET2_C,
+        MASTERKEY,
+        MONTH,
+        NAME,
+        NPD_DD,
+        NTLACCOUNT,
+        ORDER_DATE,
+        ORDERNUM,
+        OTS,
+        PARTNUM,
+        PLANT,
+        PLATFORM_C,
+        PRODCODE,
+        PRODUCT_DD,
+        PROJECTNAME_C,
+        ROUTETOMARKET,
+        ROUTETOMARKETCODE,
+        S_AND_OP,
+        SALESPRICE,
+        SALESREPLIST,
+        SALESUM,
+        SELLINGSHIPQTY,
+        SFSOLD,
+        SHIPTOADDRESS1,
+        SHIPTOADDRESS2,
+        SHIPTOADDRESS3,
+        SHIPTOCITY,
+        SHIPTOCOUNTRY,
+        SHIPTOCUSTNUM,
+        SHIPTONAME,
+        SHIPTONUM,
+        SHIPTOSTATE,
+        SHIPTOZIP,
+        SOLDTOSTATE,
+        TERRITORYID,
+        TEST_MARKET,
+        THICK,
+        WIDTH,
+        YEAR,
+        SOURCETABLE,
+        STRATEGIC_ACCOUNTS,
+        STRATEGIC_FITNESS,
+        ECOSURFACES_BY_REP,
+        SPORTS_SURFACES_DIRECTOR_PRODUCT,
+        SPORTS_SURFACES_WEST,
+        SPORTS_SURFACES_NORTHEAST_AND_SOUTHEAST,
+        STRATEGIC_PARTNERSHIPS,
+        QT_AND_OTHER_SCOREBOARD,
+        LEAD_TIME,
+        DANA_EDITS,
+        SALESPERSON_1_NAME,
+        SALESPERSON_1_RATE,
+        SALESPERSON_2_NAME,
+        SALESPERSON_2_RATE,
+        SALESPERSON_3_NAME,
+        SALESPERSON_3_RATE,
+        EXTRACT_DATE
+--        {{ var('load_datetime') }} AS psa_loaded_at
+    FROM uat.bronze.src_dana_adjustments
+        QUALIFY
+                RANK() OVER (PARTITION BY INVOICENUM
+                                        ,INVOICETYPE
+                                        ,INVOICELINE
+                                        ,COMPANY
+                                        ,INVOICEDATE 
+                                   ORDER BY EXTRACT_DATE DESC) = 1
+            AND
+                ROW_NUMBER() OVER (PARTITION BY Company
+                                        , InvoiceNum
+                                        , InvoiceDate
+                                        , InvoiceType
+                                        , Name
+                                        , InvoiceLine
+                                        , SellingShipQty
+                                        , DocUnitPrice
+                                        , DocTotalMiscChrg
+                                        , DocUnitCost
+                                        , ShipToCustNum
+                                        , ShipToAddress1
+                                        , ShipToAddress2
+                                        , SoldToState
+                                        , GroupCode
+                                        , TerritoryID
+                                        , Character03
+                                        , Formula
+                                        , Width
+                                        , SFSold
+                                        , Market2_c
+                                        , ProjectName_c
+                                        , BillToCountry
+--                                        , RequestDate
+--                                        , NeedByDate
+--                                        , CustSegment_c 
+                                        , SEGMENT
+                                   ORDER BY EXTRACT_DATE DESC) = 1
+) AS x
+;
+
+-- 500856
+SELECT COUNT(*)
+FROM uat.gold_coreview.mart_kinetic_sherri_query_adjusted
+;
+
+-- 500856
+-- 381017
+SELECT COUNT(*)
+FROM (
+SELECT DISTINCT *
+FROM uat.gold_coreview.mart_kinetic_sherri_query_adjusted
+) AS x
+;
+
+-- 371067
+SELECT COUNT(*)
+FROM (
+select 
+    -- PK
+    kin.COMPANY,
+    kin.INVOICENUM,
+    kin.INVOICELINE,
+
+    -- direct output columns from sherri_adjusted_placeholders
+    kin.INVOICEDATE,
+    kin.INVOICETYPE,
+    kin.CREDITMEMO,
+    kin.CUSTNUM,
+    kin.CUSTID,
+    kin.NAME,
+    kin.PARTNUM,
+    kin.LINEDESC,
+    kin.PRODCODE,
+    kin.SELLINGSHIPQTY,
+    kin.DOCUNITPRICE,
+    kin.DOCEXTPRICE,
+    kin.DOCDISCOUNT,
+    kin.DOCTOTALMISCCHRG,
+    kin.SALESPRICE,
+    kin.SHIPTOCUSTNUM,
+    kin.SHIPTONUM,
+    kin.OTS,
+    kin.ORDERDATE,
+    kin.SHIPTONAME,
+    kin.SHIPTOADDRESS1,
+    kin.SHIPTOADDRESS2,
+    kin.SHIPTOADDRESS3,
+    kin.SHIPTOCITY,
+    kin.SHIPTOZIP,
+    kin.BUSINESSUNIT,
+    kin.SOLDTOSTATE,
+    kin.GROUPCODE,
+    kin.TERRITORYID,
+    kin.TESTMARKET,
+    kin.CHARACTER03,
+    kin.MASTERKEY,
+    -- COALESCE(NULLIF(cpm.L2_CATEGORY, ''), 'Uncategorized') AS COREVIEW_PRODUCT_CATEGORY,
+    -- COALESCE(NULLIF(cpm.L3_STAGE, ''), 'Uncategorized') AS PRODUCT_STAGE,
+    -- COALESCE(NULLIF(cpm.L4_TYPE, ''), 'Uncategorized') AS PRODUCT_TYPE,
+    kin.PLANT,
+    -- COALESCE(NULLIF(trim(plant.CITY), ''), 'Uncategorized') as SITE,
+    -- COALESCE(NULLIF(cpm.L1_BU, ''), 'Uncategorized') AS BU,
+    kin.FORMULA,
+    kin.WIDTH,
+    kin.THICK,
+    kin.AREA,
+    kin.BASEFORULA,
+    kin.ROUTETOMARKETCODE,
+    kin.ROUTETOMARKET,
+    kin.CUSTPLATFORMCODE,
+    kin.CUSTPLATFORM,
+    kin.CUSTDESCRIPTIONCODE,
+    kin.CUSTDESCRIPTION,
+    kin.BRANDED,
+    kin.MARKET_C,
+    kin.APPLICATION_C,
+    kin.FORM_C,
+    kin.FORMAT_C,
+    kin.BRAND_C,
+    kin.PLATFORM_C,
+    kin.PROJECTNAME_C,
+    kin.ORDERNUM,
+    kin.ASSIST,
+    kin.BILLTOCOUNTRY
+-- ,
+--     -- direct output columns from Dana
+--     up.PRODUCT_DD,
+--     up.COLLECTION_DD,
+--     up.FUSION_BONDED_DD,
+--     up.NPD_DD,
+--     up.S_AND_OP,
+--     up.MONTH,
+--     up.YEAR,
+--     up.SEGMENT,
+--     up.ECOSURFACES_NO_SPLIT,
+--     up.SALESPERSON_CREDIT_PRE_SPLIT,
+--     up.REGION_FULL,
+--     up.STRATEGIC_ACCOUNTS,
+--     up.STRATEGIC_FITNESS,
+--     up.STRATEGIC_PARTNERSHIPS,
+--     up.ECOSURFACES_BY_REP,
+--     up.SPORTS_SURFACES_DIRECTOR_PRODUCT,
+--     up.SPORTS_SURFACES_WEST,
+--     up.SPORTS_SURFACES_NORTHEAST_AND_SOUTHEAST,
+--     up.QT_AND_OTHER_SCOREBOARD,
+--     up.LEAD_TIME,
+--     up.DANA_EDITS,
+--     up.HOSP_SUBBRAND,
+--     up.HOSP_BRAND,
+
+-- -- original / adjusted / final fields
+--     kin.INVOICEDATE as INVOICEDATE_ORG,
+--     case
+--         when up.COMPANY is not null
+--         and up.INVOICEDATE is distinct from kin.INVOICEDATE
+--         then up.INVOICEDATE
+--         else null
+--     end as INVOICEDATE_ADJ,
+--     case
+--         when up.COMPANY is not null then up.INVOICEDATE
+--         else kin.INVOICEDATE
+--     end as INVOICEDATE_FINAL,
+
+--     kin.SALESUM as SALESUM_ORG,
+--     case
+--         when up.COMPANY is not null
+--         and up.SALESUM is distinct from kin.SALESUM
+--         then up.SALESUM
+--         else null
+--     end as SALESUM_ADJ,
+--     case
+--         when up.COMPANY is not null then up.SALESUM
+--         else kin.SALESUM
+--     end as SALESUM_FINAL,
+
+--     kin.DOCUNITCOST as DOCUNITCOST_ORG,
+--     case
+--         when up.COMPANY is not null
+--         and up.DOCUNITCOST is distinct from kin.DOCUNITCOST
+--         then up.DOCUNITCOST
+--         else null
+--     end as DOCUNITCOST_ADJ,
+--     case
+--         when up.COMPANY is not null then up.DOCUNITCOST
+--         else kin.DOCUNITCOST
+--     end as DOCUNITCOST_FINAL,
+
+--     kin.DOCEXTCOST as DOCEXTCOST_ORG,
+--     case
+--         when up.COMPANY is not null
+--         and up.DOCEXTCOST is distinct from kin.DOCEXTCOST
+--         then up.DOCEXTCOST
+--         else null
+--     end as DOCEXTCOST_ADJ,
+--     case
+--         when up.COMPANY is not null then up.DOCEXTCOST
+--         else kin.DOCEXTCOST
+--     end as DOCEXTCOST_FINAL,
+
+--     kin.GM as GM_ORG,
+--     case
+--         when up.COMPANY is not null
+--         and up.GM is distinct from kin.GM
+--         then up.GM
+--         else null
+--     end as GM_ADJ,
+--     case
+--         when up.COMPANY is not null then up.GM
+--         else kin.GM
+--     end as GM_FINAL,
+
+--     kin.GMPCT as GMPCT_ORG,
+--     case
+--         when up.COMPANY is not null
+--         and up.GMPCT is distinct from kin.GMPCT
+--         then up.GMPCT
+--         else null
+--     end as GMPCT_ADJ,
+--     case
+--         when up.COMPANY is not null then up.GMPCT
+--         else kin.GMPCT
+--     end as GMPCT_FINAL,
+
+--     kin.SALESREPLIST as SALESREPLIST_ORG,
+--     case
+--         when up.COMPANY is not null
+--         and up.SALESREPLIST is distinct from kin.SALESREPLIST
+--         then up.SALESREPLIST
+--         else null
+--     end as SALESREPLIST_ADJ,
+--     case
+--         when up.COMPANY is not null then up.SALESREPLIST
+--         else kin.SALESREPLIST
+--     end as SALESREPLIST_FINAL,
+
+--     kin.SHIPTOSTATE as SHIPTOSTATE_ORG,
+--     case
+--         when up.COMPANY is not null
+--         and up.SHIPTOSTATE is distinct from kin.SHIPTOSTATE
+--         then up.SHIPTOSTATE
+--         else null
+--     end as SHIPTOSTATE_ADJ,
+--     case
+--         when up.COMPANY is not null then up.SHIPTOSTATE
+--         else kin.SHIPTOSTATE
+--     end as SHIPTOSTATE_FINAL,
+
+--     kin.SHIPTOCOUNTRY as SHIPTOCOUNTRY_ORG,
+--     case
+--         when up.COMPANY is not null
+--         and up.SHIPTOCOUNTRY is distinct from kin.SHIPTOCOUNTRY
+--         then up.SHIPTOCOUNTRY
+--         else null
+--     end as SHIPTOCOUNTRY_ADJ,
+--     case
+--         when up.COMPANY is not null then up.SHIPTOCOUNTRY
+--         else kin.SHIPTOCOUNTRY
+--     end as SHIPTOCOUNTRY_FINAL,
+
+--     kin.SFSOLD as SFSOLD_ORG,
+--     case
+--         when up.COMPANY is not null
+--         and up.SFSOLD is distinct from kin.SFSOLD
+--         then up.SFSOLD
+--         else null
+--     end as SFSOLD_ADJ,
+--     case
+--         when up.COMPANY is not null then up.SFSOLD
+--         else kin.SFSOLD
+--     end as SFSOLD_FINAL,
+
+--     kin.BUSINESSUNIT as BUSINESSUNIT_C_ORG,
+--     case
+--         when up.COMPANY is not null
+--         and up.BUSINESSUNIT is distinct from kin.BUSINESSUNIT
+--         then up.BUSINESSUNIT
+--         else null
+--     end as BUSINESSUNIT_C_ADJ,
+--     case
+--         when up.COMPANY is not null then up.BUSINESSUNIT
+--         else kin.BUSINESSUNIT
+--     end as BUSINESSUNIT_C_FINAL,
+
+--     kin.MARKET2_C as MARKET2_C_ORG,
+--     case
+--         when up.COMPANY is not null
+--         and up.MARKET2_C is distinct from kin.MARKET2_C
+--         then up.MARKET2_C
+--         else null
+--     end as MARKET2_C_ADJ,
+--     case
+--         when up.COMPANY is not null then up.MARKET2_C
+--         else kin.MARKET2_C
+--     end as MARKET2_C_FINAL,
+
+--     kin.NTLACCOUNT as NTLACCOUNT_ORG,
+--     case
+--         when up.COMPANY is not null
+--         and up.NTLACCOUNT is distinct from kin.NTLACCOUNT
+--         then up.NTLACCOUNT
+--         else null
+--     end as NTLACCOUNT_ADJ,
+--     case
+--         when up.COMPANY is not null then up.NTLACCOUNT
+--         else kin.NTLACCOUNT
+--     end as NTLACCOUNT_FINAL,
+
+-- -- Salesperson 1 audit columns
+--     kin.PLACEHOLDER_SALESPERSON_1_NAME as SALESPERSON_1_NAME_ORG,
+
+--     case
+--         when up.COMPANY is not null
+--         and up.SALESPERSON_1_NAME is distinct from kin.PLACEHOLDER_SALESPERSON_1_NAME
+--         then up.SALESPERSON_1_NAME
+--         else null
+--     end as SALESPERSON_1_NAME_ADJ,
+
+--     case
+--         when up.COMPANY is not null then up.SALESPERSON_1_NAME
+--         else kin.PLACEHOLDER_SALESPERSON_1_NAME
+--     end as SALESPERSON_1_NAME_FINAL,
+
+--     kin.PLACEHOLDER_SALESPERSON_1_RATE as SALESPERSON_1_RATE_ORG,
+
+--     case
+--         when up.COMPANY is not null
+--         and up.SALESPERSON_1_RATE is distinct from kin.PLACEHOLDER_SALESPERSON_1_RATE
+--         then up.SALESPERSON_1_RATE
+--         else null
+--     end as SALESPERSON_1_RATE_ADJ,
+
+--     case
+--         when up.COMPANY is not null then up.SALESPERSON_1_RATE
+--         else kin.PLACEHOLDER_SALESPERSON_1_RATE
+--     end as SALESPERSON_1_RATE_FINAL,
+
+--     -- Salesperson 2 audit columns
+--     kin.PLACEHOLDER_SALESPERSON_2_NAME as SALESPERSON_2_NAME_ORG,
+
+--     case
+--         when up.COMPANY is not null
+--         and up.SALESPERSON_2_NAME is distinct from kin.PLACEHOLDER_SALESPERSON_2_NAME
+--         then up.SALESPERSON_2_NAME
+--         else null
+--     end as SALESPERSON_2_NAME_ADJ,
+
+--     case
+--         when up.COMPANY is not null then up.SALESPERSON_2_NAME
+--         else kin.PLACEHOLDER_SALESPERSON_2_NAME
+--     end as SALESPERSON_2_NAME_FINAL,
+
+--     kin.PLACEHOLDER_SALESPERSON_2_RATE as SALESPERSON_2_RATE_ORG,
+
+--     case
+--         when up.COMPANY is not null
+--         and up.SALESPERSON_2_RATE is distinct from kin.PLACEHOLDER_SALESPERSON_2_RATE
+--         then up.SALESPERSON_2_RATE
+--         else null
+--     end as SALESPERSON_2_RATE_ADJ,
+
+--     case
+--         when up.COMPANY is not null then up.SALESPERSON_2_RATE
+--         else kin.PLACEHOLDER_SALESPERSON_2_RATE
+--     end as SALESPERSON_2_RATE_FINAL,
+
+--     -- Salesperson 3 audit columns
+--     kin.PLACEHOLDER_SALESPERSON_3_NAME as SALESPERSON_3_NAME_ORG,
+
+--     case
+--         when up.COMPANY is not null
+--         and up.SALESPERSON_3_NAME is distinct from kin.PLACEHOLDER_SALESPERSON_3_NAME
+--         then up.SALESPERSON_3_NAME
+--         else null
+--     end as SALESPERSON_3_NAME_ADJ,
+
+--     case
+--         when up.COMPANY is not null then up.SALESPERSON_3_NAME
+--         else kin.PLACEHOLDER_SALESPERSON_3_NAME
+--     end as SALESPERSON_3_NAME_FINAL,
+
+--     kin.PLACEHOLDER_SALESPERSON_3_RATE as SALESPERSON_3_RATE_ORG,
+
+--     case
+--         when up.COMPANY is not null
+--         and up.SALESPERSON_3_RATE is distinct from kin.PLACEHOLDER_SALESPERSON_3_RATE
+--         then up.SALESPERSON_3_RATE
+--         else null
+--     end as SALESPERSON_3_RATE_ADJ,
+
+--     case
+--         when up.COMPANY is not null then up.SALESPERSON_3_RATE
+--         else kin.PLACEHOLDER_SALESPERSON_3_RATE
+--     end as SALESPERSON_3_RATE_FINAL,
+
+--     -- Region audit columns(based on the 1st salesperson)
+--     kin.PLACEHOLDER_REGION as REGION_ORG,
+
+--     case
+--         when up.COMPANY is not null
+--         and up.REGION_FULL is distinct from kin.PLACEHOLDER_REGION
+--         then up.REGION_FULL
+--         else null
+--     end as REGION_ADJ,
+
+--     case
+--         when up.COMPANY is not null then up.REGION_FULL
+--         else kin.PLACEHOLDER_REGION
+--     end as REGION_FINAL
+
+
+from `tim_wilson`.`silver`.`br_sherri_adjusted_placeholders` kin
+
+left join `tim_wilson`.`silver`.`br_dana_adjustments_clean` up
+    on -- Case-insensitive equality for ad-hoc use
+UPPER(kin.COMPANY) = UPPER(up.COMPANY)
+   and -- Case-insensitive equality for ad-hoc use
+UPPER(kin.INVOICENUM) = UPPER(up.INVOICENUM)
+   and -- Case-insensitive equality for ad-hoc use
+UPPER(kin.INVOICELINE) = UPPER(up.INVOICELINE)
+
+left join `tim_wilson`.`silver`.`sat_plant_kinetic_latest` plant
+    on -- Case-insensitive equality for ad-hoc use
+UPPER(kin.COMPANY) = UPPER(plant.COMPANY)
+   and -- Case-insensitive equality for ad-hoc use
+UPPER(kin.PLANT) = UPPER(plant.PLANT)
+
+left join `tim_wilson`.`silver`.`ref_consolidated_part_master` AS cpm
+    on -- Case-insensitive equality for ad-hoc use
+UPPER(kin.PARTNUM) = UPPER(cpm.PART_NUM)
+        and -- Case-insensitive equality for ad-hoc use
+UPPER(kin.COMPANY) = UPPER(cpm.COMPANY)
+       and -- Case-insensitive equality for ad-hoc use
+UPPER(cpm.SYSTEM) = UPPER('KINETIC')
+AND cpm.REVIEWER != '' and cpm.COMMENT != ''
+) AS x
+;
+
+SELECT COUNT(*)
+FROM (
+SELECT   PARTNUM, COMPANY, SYSTEM, REVIEWER, COMMENT
+FROM `uat`.`silver`.`ref_consolidated_part_master`
+WHERE SYSTEM = 'Kinetic'
+ORDER BY PARTNUM, COMPANY, SYSTEM, REVIEWER, COMMENT
+) AS x
+;
+
+SELECT   PARTNUM, COMPANY, SYSTEM, REVIEWER, COMMENT
+FROM uat.bronze.src_consolidated_part_master_ref
+WHERE SYSTEM = 'Kinetic'
+ORDER BY PARTNUM, COMPANY, SYSTEM, REVIEWER, COMMENT
+;
+
+SELECT   PARTNUM, COMPANY, SYSTEM, REVIEWER, COMMENT
+FROM landing.raw_baq_explore.consolidated_part_master_20260605
+WHERE SYSTEM = 'Kinetic'
+ORDER BY PARTNUM, COMPANY, SYSTEM, REVIEWER, COMMENT
+;
+
+
+-- Sherri query discussion with Gordon, Keith, Ryan
+
+SELECT DISTINCT PRODUCT_ID, PRODUCT_DESCRIPTION
+FROM uat.gold_coreview.mart_outbound_transactions
+WHERE PRODUCT_ID LIKE 'SBA-000033%'
+;
+
+SELECT INVOICE_NUMBER, *
+FROM uat.gold_coreview.mart_outbound_transactions
+WHERE PRODUCT_DESCRIPTION LIKE 'EPDM - Colormill, Beige-Tatami 1308, 1.0-3.5mm'
+;
+
+SELECT *
+FROM uat.gold_coreview.mart_outbound_transactions
+WHERE INVOICE_NUMBER = '228769'
+;
+
+-- 228799
+
+--
+-- 15/06/2026
+--
+
+-- Redeploy psa table
+
+-- 2195117
+SELECT COUNT(*)
+FROM psa.refs.psa_consolidated_part_master_ref
+;
+
+-- 2195117
+SELECT COUNT(*)
+FROM psa.backup.psa_consolidated_part_master_ref_20260615
+;
+
+-- CREATE OR REPLACE TABLE psa.backup.psa_consolidated_part_master_ref_20260615 AS
+-- SELECT *
+-- FROM psa.refs.psa_consolidated_part_master_ref
+-- ;
+
+-- DROP TABLE psa.refs.psa_consolidated_part_master_ref
+-- ;
+
+-- 558723
+SELECT COUNT(*)
+FROM psa_prod.refs.psa_consolidated_part_master_ref
+;
+
+-- 558723
+SELECT COUNT(*)
+FROM psa_prod.backup.psa_consolidated_part_master_ref_20260616
+;
+
+-- CREATE OR REPLACE TABLE psa_prod.backup.psa_consolidated_part_master_ref_20260616 AS
+-- SELECT *
+-- FROM psa_prod.refs.psa_consolidated_part_master_ref
+-- ;
+
+-- DROP TABLE psa_prod.refs.psa_consolidated_part_master_ref
+-- ;
+
+

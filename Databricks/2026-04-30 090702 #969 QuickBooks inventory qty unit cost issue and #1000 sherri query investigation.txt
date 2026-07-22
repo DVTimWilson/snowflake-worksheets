@@ -1,0 +1,165 @@
+-- #1000
+
+-- DocExtPrice  95257.26000  31613.54000  13387.61000
+-- --> SALES_DOLLAR
+-- SalesPrice   95257.26  31613.54  29830.73
+-- --> SALES_DOLLAR_WITH_FREIGHT
+
+SELECT DocExtPrice, SalesPrice, DocTotalMiscChrg, DocExtCost, *
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE InvoiceNum = '776800'
+ORDER BY Extract_Date DESC, InvoiceLine
+;
+
+-- SELECT *
+-- FROM uat.gold_coreview.mart_kinetic_sherri_query
+-- WHERE InvoiceNum = '776800'
+-- ;
+
+-- SALES_DOLLAR  95257.260000  31613.540000  -3055.510000
+-- SALES_DOLLAR_WITH_FREIGHT  95257.260000  31613.540000  13387.610000
+SELECT SALES_DOLLAR, SALES_DOLLAR_WITH_FREIGHT, COGS_DOLLAR, *
+FROM uat.gold_coreview.mart_outbound_transactions
+WHERE INVOICE_NUMBER = '776800'
+ORDER BY UNIQUE_KEY
+;
+
+SELECT SALES_DOLLAR, SALES_DOLLAR_WITH_FREIGHT, COGS_DOLLAR, *
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+WHERE INVOICE_NUMBER = '776800'
+ORDER BY UNIQUE_KEY
+;
+
+-- #969
+
+-- 2019-01-01	2026-04-29
+SELECT MIN(INVOICE_DATE), MAX(INVOICE_DATE)
+FROM uat.gold_coreview.mart_outbound_transactions
+;
+
+-- inventory transactions
+
+-- 49506 not tranclass I or S
+
+SELECT AVGCOST, *
+FROM uat.silver.sat_quickbooks_inventory_transactions_360_latest
+WHERE PART_NUMBER = '11 Used Tires:A Grade Tire:Low 2 tire A Grade (Low 2 Tire A Grade)'
+AND NUM = '49506'
+ORDER BY DATE DESC
+;
+
+SELECT EXTCOST, TRANQTY, *
+FROM uat.gold_coreview.mart_inventory_transactions
+WHERE PARTNUM = '11 Used Tires:A Grade Tire:Low 2 tire A Grade (Low 2 Tire A Grade)'
+AND TRANNUM = '49506'
+ORDER BY TRANNUM
+;
+
+SELECT EXTCOST, TRANQTY, *
+FROM tim_wilson.gold_coreview.mart_inventory_transactions
+WHERE PARTNUM = '11 Used Tires:A Grade Tire:Low 2 tire A Grade (Low 2 Tire A Grade)'
+AND TRANNUM = '49506'
+ORDER BY TRANNUM
+;
+
+SELECT EXTCOST, TRANQTY, *
+FROM tim_wilson.silver.br_combined_quickbooks_inventory_transactions_step_1
+WHERE PARTNUM = '11 Used Tires:A Grade Tire:Low 2 tire A Grade (Low 2 Tire A Grade)'
+AND TRANNUM = '49506'
+ORDER BY TRANNUM
+;
+
+SELECT EXTCOST, TRANQTY, *
+FROM tim_wilson.silver.br_combined_quickbooks_inventory_transactions_step_1
+WHERE PARTNUM = '11 Used Tires:A Grade Tire:Low 2 tire A Grade (Low 2 Tire A Grade)'
+AND TRANNUM = '49506'
+ORDER BY TRANNUM
+;
+
+-- outbound invoices
+
+-- COGSPC_SOURCE == BU
+SELECT COREVIEW_PRODUCT_CATEGORY, BUSINESS_SEGMENT, BU, SALES_DOLLAR, COGS_DOLLAR, UNIT_COST, GROSS_MARGIN_DOLLAR, QUANTITY, *
+FROM uat.silver.br_outbound_invoice_quickbooks_v2
+WHERE PRODUCT_ID = '11 Used Tires:A Grade Tire:Low 2 tire A Grade (Low 2 Tire A Grade)'
+AND INVOICE_NUMBER = '49506'
+ORDER BY INVOICE_NUMBER
+;
+
+SELECT *
+FROM uat.silver.br_outbound_invoice_cogspc_bu_lookup
+WHERE BU = 'Materials Business Unit (MBU)'
+ORDER BY YEAR, QUARTER
+;
+
+SELECT SALES_DOLLAR, COGS_DOLLAR, UNIT_COST, GROSS_MARGIN_DOLLAR, QUANTITY, *
+FROM uat.gold_coreview.mart_outbound_transactions
+WHERE PRODUCT_ID = '11 Used Tires:A Grade Tire:Low 2 tire A Grade (Low 2 Tire A Grade)'
+AND INVOICE_NUMBER = '49506'
+ORDER BY INVOICE_NUMBER
+;
+
+-- inventory transactions
+
+-- 49436
+
+SELECT AVGCOST, *
+FROM uat.silver.sat_quickbooks_inventory_transactions_360_latest
+WHERE PART_NUMBER = '11 Used Tires:A Grade Tire:Low 2 tire A Grade (Low 2 Tire A Grade)'
+AND NUM = '49436'
+ORDER BY DATE DESC
+;
+
+SELECT EXTCOST, TRANQTY, *
+FROM uat.gold_coreview.mart_inventory_transactions
+WHERE PARTNUM = '11 Used Tires:A Grade Tire:Low 2 tire A Grade (Low 2 Tire A Grade)'
+AND TRANNUM = '49436'
+ORDER BY TRANNUM
+;
+
+SELECT EXTCOST, TRANQTY, *
+FROM tim_wilson.gold_coreview.mart_inventory_transactions
+WHERE PARTNUM = '11 Used Tires:A Grade Tire:Low 2 tire A Grade (Low 2 Tire A Grade)'
+AND TRANNUM = '49436'
+ORDER BY TRANNUM
+;
+
+SELECT EXTCOST, TRANQTY, *
+FROM tim_wilson.silver.br_combined_quickbooks_inventory_transactions_step_1
+WHERE PARTNUM = '11 Used Tires:A Grade Tire:Low 2 tire A Grade (Low 2 Tire A Grade)'
+AND TRANNUM = '49436'
+ORDER BY TRANNUM
+;
+
+SELECT EXTCOST, TRANQTY, *
+FROM tim_wilson.silver.br_combined_quickbooks_inventory_transactions_step_1
+WHERE PARTNUM = '11 Used Tires:A Grade Tire:Low 2 tire A Grade (Low 2 Tire A Grade)'
+AND TRANNUM = '49436'
+ORDER BY TRANNUM
+;
+
+-- outbound invoices
+
+-- COGSPC_SOURCE == BU
+SELECT COREVIEW_PRODUCT_CATEGORY, BUSINESS_SEGMENT, BU, SALES_DOLLAR, COGS_DOLLAR, UNIT_COST, GROSS_MARGIN_DOLLAR, QUANTITY, *
+FROM uat.silver.br_outbound_invoice_quickbooks_v2
+WHERE PRODUCT_ID = '11 Used Tires:A Grade Tire:Low 2 tire A Grade (Low 2 Tire A Grade)'
+AND INVOICE_NUMBER = '49436'
+ORDER BY INVOICE_NUMBER
+;
+
+SELECT *
+FROM uat.silver.br_outbound_invoice_cogspc_bu_lookup
+WHERE BU = 'Materials Business Unit (MBU)'
+ORDER BY YEAR, QUARTER
+;
+
+SELECT SALES_DOLLAR, COGS_DOLLAR, UNIT_COST, GROSS_MARGIN_DOLLAR, QUANTITY, *
+FROM uat.gold_coreview.mart_outbound_transactions
+WHERE PRODUCT_ID = '11 Used Tires:A Grade Tire:Low 2 tire A Grade (Low 2 Tire A Grade)'
+AND INVOICE_NUMBER = '49436'
+ORDER BY INVOICE_NUMBER
+;
+
+
+

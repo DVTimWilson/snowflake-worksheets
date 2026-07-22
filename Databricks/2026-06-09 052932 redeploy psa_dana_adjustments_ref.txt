@@ -1,0 +1,31 @@
+-- CREATE OR REPLACE TABLE psa.backup.psa_dana_adjustments_ref_20260609 AS
+-- SELECT *
+-- FROM psa.refs.psa_dana_adjustments_ref
+-- ;
+
+-- DROP TABLE psa.refs.psa_dana_adjustments_ref
+-- ;
+
+-- CREATE OR REPLACE TABLE psa.refs.psa_dana_adjustments_ref AS
+-- SELECT *
+-- FROM psa.backup.psa_dana_adjustments_ref_20260609
+-- ;
+
+-- 1084450
+SELECT COUNT(*)
+FROM psa.refs.psa_dana_adjustments_ref
+;
+
+-- 1084450
+SELECT COUNT(*)
+FROM psa.backup.psa_dana_adjustments_ref_20260609
+;
+
+CREATE OR REPLACE TABLE psa_prod.backup.psa_dana_adjustments_ref_20260611 AS
+SELECT *
+FROM psa_prod.refs.psa_dana_adjustments_ref
+;
+
+-- DROP TABLE psa_prod.refs.psa_dana_adjustments_ref
+-- ;
+

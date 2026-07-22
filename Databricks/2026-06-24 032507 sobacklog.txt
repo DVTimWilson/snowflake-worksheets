@@ -1,0 +1,193 @@
+SELECT *
+FROM landing.kinetic.sobacklog
+;
+
+-- 244849
+SELECT COUNT(*)
+FROM landing.kinetic.sobacklog
+;
+
+SELECT EXTRACT_DATE, COUNT(*)
+FROM landing.kinetic.sobacklog
+GROUP BY extract_date
+ORDER BY 1 DESC
+;
+
+SELECT EXTRACT_DATE, COUNT(*)
+FROM landing.kinetic.sobacklog
+WHERE order_release_company = 'EII'
+GROUP BY extract_date
+ORDER BY 1 DESC
+;
+
+-- 38579
+SELECT COUNT(*)
+FROM psa.kinetic.psa_kinetic_sobacklog
+;
+
+SELECT EXTRACT_DATE, COUNT(*)
+FROM psa.kinetic.psa_kinetic_sobacklog
+GROUP BY extract_date
+ORDER BY 1 DESC
+;
+
+-- 35485205.721100
+SELECT SUM(calculated_sales)
+FROM landing.kinetic.sobacklog
+WHERE TO_DATE(extract_date) = '2026-06-22'
+AND order_release_company = 'EII'
+;
+
+-- 21151759.097300
+SELECT SUM(calculated_sales)
+FROM psa.kinetic.psa_kinetic_sobacklog
+WHERE TO_DATE(extract_date) = '2026-06-22'
+AND order_release_company = 'EII'
+;
+
+-- -- not yet created in production
+-- SELECT SUM(calculated_sales)
+-- FROM psa_prod.kinetic.psa_kinetic_sobacklog
+-- WHERE TO_DATE(extract_date) = '2026-06-22'
+-- AND order_release_company = 'EII'
+-- ;
+
+-- 1561.950000
+SELECT SUM(calculated_sales)
+FROM uat.gold_coreview.mart_sobacklog
+WHERE TO_DATE(extract_date) = '2026-06-22'
+AND order_release_company = 'EII'
+;
+
+SELECT COUNT(*), SUM(calculated_sales)
+FROM uat.silver.sat_sobacklog_kinetic
+WHERE TO_DATE(extract_date) = '2026-06-22'
+AND order_release_company = 'EII'
+;
+
+WITH uat AS (
+SELECT ORDER_RELEASE_COMPANY, ORDER_HEADER_ORDER_DATE, COUNT(*) AS uatcount, SUM(calculated_sales) AS uatsum
+FROM (SELECT * FROM uat.silver.sat_sobacklog_kinetic QUALIFY ROW_NUMBER() OVER (PARTITION BY UPPER(ORDER_RELEASE_COMPANY)
+    , ORDER_HEADER_ORDER_NUMBER
+    , ORDER_LINE_ORDER_LINE
+    , ORDER_RELEASE_NUMBER
+    ORDER BY EXTRACT_DATE DESC) = 1)
+GROUP BY ORDER_RELEASE_COMPANY, ORDER_HEADER_ORDER_DATE
+)
+,
+
+psa AS (
+SELECT ORDER_RELEASE_COMPANY, ORDER_HEADER_ORDER_DATE, COUNT(*) AS psacount, SUM(calculated_sales) AS psasum
+FROM (SELECT * FROM psa.kinetic.psa_kinetic_sobacklog QUALIFY ROW_NUMBER() OVER (PARTITION BY UPPER(ORDER_RELEASE_COMPANY)
+    , ORDER_HEADER_ORDER_NUMBER
+    , ORDER_LINE_ORDER_LINE
+    , ORDER_RELEASE_NUMBER
+    ORDER BY EXTRACT_DATE DESC) = 1)
+GROUP BY ORDER_RELEASE_COMPANY, ORDER_HEADER_ORDER_DATE
+)
+
+SELECT uat.*, psa.psacount, psa.psasum, uat.uatsum - psa.psasum AS diff
+FROM uat
+
+FULL OUTER JOIN psa
+ON uat.order_release_company = psa.order_release_company
+AND uat.order_header_order_date = psa.order_header_order_date
+
+ORDER BY uat.order_release_company ASC, uat.order_header_order_date DESC
+;
+
+WITH uat AS (
+SELECT ORDER_RELEASE_COMPANY, EXTRACT_DATE AS uatextractdate, COUNT(*) AS uatcount, SUM(calculated_sales) AS uatsum
+FROM uat.silver.sat_sobacklog_kinetic
+GROUP BY ORDER_RELEASE_COMPANY, EXTRACT_DATE
+)
+,
+
+psa AS (
+SELECT ORDER_RELEASE_COMPANY, EXTRACT_DATE AS psaextractdate, COUNT(*) AS psacount, SUM(calculated_sales) AS psasum
+FROM (SELECT * FROM psa.kinetic.psa_kinetic_sobacklog QUALIFY ROW_NUMBER() OVER (PARTITION BY UPPER(ORDER_RELEASE_COMPANY)
+    , ORDER_HEADER_ORDER_NUMBER
+    , ORDER_LINE_ORDER_LINE
+    , ORDER_RELEASE_NUMBER
+    ORDER BY EXTRACT_DATE DESC) = 1)
+GROUP BY ORDER_RELEASE_COMPANY, EXTRACT_DATE
+)
+
+SELECT uat.*, psa.order_release_company, psa.psaextractdate, psa.psacount, psa.psasum, uat.uatsum - psa.psasum AS diff
+FROM uat
+
+FULL OUTER JOIN psa
+ON uat.order_release_company = psa.order_release_company
+AND uat.uatextractdate = psa.psaextractdate
+
+ORDER BY uat.order_release_company ASC, uat.uatextractdate DESC
+;
+
+SELECT *
+FROM landing.kinetic.sobacklog
+WHERE extract_date IS NULL
+;
+
+SELECT *
+FROM psa.kinetic.psa_kinetic_sobacklog
+WHERE extract_date IS NULL
+;
+
+SELECT *
+FROM landing.kinetic.sobacklog
+WHERE ORDER_HEADER_ORDER_DATE IS NULL
+;
+
+SELECT *
+FROM psa.kinetic.psa_kinetic_sobacklog
+WHERE ORDER_HEADER_ORDER_DATE IS NULL
+;
+
+-- 135000323.941700
+SELECT MIN(ORDER_HEADER_ORDER_DATE), MAX(ORDER_HEADER_ORDER_DATE), SUM(calculated_sales)
+FROM psa.kinetic.psa_kinetic_sobacklog
+WHERE order_release_company = 'EII'
+AND TO_DATE(EXTRACT_DATE) = '2026-06-22'
+;
+
+-- 80909319.517700
+-- 30740366.023900
+-- 21151759.097300
+SELECT MIN(ORDER_HEADER_ORDER_DATE), MAX(ORDER_HEADER_ORDER_DATE), SUM(calculated_sales)
+FROM (SELECT * FROM psa.kinetic.psa_kinetic_sobacklog WHERE TO_DATE(EXTRACT_DATE) <= '2026-06-22' QUALIFY ROW_NUMBER() OVER (PARTITION BY UPPER(ORDER_RELEASE_COMPANY)
+    , ORDER_HEADER_ORDER_NUMBER
+    , ORDER_LINE_ORDER_LINE
+    , ORDER_RELEASE_NUMBER
+    ORDER BY EXTRACT_DATE DESC) = 1)
+WHERE order_release_company = 'EII'
+AND TO_DATE(EXTRACT_DATE) = '2026-06-22'
+;
+
+-- 80909319.517700
+-- 30740366.023900
+-- 1561.950000
+SELECT MIN(ORDER_HEADER_ORDER_DATE), MAX(ORDER_HEADER_ORDER_DATE), SUM(calculated_sales)
+FROM (SELECT * FROM uat.silver.sat_sobacklog_kinetic WHERE TO_DATE(EXTRACT_DATE) <= '2026-06-22' QUALIFY ROW_NUMBER() OVER (PARTITION BY UPPER(ORDER_RELEASE_COMPANY)
+    , ORDER_HEADER_ORDER_NUMBER
+    , ORDER_LINE_ORDER_LINE
+    , ORDER_RELEASE_NUMBER
+    ORDER BY EXTRACT_DATE DESC) = 1)
+WHERE order_release_company = 'EII'
+AND TO_DATE(EXTRACT_DATE) = '2026-06-22'
+;
+
+-- 80909319.517700
+-- 30740366.023900
+-- 1561.950000
+SELECT MIN(ORDER_HEADER_ORDER_DATE), MAX(ORDER_HEADER_ORDER_DATE), SUM(calculated_sales)
+FROM (SELECT * FROM uat.gold_coreview.mart_sobacklog WHERE TO_DATE(EXTRACT_DATE) <= '2026-06-22' QUALIFY ROW_NUMBER() OVER (PARTITION BY UPPER(ORDER_RELEASE_COMPANY)
+    , ORDER_HEADER_ORDER_NUMBER
+    , ORDER_LINE_ORDER_LINE
+    , ORDER_RELEASE_NUMBER
+    ORDER BY EXTRACT_DATE DESC) = 1)
+WHERE order_release_company = 'EII'
+-- AND ORDER_HEADER_ORDER_DATE <= '2026-06-22'
+AND TO_DATE(EXTRACT_DATE) = '2026-06-22'
+;
+
+

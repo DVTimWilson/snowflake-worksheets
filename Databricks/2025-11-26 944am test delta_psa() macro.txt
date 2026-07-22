@@ -1,0 +1,56 @@
+-- 7
+SELECT DISTINCT EXTRACT_DATE
+FROM tim_wilson.psa_kinetic.psa_customer
+ORDER BY EXTRACT_DATE
+;
+
+-- 36373
+SELECT COUNT(*)
+FROM tim_wilson.psa_kinetic.psa_customer
+;
+
+DROP TABLE IF EXISTS tim_wilson.psa_kinetic.psa_customer
+;
+
+TRUNCATE TABLE tim_wilson.psa_kinetic.psa_customer
+;
+
+-- 30
+SELECT DISTINCT EXTRACT_DATE
+FROM tim_wilson.psa_kinetic.psa_coparts
+ORDER BY EXTRACT_DATE
+;
+
+-- 86789
+SELECT COUNT(*)
+FROM tim_wilson.psa_kinetic.psa_coparts
+;
+
+DROP TABLE IF EXISTS tim_wilson.psa_kinetic.psa_coparts
+;
+
+TRUNCATE TABLE tim_wilson.psa_kinetic.psa_coparts
+;
+
+
+-- 101
+SELECT DISTINCT EXTRACT_DATE
+FROM tim_wilson.psa_dayforce.psa_allocatedhoursandearnings
+ORDER BY EXTRACT_DATE
+;
+
+-- 427401
+SELECT COUNT(*)
+FROM tim_wilson.psa_dayforce.psa_allocatedhoursandearnings
+;
+
+SELECT *
+FROM tim_wilson.psa_dayforce.psa_allocatedhoursandearnings
+LIMIT 10
+;
+
+DROP TABLE IF EXISTS tim_wilson.psa_dayforce.psa_allocatedhoursandearnings
+;
+
+TRUNCATE TABLE tim_wilson.psa_dayforce.psa_allocatedhoursandearnings
+;

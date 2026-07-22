@@ -1,0 +1,14 @@
+SELECT *
+FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+WHERE pounds IS NOT NULL
+;
+
+SELECT *
+FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+;
+
+SELECT EXTRACT_DATE, COUNT(*) AS record_count
+FROM psa.kinetic.psa_resgrpeff
+GROUP BY EXTRACT_DATE
+ORDER BY Extract_Date
+;

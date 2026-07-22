@@ -1,0 +1,60 @@
+SELECT DISTINCT EXTRACT_DATE
+FROM landing.quickbooks.outbound_sales_360
+;
+
+SELECT MIN(DATE)
+FROM landing.quickbooks.outbound_sales_360
+WHERE DATE(extract_DATE ) = '2025-10-01'
+;
+
+SELECT DISTINCT EXTRACT_DATE
+FROM landing.quickbooks.outbound_sales_prc
+;
+
+SELECT MIN(DATE)
+FROM landing.quickbooks.outbound_sales_prc
+;
+
+SELECT MIN(DATE)
+FROM landing.quickbooks.outbound_sales_prc
+WHERE DATE(extract_DATE ) = '2025-10-01'
+;
+
+DROP TABLE landing.reftables.departmentmapping_test
+;
+
+DROP TABLE landing.reftables.department_ledger
+;
+
+DROP TABLE landing.reftables.dayforce_with_kinetic_department_mapping
+;
+
+DROP TABLE landing.reftables.kinetic_department
+;
+
+-- 9289
+SELECT COUNT(*)
+FROM(
+SELECT *
+FROM tim_wilson.gold_mfg.mart_labor_details
+-- WHERE plant IS NULL
+-- WHERE department IS NULL
+)
+;
+
+SELECT DISTINCT department
+FROM tim_wilson.gold_mfg.mart_labor_details
+ORDER BY 1
+;
+
+SELECT department, COUNT(*)
+FROM tim_wilson.gold_mfg.mart_labor_details
+GROUP BY department
+ORDER BY 1
+;
+
+SELECT KINETIC_DEPARTMENT_NAME, COUNT(*) AS record_count
+FROM tim_wilson.gold_mfg.mart_costs_per_pounds_total
+GROUP BY KINETIC_DEPARTMENT_NAME
+ORDER BY 1
+;

@@ -1,0 +1,202 @@
+-- 41073
+SELECT COUNT(*)
+FROM tim_wilson.gold_sow4.dim_customer_typeii
+WHERE CURRENT_FLAG = 0
+;
+
+-- 38715
+SELECT COUNT(*)
+FROM tim_wilson.gold_sow4.dim_customer_typeii_alter
+;
+
+-- 1 38715
+-- 0 0
+SELECT COUNT(*)
+FROM tim_wilson.gold_sow4.dim_customer_typeii_alter
+WHERE CURRENT_FLAG = 1
+;
+
+-- 38722
+SELECT COUNT(*)
+FROM tim_wilson.gold_sow4.dim_customer_typeii
+WHERE CURRENT_FLAG = 1
+;
+
+-- 38715
+SELECT COUNT(CUSTOMER_HK)
+FROM tim_wilson.gold_sow4.dim_customer_typeii_alter
+WHERE CURRENT_FLAG = 1
+;
+
+-- 38715
+SELECT COUNT(DISTINCT CUSTOMER_HK)
+FROM tim_wilson.gold_sow4.dim_customer_typeii_alter
+WHERE CURRENT_FLAG = 1
+;
+
+-- 38715
+SELECT COUNT(*)
+FROM (
+SELECT DISTINCT CUSTOMER_HK
+FROM tim_wilson.gold_sow4.dim_customer_typeii_alter
+WHERE CURRENT_FLAG = 1
+) AS x
+;
+
+-- 38715
+SELECT COUNT(DISTINCT HASHDIFF)
+FROM tim_wilson.gold_sow4.dim_customer_typeii_alter
+WHERE CURRENT_FLAG = 1
+;
+
+-- 38715
+SELECT COUNT(*)
+FROM (
+SELECT DISTINCT HASHDIFF
+FROM tim_wilson.gold_sow4.dim_customer_typeii_alter
+WHERE CURRENT_FLAG = 1
+) AS x
+;
+
+
+
+-- 38722
+SELECT COUNT(CUSTOMER_HK)
+FROM tim_wilson.gold_sow4.dim_customer_typeii
+-- WHERE CURRENT_FLAG = 1
+;
+
+-- 38722
+SELECT COUNT(DISTINCT CUSTOMER_HK)
+FROM tim_wilson.gold_sow4.dim_customer_typeii
+WHERE CURRENT_FLAG = 1
+;
+
+-- 38722
+SELECT COUNT(*)
+FROM (
+SELECT DISTINCT CUSTOMER_HK
+FROM tim_wilson.gold_sow4.dim_customer_typeii
+WHERE CURRENT_FLAG = 1
+) AS x
+;
+
+-- 7
+SELECT DISTINCT CUSTOMER_HK
+FROM tim_wilson.gold_sow4.dim_customer_typeii
+WHERE CURRENT_FLAG = 1
+EXCEPT
+SELECT DISTINCT CUSTOMER_HK
+FROM tim_wilson.gold_sow4.dim_customer_typeii_alter
+WHERE CURRENT_FLAG = 1
+;
+
+-- 0
+SELECT DISTINCT CUSTOMER_HK
+FROM tim_wilson.gold_sow4.dim_customer_typeii_alter
+WHERE CURRENT_FLAG = 1
+EXCEPT
+SELECT DISTINCT CUSTOMER_HK
+FROM tim_wilson.gold_sow4.dim_customer_typeii
+WHERE CURRENT_FLAG = 1
+;
+
+SELECT *
+FROM tim_wilson.gold_sow4.dim_customer_typeii
+WHERE CUSTOMER_HK IN 
+(
+SELECT DISTINCT CUSTOMER_HK
+FROM tim_wilson.gold_sow4.dim_customer_typeii
+WHERE CURRENT_FLAG = 1
+EXCEPT
+SELECT DISTINCT CUSTOMER_HK
+FROM tim_wilson.gold_sow4.dim_customer_typeii_alter
+WHERE CURRENT_FLAG = 1
+)
+;
+
+SELECT *
+FROM tim_wilson.silver.sat_customer_kinetic
+WHERE CUSTOMER_HK = UNBASE64('FES/D9opIjgRIzaH8L2LVQ==')
+;
+
+--
+-- 19/06/2026
+--
+
+SELECT *
+FROM uat.gold_sow4.dim_customer_typeii
+LIMIT 10
+;
+
+-- 90fdccc14d5bf61e16b816e2cc4ba1e0
+SELECT MD5(UNBASE64('AAPqrEoeu/wSnyIHj2+JQw=='))
+;
+
+-- One current row per customer
+SELECT CUSTOMER_HK, COUNT(*) AS RECORD_COUNT
+FROM uat.gold_sow4.dim_customer_typeii
+WHERE CURRENT_FLAG = 1
+GROUP BY CUSTOMER_HK
+HAVING RECORD_COUNT > 1
+;
+
+SELECT CUSTOMER_HK, COUNT(*) AS RECORD_COUNT
+FROM uat.gold_sow4.dim_customer_typeii
+WHERE CURRENT_FLAG = 0
+GROUP BY CUSTOMER_HK
+HAVING RECORD_COUNT > 1
+;
+
+SELECT *
+FROM uat.gold_sow4.dim_customer_typeii
+WHERE CUSTOMER_HK = UNBASE64('Af0ICG99I9DMeKkxo+1b1g==')
+;
+
+-- - No duplicate version start dates
+SELECT CUSTOMER_HK, DIM_START_DATE, COUNT(*) AS RECORD_COUNT
+FROM uat.gold_sow4.dim_customer_typeii
+WHERE CURRENT_FLAG = 1
+GROUP BY CUSTOMER_HK, DIM_START_DATE
+HAVING RECORD_COUNT > 1
+;
+
+-- Date windows do not overlap
+-- SQL overlapping events
+-- Using T-SQL to find events that overlap (or don't) in SQL Server
+-- https://www.mssqltips.com/sqlservertip/5854/using-tsql-to-find-events-that-overlap-or-dont-in-sql-server/
+SELECT *
+FROM uat.gold_sow4.dim_customer_typeii AS c1
+
+INNER JOIN uat.gold_sow4.dim_customer_typeii AS c2
+ON c1.CUSTOMER_HK = c2.CUSTOMER_HK
+-- Don't self join same records
+AND c1.DIM_START_DATE != c2.DIM_START_DATE
+AND c1.DIM_END_DATE != c2.DIM_END_DATE
+-- Join records with overlapping time periods
+AND c1.DIM_START_DATE < c2.DIM_END_DATE
+AND c1.DIM_END_DATE > c2.DIM_START_DATE
+
+-- WHERE c1.CUSTOMER_HK = UNBASE64('Af0ICG99I9DMeKkxo+1b1g==')
+-- WHERE c1.CUSTOMER_HK = UNBASE64('Akurd7lGKjT/pziWkoAsWQ==')
+;
+
+-- Start date is before end date
+SELECT *
+FROM uat.gold_sow4.dim_customer_typeii
+WHERE DIM_START_DATE >= DIM_END_DATE
+;
+
+-- Current rows have an open-ended end date
+SELECT *
+FROM uat.gold_sow4.dim_customer_typeii
+WHERE CURRENT_FLAG = 1 AND (DIM_END_DATE IS NULL OR DIM_END_DATE != TO_TIMESTAMP('9999-12-31T23:59:59.999999+00:00'))
+;
+
+-- Inactive rows have a date which is not an open-ended end date
+SELECT *
+FROM uat.gold_sow4.dim_customer_typeii
+WHERE CURRENT_FLAG = 0 AND (DIM_END_DATE IS NULL OR DIM_END_DATE = TO_TIMESTAMP('9999-12-31T23:59:59.999999+00:00'))
+;
+
+

@@ -1,0 +1,548 @@
+ALTER TABLE landing_workato_test.reftables.bu_site_part_costs
+SET TBLPROPERTIES ('delta.columnMapping.mode' = 'name')
+;
+
+ALTER TABLE landing_workato_test.reftables.bu_site_part_costs
+ADD COLUMN EXTRACT_DATE TIMESTAMP
+;
+
+UPDATE landing_workato_test.reftables.bu_site_part_costs
+SET EXTRACT_DATE = TIMESTAMP('2026-07-08T12:00:00.000000+00:00')
+;
+
+SELECT * 
+FROM tim_wilson.bronze.src_bu_site_part_costs
+;
+
+SELECT * 
+FROM tim_wilson.bronze.stg_bu_site_part_costs
+;
+
+SELECT * 
+FROM tim_wilson.silver.ref_sat_bu_site_part_costs
+;
+
+-- 3604
+SELECT COUNT(*)
+FROM tim_wilson.silver.ref_sat_bu_site_part_costs
+;
+
+-- 3603
+SELECT COUNT(*)
+FROM tim_wilson.silver.ref_sat_bu_site_part_costs_latest
+;
+
+SELECT *
+FROM tim_wilson.silver.ref_sat_bu_site_part_costs
+EXCEPT
+SELECT *
+FROM tim_wilson.silver.ref_sat_bu_site_part_costs_latest
+;
+
+SELECT *
+FROM tim_wilson.silver.ref_sat_bu_site_part_costs
+WHERE COMPANY = 'ECS'
+AND SITE = 'DELPHOS'
+AND PART = 'SBA-354465'
+;
+
+SELECT *
+FROM tim_wilson.silver.ref_sat_bu_site_part_costs
+WHERE BU_SITE_PART_LHK = UNBASE64('7BrbC4Dj1ITp9NGe5jAcTw==')
+;
+
+--
+-- 09/07/2026
+--
+
+SELECT COUNT(*)
+FROM (
+SELECT 
+     kin.INVOICE_LINE_LHK
+     , kin.UNIQUE_KEY
+     , kin.INVOICELINE
+     , CAST(kin.INVOICENUM AS string) AS INVOICE_NUMBER
+     , kin.INVOICEDATE AS INVOICE_DATE
+     , kin.NAME AS CUSTOMER
+     , kin.PARTNUM AS PRODUCT_ID
+     , kin.LINEDESC AS PRODUCT_DESCRIPTION
+     , COALESCE(NULLIF(cpm.L2_CATEGORY, ''), 'Uncategorized') AS COREVIEW_PRODUCT_CATEGORY
+     , COALESCE(NULLIF(cpm.L3_STAGE, ''), 'Uncategorized') AS PRODUCT_STAGE
+     , COALESCE(NULLIF(cpm.L4_TYPE, ''), 'Uncategorized') AS PRODUCT_TYPE  
+     , kin.PLANT AS PLANT
+     , COALESCE(NULLIF(plant.CITY, ''), 'Uncategorized') AS SITE
+     , COALESCE(NULLIF(cpm.L1_BU, ''), 'Uncategorized') AS BU
+     , 
+CASE
+  WHEN UPPER(TRIM(kin.COMPANY)) <> 'EII' AND mec.BUSINESS_SEGMENT = 'Materials Business Unit (MBU)' THEN 'MBU'
+  WHEN UPPER(TRIM(kin.COMPANY)) <> 'EII' AND mec.BUSINESS_SEGMENT = 'Outdoor Surfacing'           THEN 'OSG'
+  WHEN UPPER(TRIM(kin.BUSINESS_UNIT_ID)) = 'MTL'                                                                THEN 'MBU'
+  WHEN UPPER(TRIM(kin.COMPANY)) =  'EII' AND (UPPER(TRIM(kin.BUSINESS_UNIT_ID)) IS NULL OR UPPER(TRIM(kin.BUSINESS_UNIT_ID)) <> 'F&I')         THEN 'MBU'
+  WHEN UPPER(TRIM(kin.BUSINESS_UNIT_ID)) IS NULL OR UPPER(TRIM(kin.BUSINESS_UNIT_ID)) IN ('','-1')                                    THEN 'Uncategorized'
+  ELSE UPPER(TRIM(kin.BUSINESS_UNIT_ID))
+END AS BU_LOGICAL
+     , kin.COMPANY AS ENTITY
+     , kin.DOCEXTPRICE AS SALES_DOLLAR
+     , kin.SALESPRICE AS SALES_DOLLAR_WITH_FREIGHT
+     , CASE WHEN kin.DOCEXTCOST = 0 THEN stdcosts.STD_TOTAL_COST ELSE kin.DOCEXTCOST END  AS COGS_DOLLAR
+     , kin.DOCUNITCOST AS UNIT_COST
+     , kin.GM AS GROSS_MARGIN_DOLLAR
+     , kin.GMPCT AS GROSS_MARGIN_PCT
+     , kin.SELLINGSHIPQTY as QUANTITY
+     , CASE
+  WHEN UPPER(TRIM(pm.PART_IUM)) IS NULL OR UPPER(TRIM(pm.PART_IUM)) IN ('', '-1', '0', 'NULL') THEN 'Uncategorized'
+  ELSE COALESCE(
+         element_at(
+           map_from_arrays(
+             array('EACH', 'LOAD'),
+             array('EA', 'LD')
+           ),
+           UPPER(TRIM(pm.PART_IUM))
+         ),
+         UPPER(TRIM(pm.PART_IUM))
+       )
+END AS UOM
+     , 
+
+(
+  
+    CAST(COALESCE(TRY_MULTIPLY(kin.SELLINGSHIPQTY, pm.PART_NETWEIGHT) , 0) AS DECIMAL(38,8))
+  
+) AS WEIGHT_LBS
+     , 'NA' AS COGSPC_SOURCE
+     , kin.LOAD_DATETIME
+     , kin.RECORD_SOURCE
+     , kin.HASHDIFF
+FROM `tim_wilson`.`silver`.`sat_outbound_invoice_kinetic_latest` as kin
+
+INNER JOIN (
+    SELECT y.Business_Segment 
+           , y.Company_Code
+    FROM `tim_wilson`.`silver`.`ref_master_ecore_companies` AS y
+) AS mec
+    ON -- Case-insensitive equality for ad-hoc use
+UPPER(kin.COMPANY) = UPPER(mec.company_code)
+
+LEFT OUTER JOIN (
+  SELECT PART_PARTNUM
+    , PART_IUM
+    , PART_NETWEIGHT
+    , PART_COMPANY 
+  FROM `tim_wilson`.`silver`.`ref_sat_kinetic_part_master_latest`
+) AS pm
+    ON -- Case-insensitive equality for ad-hoc use
+UPPER(kin.PARTNUM) = UPPER(pm.PART_PARTNUM)
+    AND -- Case-insensitive equality for ad-hoc use
+UPPER(kin.COMPANY) = UPPER(pm.PART_COMPANY)
+
+LEFT OUTER JOIN `tim_wilson`.`silver`.`sat_plant_kinetic_latest` as plant
+    ON -- Case-insensitive equality for ad-hoc use
+UPPER(kin.COMPANY) = UPPER(plant.COMPANY)
+    AND -- Case-insensitive equality for ad-hoc use
+UPPER(kin.PLANT) = UPPER(plant.PLANT)
+
+LEFT OUTER JOIN `tim_wilson`.`silver`.`ref_sat_consolidated_part_master_latest` AS cpm
+    ON -- Case-insensitive equality for ad-hoc use
+UPPER(kin.PARTNUM) = UPPER(cpm.PART_NUM)
+        AND -- Case-insensitive equality for ad-hoc use
+UPPER(kin.COMPANY) = UPPER(cpm.COMPANY)
+        AND -- Case-insensitive equality for ad-hoc use
+UPPER(cpm.SYSTEM) = UPPER('KINETIC')
+
+LEFT OUTER JOIN `tim_wilson`.`silver`.`ref_sat_bu_site_part_costs_latest` as stdcosts
+    ON -- Case-insensitive equality for ad-hoc use
+UPPER(kin.COMPANY) = UPPER(stdcosts.COMPANY)
+    AND -- Case-insensitive equality for ad-hoc use
+UPPER(COALESCE(NULLIF(plant.CITY, ''), 'Uncategorized')) = UPPER(stdcosts.SITE)
+    AND -- Case-insensitive equality for ad-hoc use
+UPPER(kin.PARTNUM) = UPPER(stdcosts.PART)
+) AS x
+;
+
+-- 382539
+-- 382539
+
+-- 382539
+SELECT COUNT(*)
+FROM tim_wilson.silver.br_outbound_invoice_sherri
+;
+
+SELECT COGS_DOLLAR, UNIT_COST
+FROM tim_wilson.silver.br_outbound_invoice_sherri
+;
+
+SELECT COGS_DOLLAR, UNIT_COST
+FROM tim_wilson.silver.br_outbound_invoice_sherri
+WHERE UNIT_COST = 0
+;
+
+SELECT COGS_DOLLAR, UNIT_COST
+FROM tim_wilson.silver.br_outbound_invoice_sherri
+WHERE COGS_DOLLAR = 0
+;
+
+-- 171173
+-- 169821
+SELECT COUNT(*)
+FROM tim_wilson.silver.br_outbound_invoice_sherri
+WHERE UNIT_COST = 0
+;
+
+SELECT DISTINCT SITE
+FROM tim_wilson.silver.br_outbound_invoice_sherri
+WHERE UNIT_COST = 0
+;
+
+-- 172019
+-- 170127
+SELECT COUNT(*)
+FROM tim_wilson.silver.br_outbound_invoice_sherri
+WHERE COGS_DOLLAR = 0
+;
+
+SELECT COGS_DOLLAR, UNIT_COST
+FROM uat.silver.br_outbound_invoice_sherri
+WHERE UNIT_COST IS NULL
+;
+
+SELECT COGS_DOLLAR, UNIT_COST
+FROM uat.silver.br_outbound_invoice_sherri
+WHERE UNIT_COST = 0
+;
+
+-- 178363
+SELECT COUNT(*)
+FROM uat.silver.br_outbound_invoice_sherri
+WHERE UNIT_COST = 0
+;
+
+-- 0
+SELECT COUNT(*)
+FROM uat.silver.br_outbound_invoice_sherri
+WHERE COGS_DOLLAR IS NULL
+;
+
+-- 178665
+SELECT COUNT(*)
+FROM uat.silver.br_outbound_invoice_sherri
+WHERE COGS_DOLLAR = 0
+;
+
+--
+-- 10/07/2026
+--
+
+-- TRUNCATE TABLE landing_workato_test.reftables.bu_site_part_costs
+-- ;
+
+ALTER TABLE landing_workato_test.reftables.bu_site_part_costs
+ADD COLUMN `Default Site Cost ID` STRING
+;
+
+ALTER TABLE landing_workato_test.reftables.site_part_costs_all_companies
+SET TBLPROPERTIES ('delta.columnMapping.mode' = 'name')
+;
+
+ALTER TABLE landing_workato_test.reftables.site_part_costs_all_companies
+ADD COLUMN EXTRACT_DATE TIMESTAMP
+;
+
+UPDATE landing_workato_test.reftables.site_part_costs_all_companies
+SET EXTRACT_DATE = TIMESTAMP('2026-07-10T12:00:00.000000+00:00')
+;
+
+-- 123327
+SELECT *
+FROM landing_workato_test.reftables.site_part_costs_all_companies
+;
+
+SELECT DISTINCT COMPANY
+FROM tim_wilson.silver.sat_outbound_invoice_kinetic_latest
+ORDER BY 1
+;
+
+SELECT DISTINCT BU
+FROM tim_wilson.silver.br_outbound_invoice_sherri
+ORDER BY 1
+;
+
+SELECT DISTINCT COMPANY
+FROM landing_workato_test.reftables.bu_site_part_costs
+ORDER BY 1
+;
+
+-- Barberton
+-- Caddo Mills
+-- Chambersburg
+-- Cheektowaga
+-- Corona
+-- Delphos
+-- Greenville
+-- Lancaster
+-- Lockport
+-- Mexia
+-- Newville
+-- Ozark
+-- Uncategorized
+-- York
+SELECT DISTINCT SITE
+FROM tim_wilson.silver.br_outbound_invoice_sherri
+ORDER BY 1
+;
+
+SELECT DISTINCT SITE
+FROM landing_workato_test.reftables.bu_site_part_costs
+ORDER BY 1
+;
+
+-- BARBRTON  3726
+UPDATE landing_workato_test.reftables.bu_site_part_costs
+SET SITE = 'Barberton'
+WHERE UPPER(SITE) = 'BARBRTON'
+;
+
+-- BARBRTON  3726
+UPDATE landing_workato_test.reftables.bu_site_part_costs
+SET `Costing ID` = 'Barberton'
+WHERE UPPER(`Costing ID`) = 'BARBRTON'
+;
+
+-- BARBRTON  3726
+UPDATE landing_workato_test.reftables.bu_site_part_costs
+SET `Default Site Cost ID` = 'Barberton'
+WHERE (`Default Site Cost ID`) = 'BARBRTON'
+;
+
+-- BFCOMMON  3726
+UPDATE landing_workato_test.reftables.bu_site_part_costs
+SET SITE = 'Butterfly Commons'
+WHERE UPPER(SITE) = 'BFCOMMON'
+;
+
+-- BFCOMMON  3726
+UPDATE landing_workato_test.reftables.bu_site_part_costs
+SET `Costing ID` = 'Butterfly Commons'
+WHERE UPPER(`Costing ID`) = 'BFCOMMON'
+;
+
+-- BFCOMMON  3726
+UPDATE landing_workato_test.reftables.bu_site_part_costs
+SET `Default Site Cost ID` = 'Butterfly Commons'
+WHERE (`Default Site Cost ID`) = 'BFCOMMON'
+;
+
+-- CADDO
+UPDATE landing_workato_test.reftables.bu_site_part_costs
+SET SITE = 'Caddo Mills'
+WHERE UPPER(SITE) = 'CADDO'
+;
+
+-- CADDO
+UPDATE landing_workato_test.reftables.bu_site_part_costs
+SET `Costing ID` = 'Caddo Mills'
+WHERE UPPER(`Costing ID`) = 'CADDO'
+;
+
+-- CADDO
+UPDATE landing_workato_test.reftables.bu_site_part_costs
+SET `Default Site Cost ID` = 'Caddo Mills'
+WHERE UPPER(`Default Site Cost ID`) = 'CADDO'
+;
+
+-- CHAMBER
+UPDATE landing_workato_test.reftables.bu_site_part_costs
+SET SITE = 'Chambersburg'
+WHERE UPPER(SITE) = 'CHAMBER'
+;
+
+-- CHAMBER
+UPDATE landing_workato_test.reftables.bu_site_part_costs
+SET `Costing ID` = 'Chambersburg'
+WHERE UPPER(`Costing ID`) = 'CHAMBER'
+;
+
+-- CHAMBER
+UPDATE landing_workato_test.reftables.bu_site_part_costs
+SET `Default Site Cost ID` = 'Chambersburg'
+WHERE UPPER(`Default Site Cost ID`) = 'CHAMBER'
+;
+
+-- CORONADE
+UPDATE landing_workato_test.reftables.bu_site_part_costs
+SET SITE = 'Corona'
+WHERE UPPER(SITE) = 'CORONADE'
+;
+
+-- CORONADE
+UPDATE landing_workato_test.reftables.bu_site_part_costs
+SET `Costing ID` = 'Corona'
+WHERE UPPER(`Costing ID`) = 'CORONADE'
+;
+
+-- CORONADE
+UPDATE landing_workato_test.reftables.bu_site_part_costs
+SET `Default Site Cost ID` = 'Corona'
+WHERE UPPER(`Default Site Cost ID`) = 'CORONADE'
+;
+
+-- GREENVL
+UPDATE landing_workato_test.reftables.bu_site_part_costs
+SET SITE = 'Greenville'
+WHERE UPPER(SITE) = 'GREENVL'
+;
+
+-- GREENVL
+UPDATE landing_workato_test.reftables.bu_site_part_costs
+SET `Costing ID` = 'Greenville'
+WHERE UPPER(`Costing ID`) = 'GREENVL'
+;
+
+-- GREENVL
+UPDATE landing_workato_test.reftables.bu_site_part_costs
+SET `Default Site Cost ID` = 'Greenville'
+WHERE UPPER(`Default Site Cost ID`) = 'GREENVL'
+;
+
+-- MFGSYS
+UPDATE landing_workato_test.reftables.bu_site_part_costs
+SET SITE = 'Uncategorized'
+WHERE UPPER(SITE) = 'MFGSYS'
+;
+
+-- MFGSYS
+UPDATE landing_workato_test.reftables.bu_site_part_costs
+SET `Costing ID` = 'Uncategorized'
+WHERE UPPER(`Costing ID`) = 'MFGSYS'
+;
+
+-- MFGSYS
+UPDATE landing_workato_test.reftables.bu_site_part_costs
+SET `Default Site Cost ID` = 'Uncategorized'
+WHERE UPPER(`Default Site Cost ID`) = 'MFGSYS'
+;
+
+
+
+
+
+
+
+SELECT DISTINCT SITE
+FROM landing_workato_test.reftables.bu_site_part_costs
+ORDER BY 1
+;
+
+UPDATE landing_workato_test.reftables.bu_site_part_costs
+SET SITE = 'York'
+WHERE UPPER(SITE) = 'YORK'
+;
+
+UPDATE landing_workato_test.reftables.bu_site_part_costs
+SET `Costing ID` = 'York'
+WHERE UPPER(`Costing ID`) = 'YORK'
+;
+
+UPDATE landing_workato_test.reftables.bu_site_part_costs
+SET `Default Site Cost ID` = 'York'
+WHERE (`Default Site Cost ID`) = 'YORK'
+;
+
+SELECT DISTINCT PRODUCT_ID
+FROM tim_wilson.silver.br_outbound_invoice_sherri
+ORDER BY 1
+;
+
+SELECT DISTINCT PART
+FROM landing_workato_test.reftables.bu_site_part_costs
+ORDER BY 1
+;
+
+SELECT DISTINCT PRODUCT_ID
+FROM tim_wilson.silver.br_outbound_invoice_sherri
+EXCEPT
+SELECT DISTINCT PART
+FROM landing_workato_test.reftables.bu_site_part_costs
+ORDER BY 1
+;
+
+SELECT DISTINCT PART
+FROM landing_workato_test.reftables.bu_site_part_costs
+EXCEPT
+SELECT DISTINCT PRODUCT_ID
+FROM tim_wilson.silver.br_outbound_invoice_sherri
+ORDER BY 1
+;
+
+SELECT DISTINCT PART
+FROM landing_workato_test.reftables.bu_site_part_costs
+WHERE `Std. Total Cost` = 0
+;
+
+-- 123327
+SELECT COUNT(*)
+FROM landing.reftables.bu_site_part_costs
+;
+
+-- 26485
+SELECT COUNT(*)
+FROM landing.reftables.bu_site_part_costs
+WHERE ABS(`Std. Burden`) + ABS(`Std. Labor`) + ABS(`Std. Material Burden`) + ABS(`Std. Material`) + ABS(`Std. Subcontract`) = 0
+;
+
+SELECT *
+FROM landing.reftables.bu_site_part_costs
+-- WHERE ABS(`Std. Burden`) + ABS(`Std. Labor`) + ABS(`Std. Material Burden`) + ABS(`Std. Material`) + ABS(`Std. Subcontract`) = 0
+WHERE Part = 'SBR-000031'
+ORDER BY 1, 2, 3
+;
+
+--
+-- 16/07/2026
+--
+
+-- 2026-07-10T12:00:00.000+00:00
+SELECT *
+FROM landing.reftables.bu_site_part_costs
+ORDER BY 10 DESC
+;
+
+-- 123327
+SELECT COUNT(*)
+FROM landing.reftables.bu_site_part_costs
+ORDER BY 1
+;
+
+SELECT DISTINCT SITE
+FROM landing.reftables.bu_site_part_costs
+ORDER BY 1
+;
+
+SELECT DISTINCT SITE, `Costing ID`
+FROM landing.reftables.bu_site_part_costs
+ORDER BY 1,2
+;
+
+SELECT DISTINCT SITE, `Costing ID`, `Default Site Cost ID`
+FROM landing.reftables.bu_site_part_costs
+ORDER BY 1,2,3
+;
+
+SELECT DISTINCT COMPANY, SITE, `Costing ID`, `Default Site Cost ID`
+FROM landing.reftables.bu_site_part_costs
+ORDER BY 1,2,3,4
+;
+
+-- TRUNCATE TABLE landing.reftables.bu_site_part_costs
+-- ;
+
+ALTER TABLE landing.reftables.bu_site_part_costs
+SET TBLPROPERTIES ('delta.columnMapping.mode' = 'name')
+;
+
+ALTER TABLE landing.reftables.bu_site_part_costs
+ADD COLUMN EXTRACT_DATE TIMESTAMP
+;
+
+UPDATE landing.reftables.bu_site_part_costs
+SET EXTRACT_DATE = TIMESTAMP('2026-07-15T12:00:00.000000+00:00')
+;

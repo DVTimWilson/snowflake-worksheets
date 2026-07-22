@@ -1,0 +1,237 @@
+--
+-- 09/01/2026
+--
+
+-- More testing around UNIQUE_KEY, etc.
+SELECT UNIQUE_KEY, PARTBIN_PARTNUM, *
+FROM tim_wilson.bronze.stg_inventory_stockstat
+WHERE PARTBIN_PARTNUM >= 'A'
+ORDER BY INVENTORY_DATE
+LIMIT 100
+;
+
+SELECT PARTBIN_PARTNUM
+FROM tim_wilson.bronze.stg_inventory_stockstat
+GROUP BY PARTBIN_PARTNUM
+HAVING COUNT(*) > 1
+-- ORDER BY 1
+ORDER BY 1 DESC
+;
+
+SELECT PARTBIN_COMPANY
+FROM tim_wilson.bronze.stg_inventory_stockstat
+GROUP BY PARTBIN_COMPANY
+HAVING COUNT(*) > 1
+-- ORDER BY 1
+ORDER BY 1 DESC
+;
+
+SELECT PARTBIN_LOTNUM
+FROM tim_wilson.bronze.stg_inventory_stockstat
+GROUP BY PARTBIN_LOTNUM
+HAVING COUNT(*) > 1
+ORDER BY 1
+-- ORDER BY 1 DESC
+;
+
+SELECT PLANT_NAME
+FROM tim_wilson.bronze.stg_inventory_stockstat
+GROUP BY PLANT_NAME
+-- HAVING COUNT(*) > 1
+ORDER BY 1
+;
+
+SELECT PartBin_WarehouseCode
+FROM tim_wilson.bronze.stg_inventory_stockstat
+GROUP BY PartBin_WarehouseCode
+-- HAVING COUNT(*) > 1
+ORDER BY 1
+;
+
+SELECT PartBin_BinNum
+FROM tim_wilson.bronze.stg_inventory_stockstat
+GROUP BY PartBin_BinNum
+-- HAVING COUNT(*) > 1
+-- ORDER BY 1
+ORDER BY 1 DESC
+;
+
+ WITH inventory_with_gaps AS (
+    SELECT 
+        UNIQUE_KEY
+        , DATE
+        , INVENTORY_ITEM_ID
+        , INVENTORY_ITEM_DESCRIPTION
+        , COREVIEW_PRODUCT_CATEGORY
+        , ENTITY
+        , BU
+        , SITE
+        , TOTAL_VALUE
+        , UNIT_COST
+        , UOM
+        , QUANTITY
+        , UNIT_WEIGHT
+        , WEIGHT_LBS
+        , IS_ACQUIRED_DATE
+        , IS_ACQUIRED_NOW
+        , META_LOAD_DATETIME
+        , RECORD_SOURCE
+        , HASHDIFF
+        , MIN(DATE) OVER (PARTITION BY INVENTORY_ITEM_ID, INVENTORY_ITEM_DESCRIPTION, ENTITY, SITE) AS MIN_DATE
+        , MAX(DATE) OVER () AS MAX_DATE
+    FROM tim_wilson.silver.bsat_combined_inventory_stock_levels
+--    WHERE INVENTORY_ITEM_DESCRIPTION = '01 Inventory Parts (Inventory Part)'
+--    WHERE INVENTORY_ITEM_DESCRIPTION = '01 Inventory Parts (Inventory Part)'  AND DATE <= '2025-02-11'
+--    WHERE INVENTORY_ITEM_DESCRIPTION IN (SELECT DISTINCT INVENTORY_ITEM_DESCRIPTION FROM tim_wilson.silver.bsat_combined_inventory_stock_levels LIMIT 2)
+--    WHERE INVENTORY_ITEM_ID = 'SAMP-005305' AND DATE <= '2025-09-25'
+--    QUALIFY ROW_NUMBER () OVER (PARTITION BY DATE, INVENTORY_ITEM_ID, INVENTORY_ITEM_DESCRIPTION, ENTITY, SITE ORDER BY QUANTITY DESC) = 1  -- Check for data quality, record counts should be the same both with and without this filter
+--    ORDER BY DATE
+    WHERE INVENTORY_ITEM_ID NOT ILIKE 'SAMP%'
+)
+-- SELECT COUNT(*) FROM inventory_with_gaps  -- 902591
+-- SELECT * FROM inventory_with_gaps ORDER BY DATE, UNIQUE_KEY
+,
+
+distinct_inventory_items AS (
+  SELECT DISTINCT
+    INVENTORY_ITEM_ID
+    , INVENTORY_ITEM_DESCRIPTION 
+    , ENTITY
+    , SITE
+    , MIN_DATE
+    , MAX_DATE
+  FROM inventory_with_gaps
+)
+-- SELECT COUNT(*) FROM distinct_inventory_items  -- 11386
+,
+
+cross_join_data AS (
+  SELECT cal.date_day AS dim_date, INVENTORY_ITEM_ID AS dim_inventory_item_id, INVENTORY_ITEM_DESCRIPTION AS dim_inventory_item_description, ENTITY AS dim_entity, SITE AS dim_site
+  FROM tim_wilson.silver.dim_calendar_usa AS cal
+
+  -- CROSS JOIN distinct_inventory_items AS inv
+
+  -- Not a CROSS JOIN but a TRIANGLE JOIN!
+  INNER JOIN distinct_inventory_items AS inv
+  ON cal.date_day >= inv.MIN_DATE
+
+  WHERE cal.date_day <= inv.MAX_DATE
+)
+-- SELECT * FROM cross_join_data WHERE dim_date >= '2025-02-11' ORDER BY dim_date, date
+-- SELECT COUNT(*) FROM cross_join_data  -- 105,175,041 triangle  116,433,236 cross
+,
+
+left_outer_join_data AS (
+  SELECT *
+  FROM cross_join_data AS cjd
+
+  LEFT OUTER JOIN inventory_with_gaps AS inv
+  ON  1=1
+  AND cjd.dim_date = inv.DATE
+  AND cjd.dim_inventory_item_id = inv.INVENTORY_ITEM_ID
+  AND cjd.dim_inventory_item_description = inv.INVENTORY_ITEM_DESCRIPTION
+  AND cjd.dim_entity = inv.ENTITY
+  AND cjd.dim_site = inv.SITE
+)
+-- SELECT * FROM left_outer_join_data WHERE dim_date >= '2025-02-11' ORDER BY dim_date, date
+-- SELECT COUNT(*) FROM left_outer_join_data  -- 105,175,041
+,
+
+mart AS (
+SELECT
+    dim_date
+    , date
+    , dim_inventory_item_id
+    , dim_inventory_item_description
+    , dim_entity
+    , dim_site
+    , CASE WHEN DATE IS NULL THEN LAG(UNIQUE_KEY) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE UNIQUE_KEY
+      END AS UNIQUE_KEY
+    , CASE WHEN DATE IS NULL THEN LAG(DATE) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE DATE
+      END AS DATE
+    , CASE WHEN DATE IS NULL THEN LAG(INVENTORY_ITEM_ID) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE INVENTORY_ITEM_ID
+      END AS INVENTORY_ITEM_ID
+    , CASE WHEN DATE IS NULL THEN LAG(INVENTORY_ITEM_DESCRIPTION) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE INVENTORY_ITEM_DESCRIPTION
+      END AS INVENTORY_ITEM_DESCRIPTION
+    , CASE WHEN DATE IS NULL THEN LAG(COREVIEW_PRODUCT_CATEGORY) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE COREVIEW_PRODUCT_CATEGORY
+      END AS COREVIEW_PRODUCT_CATEGORY
+    , CASE WHEN DATE IS NULL THEN LAG(ENTITY) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE ENTITY
+      END AS ENTITY
+    , CASE WHEN DATE IS NULL THEN LAG(BU) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE BU
+      END AS BU
+    , CASE WHEN DATE IS NULL THEN LAG(SITE) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE SITE
+      END AS SITE
+    , CASE WHEN DATE IS NULL THEN LAG(TOTAL_VALUE) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE TOTAL_VALUE
+      END AS TOTAL_VALUE
+    , CASE WHEN DATE IS NULL THEN LAG(UNIT_COST) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE UNIT_COST
+      END AS UNIT_COST
+    , CASE WHEN DATE IS NULL THEN LAG(UOM) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE UOM
+      END AS UOM
+    , CASE WHEN DATE IS NULL THEN LAG(QUANTITY) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE QUANTITY
+      END AS QUANTITY
+    , CASE WHEN DATE IS NULL THEN LAG(UNIT_WEIGHT) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE UNIT_WEIGHT
+      END AS UNIT_WEIGHT
+    , CASE WHEN DATE IS NULL THEN LAG(WEIGHT_LBS) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE WEIGHT_LBS
+      END AS WEIGHT_LBS
+    , CASE WHEN DATE IS NULL THEN LAG(IS_ACQUIRED_DATE) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE IS_ACQUIRED_DATE
+      END AS IS_ACQUIRED_DATE
+    , CASE WHEN DATE IS NULL THEN LAG(IS_ACQUIRED_NOW) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE IS_ACQUIRED_NOW
+      END AS IS_ACQUIRED_NOW
+    , CASE WHEN META_LOAD_DATETIME IS NULL THEN LAG(META_LOAD_DATETIME) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE META_LOAD_DATETIME
+      END AS META_LOAD_DATETIME
+    , CASE WHEN DATE IS NULL THEN LAG(RECORD_SOURCE) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE RECORD_SOURCE
+      END AS RECORD_SOURCE
+FROM left_outer_join_data
+
+-- WHERE dim_inventory_item_description = '01 Inventory Parts (Inventory Part)' AND dim_date >= '2025-02-11'
+-- WHERE dim_date >= '2024-10-08'
+-- WHERE dim_date >= '2025-09-23'
+-- WHERE dim_date >= '2025-02-11'
+-- WHERE dim_date >= '2025-02-01'
+)
+-- SELECT COUNT(*) FROM mart  -- 105,175,041
+
+SELECT *
+-- SELECT MAX(dim_date)
+FROM mart
+ORDER BY dim_date, entity, site, inventory_item_id, inventory_item_description
+;
+
+SELECT *
+FROM tim_wilson.gold_coreview.mart_inventory_stock_levels_backfill
+--WHERE INVENTORY_ITEM_ID = '02 EPDM Raw Materials:02 01 Pigment:02 01 47 Yellow (Yellow 313 (Cardinal))'
+;
+
+-- 1,100,528
+SELECT COUNT(*), MIN(dim_date), MAX(dim_date)
+FROM tim_wilson.gold_coreview.mart_inventory_stock_levels_backfill
+;
+
+-- 902,591
+SELECT COUNT(*)
+FROM tim_wilson.gold_coreview.mart_inventory_stock_levels
+;
+
+SELECT dim_date, COUNT(INVENTORY_ITEM_ID) AS item_id_count
+FROM tim_wilson.gold_coreview.mart_inventory_stock_levels_backfill
+GROUP BY dim_date
+ORDER BY dim_date DESC
+;

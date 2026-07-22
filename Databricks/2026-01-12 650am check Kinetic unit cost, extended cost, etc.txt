@@ -1,0 +1,17 @@
+SELECT *
+FROM tim_wilson.silver.br_inventory_stock_levels_kinetic_step_1
+;
+
+SELECT *
+FROM tim_wilson.silver.br_combined_quickbooks_stock_status_step_1
+;
+
+SELECT CALCULATED_TOTALCOST, *
+FROM tim_wilson.silver.br_inventory_stock_levels_kinetic_step_0
+ORDER BY 1 ASC
+;
+
+SELECT CALCULATED_TOTALCOST, *
+FROM tim_wilson.silver.br_inventory_stock_levels_kinetic_step_0
+ORDER BY 1 DESC
+;

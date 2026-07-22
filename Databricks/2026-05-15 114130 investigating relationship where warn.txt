@@ -1,0 +1,91 @@
+with left_table as (
+
+  select
+    INVOICE_LINE_LHK as id
+
+  from `tim_wilson`.`silver`.`bsat_combined_outbound_invoice_v2`
+
+  where INVOICE_LINE_LHK is not null
+    and RECORD_SOURCE NOT IN ('QUICKBOOKS.CONTRA_COGS','KINETIC.MATERIAL_TRANSFER')
+
+),
+
+right_table as (
+
+  select
+    INVOICE_LINE_LHK as id
+
+  from `tim_wilson`.`silver`.`lnk_outbound_invoice_line`
+
+  where INVOICE_LINE_LHK is not null
+    and RECORD_SOURCE NOT IN ('QUICKBOOKS.CONTRA_COGS','KINETIC.MATERIAL_TRANSFER')
+
+),
+
+exceptions as (
+
+  select
+    left_table.id
+
+  from left_table
+
+  left anti join right_table
+         on left_table.id = right_table.id
+
+)
+
+SELECT *
+FROM `tim_wilson`.`silver`.`bsat_combined_outbound_invoice_v2`
+WHERE INVOICE_LINE_LHK IN (SELECT * FROM exceptions)
+;
+
+SELECT *
+FROM `tim_wilson`.`silver`.`bsat_combined_outbound_invoice_v2`
+WHERE INVOICE_LINE_LHK = UNBASE64('AjN4sJUwa72qEyid/qw86A==')
+;
+
+SELECT *
+FROM `tim_wilson`.`silver`.`lnk_outbound_invoice_line`
+WHERE RECORD_SOURCE = 'QUICKBOOKS.STAGING_ETI_V2'
+;
+
+with left_table as (
+
+  select
+    INVOICE_LINE_LHK as id
+
+  from `develop`.`silver`.`bsat_combined_outbound_invoice_v2`
+
+  where INVOICE_LINE_LHK is not null
+    and RECORD_SOURCE NOT IN ('QUICKBOOKS.CONTRA_COGS','KINETIC.MATERIAL_TRANSFER')
+
+),
+
+right_table as (
+
+  select
+    INVOICE_LINE_LHK as id
+
+  from `develop`.`silver`.`lnk_outbound_invoice_line`
+
+  where INVOICE_LINE_LHK is not null
+    and RECORD_SOURCE NOT IN ('QUICKBOOKS.CONTRA_COGS','KINETIC.MATERIAL_TRANSFER')
+
+),
+
+exceptions as (
+
+  select
+    left_table.id
+
+  from left_table
+
+  left anti join right_table
+         on left_table.id = right_table.id
+
+)
+
+SELECT *
+FROM `develop`.`silver`.`bsat_combined_outbound_invoice_v2`
+WHERE INVOICE_LINE_LHK IN (SELECT * FROM exceptions)
+;

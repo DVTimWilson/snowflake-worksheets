@@ -1,0 +1,522 @@
+--8
+SELECT COUNT(*)
+FROM develop.gold_coreview.mart_inventory_transactions
+WHERE TRANDATE = '2026-01-03'
+;
+
+SELECT *
+FROM develop.gold_coreview.mart_inventory_transactions
+WHERE TRANDATE = '2026-01-03'
+;
+
+--6953
+SELECT COUNT(*)
+FROM develop.gold_coreview.mart_inventory_stock_levels_backfill
+WHERE DATE = '2026-01-03'
+;
+
+SELECT *
+FROM develop.gold_coreview.mart_inventory_stock_levels_backfill
+WHERE DATE = '2026-01-03'
+;
+
+-- QUANTITY NULL
+SELECT *
+FROM develop.gold_coreview.mart_inventory_stock_levels_backfill
+WHERE INVENTORY_ITEM_ID = '01 Inventory Parts:05 Plant Labor'
+AND DATE = '2026-01-02'
+;
+
+-- QUANTITY 9269.0000000
+SELECT *
+FROM develop.gold_coreview.mart_inventory_stock_levels_backfill
+WHERE INVENTORY_ITEM_ID = '01 Inventory Parts:05 Plant Labor'
+AND DATE = '2026-01-03'
+;
+
+-- QUANTITY 9139.0000000
+SELECT *
+FROM develop.gold_coreview.mart_inventory_stock_levels_backfill
+WHERE INVENTORY_ITEM_ID = '01 Inventory Parts:05 Plant Labor'
+AND DATE = '2026-01-04'
+;
+
+-- QUANTITY 8413.0000000
+SELECT *
+FROM develop.gold_coreview.mart_inventory_stock_levels_backfill
+WHERE INVENTORY_ITEM_ID = '01 Inventory Parts:05 Plant Labor'
+AND DATE = '2026-01-05'
+;
+
+-- -120
+SELECT *
+FROM develop.gold_coreview.mart_inventory_transactions
+WHERE PARTNUM = '01 Inventory Parts:05 Plant Labor'
+AND TRANDATE = '2026-01-03'
+;
+
+-- -68
+SELECT *
+FROM develop.gold_coreview.mart_inventory_transactions
+WHERE PARTNUM = '01 Inventory Parts:05 Plant Labor'
+AND TRANDATE = '2026-01-04'
+;
+
+-- -10
+SELECT *
+FROM develop.gold_coreview.mart_inventory_transactions
+WHERE PARTNUM = '01 Inventory Parts:05 Plant Labor'
+AND TRANDATE = '2026-01-05'
+;
+
+SELECT *
+, QUANTITY
+, LEAD(QUANTITY) OVER (PARTITION BY INVENTORY_ITEM_ID ORDER BY DATE) AS NEXT_QUANTITY
+, NEXT_QUANTITY - QUANTITY AS MOVEMENT
+, t.TRANQTY
+FROM develop.gold_coreview.mart_inventory_stock_levels_backfill AS s
+-- FROM develop.gold_coreview.mart_inventory_stock_levels AS s
+
+LEFT OUTER JOIN develop.gold_coreview.mart_inventory_transactions AS t
+ON s.INVENTORY_ITEM_ID = t.PARTNUM
+AND s.DATE = t.TRANDATE
+
+WHERE INVENTORY_ITEM_ID = '01 Inventory Parts:05 Plant Labor'
+AND DATE >= '2026-01-03'
+AND TRANDATE IS NOT NULL
+ORDER BY DATE
+;
+
+-- L000036-04-89-1903
+SELECT *
+FROM develop.gold_coreview.mart_inventory_transactions AS t
+WHERE PARTNUM = 'L000036-04-89-1903'
+AND TRANDATE >= '2026-01-03'
+ORDER BY TRANDATE
+;
+
+SELECT *
+, TRANQTY
+, LEAD(TRANQTY) OVER (PARTITION BY PARTNUM ORDER BY TRANDATE) AS NEXT_TRANQTY
+, NEXT_TRANQTY - TRANQTY AS TRANMOVEMENT
+FROM develop.gold_coreview.mart_inventory_transactions AS t
+WHERE PARTNUM = 'L000036-04-89-1903'
+AND TRANDATE >= '2026-01-03'
+ORDER BY TRANDATE
+;
+
+SELECT *
+FROM develop.gold_coreview.mart_inventory_stock_levels_backfill AS s
+WHERE INVENTORY_ITEM_ID = 'L000036-04-89-1903'
+AND DATE >= '2026-01-03'
+ORDER BY DATE
+;
+
+SELECT *
+, QUANTITY
+, LEAD(QUANTITY) OVER (PARTITION BY INVENTORY_ITEM_ID ORDER BY DATE) AS NEXT_QUANTITY
+, NEXT_QUANTITY - QUANTITY AS STOCKMOVEMENT
+FROM develop.gold_coreview.mart_inventory_stock_levels_backfill AS s
+WHERE INVENTORY_ITEM_ID = 'L000036-04-89-1903'
+AND DATE >= '2026-01-03'
+ORDER BY DATE
+;
+
+SELECT -- *
+  dim_date
+, DATE
+, INVENTORY_ITEM_ID
+, QUANTITY
+, LEAD(QUANTITY) OVER (PARTITION BY INVENTORY_ITEM_ID ORDER BY DATE) AS NEXT_QUANTITY
+, NEXT_QUANTITY - QUANTITY AS STOCKMOVEMENT
+, TRANQTY * -1 AS TRANQTY
+FROM develop.gold_coreview.mart_inventory_stock_levels_backfill AS s
+
+LEFT OUTER JOIN develop.gold_coreview.mart_inventory_transactions AS t
+ON s.INVENTORY_ITEM_ID = t.PARTNUM
+AND s.DATE = t.TRANDATE
+AND s.SITE = t.PLANT
+
+WHERE INVENTORY_ITEM_ID = 'L000036-04-89-1903'
+-- AND DATE >= '2026-01-03'
+AND DATE = '2025-12-30'
+ORDER BY DATE
+;
+
+SELECT DATE, SUM(STOCKMOVEMENT) AS S, SUM(TRANQTY) AS T
+FROM (
+SELECT -- *
+  dim_date
+, DATE
+, INVENTORY_ITEM_ID
+, QUANTITY
+, LEAD(QUANTITY) OVER (PARTITION BY INVENTORY_ITEM_ID ORDER BY DATE) AS NEXT_QUANTITY
+, NEXT_QUANTITY - QUANTITY AS STOCKMOVEMENT
+, TRANQTY * -1 AS TRANQTY
+FROM develop.gold_coreview.mart_inventory_stock_levels_backfill AS s
+
+LEFT OUTER JOIN develop.gold_coreview.mart_inventory_transactions AS t
+ON s.INVENTORY_ITEM_ID = t.PARTNUM
+AND s.DATE = t.TRANDATE
+
+WHERE INVENTORY_ITEM_ID = 'L000036-04-89-1903'
+-- AND DATE >= '2026-01-03'
+-- ORDER BY DATE
+) AS x
+GROUP BY DATE
+ORDER BY DATE
+;
+
+SELECT DISTINCT COMPANY, PLANT
+FROM develop.gold_coreview.mart_inventory_transactions
+;
+
+SELECT DISTINCT ENTITY, SITE
+FROM develop.gold_coreview.mart_inventory_stock_levels_backfill
+;
+
+SELECT DISTINCT COMPANY, PLANT
+FROM tim_wilson.gold_coreview.mart_inventory_transactions
+;
+
+SELECT DISTINCT COMPANY, SITE
+FROM tim_wilson.gold_coreview.mart_inventory_transactions
+;
+
+SELECT DISTINCT ENTITY, SITE
+FROM tim_wilson.gold_coreview.mart_inventory_stock_levels_backfill
+;
+
+-- SELECT SUM(S), SUM(T)
+-- FROM (
+SELECT DATE, SUM(STOCKMOVEMENT) AS S, SUM(TRANQTY) AS T  -- , SUM(LAGSTOCKMOVEMENT) AS SS
+FROM (
+SELECT -- *,
+  dim_date
+, DATE
+, INVENTORY_ITEM_ID
+, QUANTITY
+, LEAD(QUANTITY) OVER (PARTITION BY INVENTORY_ITEM_ID ORDER BY DATE) AS NEXT_QUANTITY
+, LEAD(QUANTITY) OVER (PARTITION BY INVENTORY_ITEM_ID ORDER BY DATE) - QUANTITY AS STOCKMOVEMENT
+-- , LAG(QUANTITY) OVER (PARTITION BY INVENTORY_ITEM_ID ORDER BY DATE) AS PREV_QUANTITY
+-- , QUANTITY - LAG(QUANTITY) OVER (PARTITION BY INVENTORY_ITEM_ID ORDER BY DATE) AS LAGSTOCKMOVEMENT
+, TRANQTY
+FROM tim_wilson.gold_coreview.mart_inventory_stock_levels_backfill AS s
+
+INNER JOIN tim_wilson.gold_coreview.mart_inventory_transactions AS t
+ON s.INVENTORY_ITEM_ID = t.PARTNUM
+AND s.DATE = t.TRANDATE
+AND s.SITE = t.SITE
+AND S.ENTITY = t.COMPANY
+
+WHERE INVENTORY_ITEM_ID = 'L000036-04-89-1903'
+-- AND DATE >= '2026-01-03'
+-- AND TRANTYPE != 'MFG-VAR'
+ORDER BY DATE
+) AS x
+GROUP BY DATE
+ORDER BY DATE
+-- ) AS y
+;
+
+SELECT *,
+  dim_date
+, DATE
+, INVENTORY_ITEM_ID
+, QUANTITY
+, LEAD(QUANTITY) OVER (PARTITION BY INVENTORY_ITEM_ID ORDER BY DATE) AS NEXT_QUANTITY
+, LEAD(QUANTITY) OVER (PARTITION BY INVENTORY_ITEM_ID ORDER BY DATE) - QUANTITY AS STOCKMOVEMENT
+-- , LAG(QUANTITY) OVER (PARTITION BY INVENTORY_ITEM_ID ORDER BY DATE) AS PREV_QUANTITY
+-- , QUANTITY - LAG(QUANTITY) OVER (PARTITION BY INVENTORY_ITEM_ID ORDER BY DATE) AS LAGSTOCKMOVEMENT
+, TRANQTY * -1 AS TRANQTY
+FROM tim_wilson.gold_coreview.mart_inventory_stock_levels_backfill AS s
+
+LEFT OUTER JOIN tim_wilson.gold_coreview.mart_inventory_transactions AS t
+ON s.INVENTORY_ITEM_ID = t.PARTNUM
+AND s.DATE = t.TRANDATE
+-- AND s.SITE = t.SITE
+-- AND S.ENTITY = t.COMPANY
+
+WHERE INVENTORY_ITEM_ID = 'L000036-04-89-1903'
+-- AND DATE >= '2026-01-03'
+-- AND TRANTYPE != 'MFG-VAR'
+-- AND TRANTYPE != 'MFG-STK'
+-- AND JOBNUM != '-1'
+-- AND TRANTYPE = 'STK-MTL'
+ORDER BY DATE
+;
+
+SELECT *
+FROM tim_wilson.gold_coreview.mart_inventory_stock_levels_backfill AS s
+WHERE INVENTORY_ITEM_ID = 'L000036-04-89-1903'
+ORDER BY DATE
+;
+
+SELECT *
+FROM landing.kinetic.stockstat
+WHERE PartBin_PartNum = 'L000036-04-89-1903'
+ORDER BY EXTRACT_DATE
+;
+
+--
+-- 11/03/2026
+--
+
+-- SBR-000024, 1008963-06-01-0400, SBA-000113, 12 Casings:B Grade Casing:Tall 4 Casing B Grade (Tall 4 Casing B Grade), 11 Industrial Assemblies:11 04 Pentair Water:11 04 09 RTA-RTB14R (14-inch Base  ), RML-000000, 9008602-03-02-0306, LMNT-000734, PKG-0000050
+SELECT *
+FROM develop.gold_coreview.mart_inventory_transactions
+WHERE TRANDATE = '2026-01-05'
+;
+
+SELECT *
+FROM develop.gold_coreview.mart_inventory_transactions
+WHERE PARTNUM = '12 Casings:B Grade Casing:Tall 4 Casing B Grade (Tall 4 Casing B Grade)'
+AND TO_DATE(TRANDATE) = '2024-05-01'
+ORDER BY TRANDATE
+;
+
+SELECT *
+FROM develop.gold_coreview.mart_inventory_stock_levels
+WHERE INVENTORY_ITEM_ID = '12 Casings:B Grade Casing:Tall 4 Casing B Grade (Tall 4 Casing B Grade)'
+ORDER BY DATE
+;
+
+SELECT *
+FROM develop.gold_coreview.mart_inventory_stock_levels_backfill
+WHERE INVENTORY_ITEM_ID = '12 Casings:B Grade Casing:Tall 4 Casing B Grade (Tall 4 Casing B Grade)'
+ORDER BY DATE
+;
+
+-- QUICKBOOKS data
+-- SELECT SUM(STOCK_MOVEMENT) AS TOTAL_STOCK_MOVEMENT, SUM(TRANSACTION_QUANTITY) AS TOTAL_TRANSACTION_QUANTITY
+-- FROM (
+SELECT DATE, ANY_VALUE(INVENTORY_ITEM_ID) AS INVENTORY_ITEM_ID, SUM(STOCKMOVEMENT) AS STOCK_MOVEMENT, SUM(TRANQTY) AS TRANSACTION_QUANTITY
+FROM (
+SELECT -- *,
+  DATE
+, INVENTORY_ITEM_ID
+, QUANTITY
+, LEAD(QUANTITY) OVER (PARTITION BY INVENTORY_ITEM_ID ORDER BY DATE) AS NEXT_QUANTITY
+, LEAD(QUANTITY) OVER (PARTITION BY INVENTORY_ITEM_ID ORDER BY DATE) - QUANTITY AS STOCKMOVEMENT
+, COALESCE(TRANQTY, 0) AS TRANQTY
+FROM (SELECT *, LEAD(DATE) OVER (PARTITION BY INVENTORY_ITEM_ID ORDER BY DATE) AS NEXTDATE FROM tim_wilson.gold_coreview.mart_inventory_stock_levels) AS s
+
+INNER JOIN tim_wilson.gold_coreview.mart_inventory_transactions AS t
+ON s.INVENTORY_ITEM_ID = t.PARTNUM
+AND s.NEXTDATE = TO_DATE(t.TRANDATE)
+-- AND s.SITE = t.SITE
+-- AND S.ENTITY = t.COMPANY
+
+WHERE INVENTORY_ITEM_ID = '11 Industrial Assemblies:11 04 Pentair Water:11 04 09 RTA-RTB14R (14-inch Base  )'  -- L000036-04-89-1903, SBR-000024, 1008963-06-01-0400, SBA-000113, 12 Casings:B Grade Casing:Tall 4 Casing B Grade (Tall 4 Casing B Grade), 11 Industrial Assemblies:11 04 Pentair Water:11 04 09 RTA-RTB14R (14-inch Base  ), RML-000005, 9008602-03-02-0306, LMNT-000734, PKG-0000050
+-- AND DATE >= '2026-01-03'
+-- AND TRANTYPE != 'MFG-VAR'
+ORDER BY DATE
+) AS x
+GROUP BY DATE
+ORDER BY DATE
+-- ) AS y
+;
+
+-- KINETIC data
+-- SELECT SUM(STOCK_MOVEMENT) AS TOTAL_STOCK_MOVEMENT, SUM(TRANSACTION_QUANTITY) AS TOTAL_TRANSACTION_QUANTITY
+-- FROM (
+SELECT DATE, ANY_VALUE(INVENTORY_ITEM_ID) AS INVENTORY_ITEM_ID, SUM(STOCKMOVEMENT) AS STOCK_MOVEMENT, SUM(TRANQTY) AS TRANSACTION_QUANTITY
+FROM (
+SELECT -- *,
+  DATE
+, INVENTORY_ITEM_ID
+, QUANTITY
+, LEAD(QUANTITY) OVER (PARTITION BY INVENTORY_ITEM_ID ORDER BY DATE) AS NEXT_QUANTITY
+, LEAD(QUANTITY) OVER (PARTITION BY INVENTORY_ITEM_ID ORDER BY DATE) - QUANTITY AS STOCKMOVEMENT
+, COALESCE(TRANQTY, 0) * -1 AS TRANQTY
+, *
+FROM tim_wilson.gold_coreview.mart_inventory_stock_levels AS s
+
+LEFT OUTER JOIN tim_wilson.gold_coreview.mart_inventory_transactions AS t
+ON s.INVENTORY_ITEM_ID = t.PARTNUM
+AND s.DATE = TO_DATE(t.TRANDATE)
+-- AND s.SITE = t.SITE
+-- AND S.ENTITY = t.COMPANY
+
+WHERE INVENTORY_ITEM_ID = 'RML-000005'  -- L000036-04-89-1903, SBR-000024, 1008963-06-01-0400, SBA-000113, RML-000005, 9008602-03-02-0306, LMNT-000734, PKG-0000050
+AND DATE <= '2026-01-31'
+AND TRANTYPE != 'MFG-VAR'
+ORDER BY DATE
+) AS x
+GROUP BY DATE
+HAVING NOT (STOCK_MOVEMENT = 0 AND TRANSACTION_QUANTITY = 0)
+ORDER BY DATE
+-- ) AS y
+;
+
+-- 43
+SELECT DISTINCT TRANTYPE
+FROM tim_wilson.gold_coreview.mart_inventory_transactions
+;
+
+SELECT DISTINCT TRANTYPE
+FROM tim_wilson.gold_coreview.mart_inventory_transactions
+WHERE RECORD_SOURCE LIKE 'KINETIC%'
+ORDER BY TRANTYPE
+;
+
+-- 39309
+-- 35716 excluding SAMPLEs WHERE filter
+-- 35716 excluding SAMPLEs mart filter
+SELECT COUNT(*) FROM (
+SELECT DISTINCT PARTNUM, PARTDESCRIPTION
+FROM tim_wilson.gold_coreview.mart_inventory_transactions
+WHERE RECORD_SOURCE LIKE 'KINETIC%'
+-- AND PARTNUM NOT ILIKE 'SAMP%'
+ORDER BY PARTNUM
+) AS x
+;
+
+SELECT DISTINCT PARTNUM, PARTDESCRIPTION
+FROM tim_wilson.gold_coreview.mart_inventory_transactions
+WHERE PARTNUM ILIKE 'SAMP%'
+-- WHERE PARTNUM ILIKE '%SAMP%'
+;
+
+-- 10123
+SELECT COUNT(*) FROM (
+SELECT DISTINCT INVENTORY_ITEM_ID, INVENTORY_ITEM_DESCRIPTION
+FROM tim_wilson.gold_coreview.mart_inventory_stock_levels
+WHERE RECORD_SOURCE LIKE 'KINETIC%'
+ORDER BY INVENTORY_ITEM_ID
+) AS x
+;
+
+-- 5446
+SELECT COUNT(*) FROM (
+SELECT DISTINCT INVENTORY_ITEM_ID, INVENTORY_ITEM_DESCRIPTION
+FROM tim_wilson.gold_coreview.mart_inventory_stock_levels AS s
+
+INNER JOIN tim_wilson.gold_coreview.mart_inventory_transactions AS t
+ON s.INVENTORY_ITEM_ID = t.PARTNUM
+
+WHERE s.RECORD_SOURCE LIKE 'KINETIC%'
+ORDER BY INVENTORY_ITEM_ID
+) AS x
+;
+
+SELECT DISTINCT TRANTYPE
+FROM tim_wilson.gold_coreview.mart_inventory_transactions AS t
+
+LEFT ANTI JOIN tim_wilson.gold_coreview.mart_inventory_stock_levels AS s
+ON s.INVENTORY_ITEM_ID = t.PARTNUM
+
+-- WHERE t.RECORD_SOURCE LIKE 'KINETIC%'
+ORDER BY TRANTYPE
+;
+
+-- 2025-10-24
+
+-- 3 records
+SELECT *
+FROM landing.kinetic.stockstat
+WHERE PartBin_PartNum = 'L000036-04-89-1903'
+AND TO_DATE(Extract_Date) = '2025-10-24'
+ORDER BY Extract_Date
+;
+
+-- 3 records
+SELECT *
+FROM psa.kinetic.psa_inventory_stockstat
+WHERE PartBin_PartNum = 'L000036-04-89-1903'
+AND TO_DATE(Extract_Date) = '2025-10-24'
+ORDER BY Extract_Date
+;
+
+-- 1 record
+SELECT *
+FROM tim_wilson.gold_coreview.mart_inventory_stock_levels
+WHERE INVENTORY_ITEM_ID = 'L000036-04-89-1903'
+AND DATE = '2025-10-24'
+;
+
+-- 5 records
+SELECT *
+FROM landing.kinetic.parttran
+WHERE PartNum = 'L000036-04-89-1903'
+AND TranDate = '2025-10-24'
+ORDER BY TranDate, TranNum
+;
+
+-- 5 records
+SELECT *
+FROM tim_wilson.gold_coreview.mart_inventory_transactions
+WHERE PARTNUM = 'L000036-04-89-1903'
+AND TRANDATE = '2025-10-24'
+ORDER BY TRANNUM
+;
+
+-- 2025-10-14
+
+-- 5 records
+SELECT Extract_date, *
+FROM landing.kinetic.stockstat
+WHERE PartBin_PartNum = 'RML-000005'
+-- AND TO_DATE(Extract_Date) BETWEEN '2025-10-01' AND  '2025-10-31'
+ORDER BY Extract_Date, UPPER(PartBin_LotNum)
+;
+
+-- 5 records
+SELECT *
+FROM psa.kinetic.psa_inventory_stockstat
+WHERE PartBin_PartNum = 'L000036-04-89-1903'
+AND TO_DATE(Extract_Date) = '2025-10-14'
+ORDER BY Extract_Date, UPPER(PartBin_LotNum)
+;
+
+-- 1 record
+SELECT *
+FROM tim_wilson.gold_coreview.mart_inventory_stock_levels
+WHERE INVENTORY_ITEM_ID = 'L000036-04-89-1903'
+AND DATE = '2025-10-14'
+;
+
+-- 12 records
+-- exclude TranClass 'A' ?
+SELECT *
+FROM landing.kinetic.parttran
+WHERE PartNum = 'L000036-04-89-1903'
+AND TranDate = '2025-10-14'
+ORDER BY TranDate, TranNum
+;
+
+-- 12 records
+SELECT *
+FROM tim_wilson.gold_coreview.mart_inventory_transactions
+WHERE PARTNUM = 'L000036-04-89-1903'
+AND TRANDATE = '2025-10-14'
+ORDER BY TRANNUM
+;
+
+-- 20/10/2025
+-- 1345
+
+SELECT *
+FROM landing.kinetic.parttran
+WHERE PartNum = 'L000036-04-89-1903'
+AND TranDate = '2025-10-20'
+ORDER BY TranDate, TranNum
+;
+
+-- 24/10/2025
+-- 652
+
+SELECT *
+FROM landing.kinetic.parttran
+WHERE PartNum = 'L000036-04-89-1903'
+AND TranDate BETWEEN '2025-10-01' AND  '2025-10-31'
+ORDER BY TranDate, TranNum
+;
+
+SELECT TRANDATE, SUM(TRANQTY)
+FROM landing.kinetic.parttran
+WHERE PartNum = 'L000036-04-89-1903'
+AND TranDate BETWEEN '2025-10-01' AND  '2025-10-31'
+GROUP BY TRANDATE
+ORDER BY TranDate
+;

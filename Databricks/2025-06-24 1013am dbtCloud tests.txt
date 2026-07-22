@@ -1,0 +1,29 @@
+SELECT *
+FROM `tim_wilson`.`tim_wilson`.`test_table`
+;
+
+SELECT *
+FROM `tim_wilson`.`tim_wilson`.`test_databricks`
+;
+
+DROP VIEW `hive_metastore`.`default`.`test_databricks`
+;
+
+DROP TABLE tim_wilson.tim_wilson_tim_wilson.test_databricks
+;
+DROP SCHEMA tim_wilson.tim_wilson_tim_wilson
+;
+
+DROP TABLE `hive_metastore`.`tim_wilson`.`test_databricks`
+;
+DROP SCHEMA `hive_metastore`.`tim_wilson`
+;
+
+DROP VIEW tim_wilson.default_tim_wilson.test_databricks
+;
+DROP SCHEMA tim_wilson.default_tim_wilson
+;
+
+select * from `tim_wilson`.`example`.`my_first_dbt_model` limit 100;
+
+select * from `tim_wilson`.`example`.`my_second_dbt_model` limit 100;

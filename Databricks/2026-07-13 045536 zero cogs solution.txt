@@ -1,0 +1,178 @@
+SELECT *
+FROM tim_wilson.silver.sat_inventory_transactions
+WHERE EXTCOST = 0
+;
+
+SELECT *
+FROM tim_wilson.gold_coreview.mart_inventory_usage
+WHERE EXTCOST != 0
+;
+
+WITH sats AS (
+    SELECT INVENTORY_TRANSACTION_LHK
+        , HASHDIFF
+        , TRANCLASS
+        , TRANTYPE
+        , INVENTORYTRANS
+        , UM
+        , JOBNUM
+        , PACKLINE
+        , PONUM
+        , PACKNUM
+        , POLINE
+        , PORELNUM
+        , ORDERNUM
+        , ORDERLINE
+        , ORDERRELNUM
+        , BINNUM2
+        , PARTDESCRIPTION
+        , REVISIONNUM
+        , VENDORNUM
+        , INVOICENUM
+        , INVOICELINE
+        , FISCALYEAR
+        , FISCALPERIOD
+        , SYSDATE
+        , SYSROWID
+        , MTLUNITCOST
+        , LBRUNITCOST
+        , BURUNITCOST
+        , SUBUNITCOST
+        , MTLBURUNITCOST
+        , EXTCOST
+        , COSTMETHOD
+        , INVADJSRC
+        , INVADJREASON
+        , PLANT
+        , GLTRANS
+        , POSTEDTOGL
+        , PARTNUM
+        , COMPANY
+        , WAREHOUSECODE
+        , BINNUM
+        , LOTNUM
+        , TRANNUM
+        , TRANQTY
+        , TRANDATE
+        , EXTRACT_DATE
+        , UNIQUE_KEY
+        , LOAD_DATETIME
+        , RECORD_SOURCE
+        , COALESCE(
+  -- company -> site map (fast constant map lookup)
+  element_at(
+    map_from_arrays(
+      array('DRC','SAI','STI','TSS','CRC','PRC','ETI','ETR','DOS','ATURF'),
+      array('Delphos','Buffalo','Corona','Newville','Barberton','Farmingdale','Lockport','Chambersburg','Driftwood','Buffalo')
+    ),
+    UPPER(TRIM(COMPANY))
+  ),
+  -- plant -> site map
+  element_at(
+    map_from_arrays(
+      array('CORONA','CORONADE','BFCOMMON','CHAMBER','LOCKPORT','NEWVILLE'),
+      array('Corona','Corona','Butterfly Commons','Chambersburg','Lockport','Newville')
+    ),
+    UPPER(TRIM(PLANT))
+  ),
+  -- special cross-rule
+  CASE WHEN UPPER(TRIM(COMPANY)) = 'EII' AND UPPER(TRIM(PLANT)) = 'MFGSYS' THEN 'Lancaster' END,
+  CASE WHEN UPPER(TRIM(COMPANY)) = 'DRC' AND UPPER(TRIM(PLANT)) = 'MFGSYS' THEN 'Delphos' END,
+  -- explicit -1 → Uncategorized
+  CASE WHEN UPPER(TRIM(PLANT)) = '-1' THEN 'Uncategorized' END,
+  -- fallback to cleaned plant text
+  INITCAP(REPLACE(UPPER(TRIM(PLANT)), '_', ' ')),
+  'Uncategorized'
+) AS SITE
+        , NULL AS QUICKBOOKSITEMTYPE
+        , NULL AS QUICKBOOKSNAME
+        , NULL AS QUICKBOOKSMEMO
+        , MTLUNITCOST + LBRUNITCOST + BURUNITCOST + SUBUNITCOST + MTLBURUNITCOST AS TOTAL_UNIT_COST
+        , ABS(MTLUNITCOST) + ABS(LBRUNITCOST) + ABS(BURUNITCOST) + ABS(SUBUNITCOST) + ABS(MTLBURUNITCOST) AS TOTAL_ABS_UNIT_COST
+    FROM `tim_wilson`.`silver`.`sat_inventory_transactions_latest`
+)
+
+SELECT sats.INVENTORY_TRANSACTION_LHK
+        , sats.HASHDIFF
+        , sats.TRANCLASS
+        , sats.TRANTYPE
+        , sats.INVENTORYTRANS
+        , sats.UM
+        , sats.JOBNUM
+        , sats.PACKLINE
+        , sats.PONUM
+        , sats.PACKNUM
+        , sats.POLINE
+        , sats.PORELNUM
+        , sats.ORDERNUM
+        , sats.ORDERLINE
+        , sats.ORDERRELNUM
+        , sats.BINNUM2
+        , sats.PARTDESCRIPTION
+        , sats.REVISIONNUM
+        , sats.VENDORNUM
+        , sats.INVOICENUM
+        , sats.INVOICELINE
+        , sats.FISCALYEAR
+        , sats.FISCALPERIOD
+        , sats.SYSDATE
+        , sats.SYSROWID
+        , CASE WHEN sats.TOTAL_UNIT_COST = 0 AND sats.TOTAL_ABS_UNIT_COST = 0 THEN COALESCE(stdcosts.STD_MATERIAL, 0) ELSE sats.MTLUNITCOST END AS MTLUNITCOST
+        , CASE WHEN sats.TOTAL_UNIT_COST = 0 AND sats.TOTAL_ABS_UNIT_COST = 0 THEN COALESCE(stdcosts.STD_LABOR, 0) ELSE sats.LBRUNITCOST END AS LBRUNITCOST
+        , CASE WHEN sats.TOTAL_UNIT_COST = 0 AND sats.TOTAL_ABS_UNIT_COST = 0 THEN COALESCE(stdcosts.STD_BURDEN, 0) ELSE sats.BURUNITCOST END AS BURUNITCOST
+        , CASE WHEN sats.TOTAL_UNIT_COST = 0 AND sats.TOTAL_ABS_UNIT_COST = 0 THEN COALESCE(stdcosts.STD_SUBCONTRACT, 0) ELSE sats.SUBUNITCOST END AS SUBUNITCOST
+        , CASE WHEN sats.TOTAL_UNIT_COST = 0 AND sats.TOTAL_ABS_UNIT_COST = 0 THEN COALESCE(stdcosts.STD_MATERIAL_BURDEN, 0) ELSE sats.MTLBURUNITCOST END AS MTLBURUNITCOST
+        , CASE WHEN sats.TOTAL_UNIT_COST = 0 AND sats.TOTAL_ABS_UNIT_COST = 0 THEN 
+
+(
+  
+    CAST(COALESCE(TRY_MULTIPLY(sats.TRANQTY, stdcosts.STD_TOTAL_COST) , 0) AS DECIMAL(38,8))
+  
+) ELSE sats.EXTCOST END AS EXTCOST
+        , sats.COSTMETHOD
+        , sats.INVADJSRC
+        , sats.INVADJREASON
+        , sats.PLANT
+        , sats.GLTRANS
+        , sats.POSTEDTOGL
+        , sats.PARTNUM
+        , sats.COMPANY
+        , sats.WAREHOUSECODE
+        , sats.BINNUM
+        , sats.LOTNUM
+        , sats.TRANNUM
+        , sats.TRANQTY
+        , sats.TRANDATE
+        , sats.EXTRACT_DATE
+        , sats.UNIQUE_KEY
+        , sats.LOAD_DATETIME
+        , sats.RECORD_SOURCE
+        , sats.SITE
+        , sats.QUICKBOOKSITEMTYPE
+        , sats.QUICKBOOKSNAME
+        , sats.QUICKBOOKSMEMO   
+FROM sats
+
+LEFT OUTER JOIN `tim_wilson`.`silver`.`ref_sat_bu_site_part_costs_latest` as stdcosts
+    ON -- Case-insensitive equality for ad-hoc use
+UPPER(sats.COMPANY) = UPPER(stdcosts.COMPANY)
+    AND -- Case-insensitive equality for ad-hoc use
+UPPER(sats.SITE) = UPPER(stdcosts.SITE)
+    AND -- Case-insensitive equality for ad-hoc use
+UPPER(sats.PARTNUM) = UPPER(stdcosts.PART)
+
+WHERE sats.TOTAL_UNIT_COST = 0 AND sats.TOTAL_ABS_UNIT_COST = 0
+;
+
+CREATE TABLE landing.reftables.bu_site_part_costs AS
+SELECT * FROM landing_workato_test.reftables.bu_site_part_costs
+;
+
+ALTER TABLE landing.reftables.bu_site_part_costs
+SET TBLPROPERTIES ('delta.columnMapping.mode' = 'name')
+;
+
+SELECT * FROM landing.reftables.bu_site_part_costs
+;
+
+

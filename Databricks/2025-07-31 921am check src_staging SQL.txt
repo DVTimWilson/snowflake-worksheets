@@ -1,0 +1,163 @@
+-- 31/07/2025
+
+DROP TABLE develop.alex_higgs.waterlevels
+;
+DROP SCHEMA develop.alex_higgs CASCADE
+;
+DROP TABLE develop.tim_wilson.waterlevels
+;
+DROP SCHEMA develop.tim_wilson
+;
+DROP SCHEMA develop.bronze CASCADE
+;
+DROP SCHEMA develop.silver CASCADE
+;
+
+-- 01/08/2025
+
+DROP SCHEMA tim_wilson.gold_mfg CASCADE
+;
+
+-- 04/08/2025
+
+DROP VIEW tim_wilson.bronze.src_trial_balance
+;
+
+-- raw_department_dayforce
+
+-- Original query 155 records
+WITH deps as (
+    SELECT DISTINCT ALLOCATED_DEPARTMENT
+        FROM `tim_wilson`.`BRONZE`.`src_allocatedhoursandearnings`
+),
+
+deps_details AS (
+    SELECT DISTINCT deps.ALLOCATED_DEPARTMENT
+                  , a.ALLOCATED_LEDGER_CODE
+                  , a.DEPT
+                  , a.ENTITY
+                  , a.SITE
+                  , a.EXTRACT_DATE
+                  , ROW_NUMBER() OVER(PARTITION BY deps.ALLOCATED_DEPARTMENT ORDER BY DEPT ASC) AS rn
+    FROM `tim_wilson`.`BRONZE`.`src_allocatedhoursandearnings` as a
+    INNER JOIN deps
+        ON deps.allocated_department = a.allocated_department
+)
+
+SELECT *
+FROM deps_details
+WHERE rn = 1
+ORDER BY 1
+;
+
+-- Experiment 155 records
+WITH deps_details AS (
+    SELECT 
+                  a.ALLOCATED_DEPARTMENT  
+                  , a.ALLOCATED_LEDGER_CODE
+                  , a.DEPT
+                  , a.ENTITY
+                  , a.SITE
+                  , a.EXTRACT_DATE
+                  , ROW_NUMBER() OVER(PARTITION BY a.ALLOCATED_DEPARTMENT ORDER BY EXTRACT_DATE DESC) AS rn
+    FROM `tim_wilson`.`BRONZE`.`src_allocatedhoursandearnings` as a
+)
+
+SELECT *
+FROM deps_details
+WHERE rn = 1
+ORDER BY 1
+;
+
+-- raw_operator_dayforce
+
+-- Original query 240136 records
+SELECT COUNT(*)
+FROM (
+SELECT DISTINCT
+DATA_ID
+, DATE
+, ALLOCATED_DEPARTMENT
+, ALLOCATED_LEDGER_CODE
+, HOME_DEPARTMENT
+, HOME_LEDGER_CODE
+, JOB_NAME
+, TOTAL_HOURS
+, NET_HOURS
+, PAY_AMOUNT
+, PAY_CODE_NAME
+, PAY_CATEGORY_NAME
+, PAY_CLASS
+, PAY_TYPE
+, EXTRACT_DATE
+
+FROM `tim_wilson`.`BRONZE`.`src_allocatedhoursandearnings`
+WHERE 1 = 1
+    AND NET_HOURS != 0
+    AND DATE IS NOT NULL
+) AS x
+;
+
+-- 1464 records
+-- 1818 records
+SELECT COUNT(*)
+FROM (
+WITH details AS (
+SELECT -- DISTINCT
+DATA_ID
+--, DATE
+, ALLOCATED_DEPARTMENT
+, ALLOCATED_LEDGER_CODE
+, HOME_DEPARTMENT
+, HOME_LEDGER_CODE
+, JOB_NAME
+, TOTAL_HOURS
+, NET_HOURS
+, PAY_AMOUNT
+, PAY_CODE_NAME
+, PAY_CATEGORY_NAME
+, PAY_CLASS
+, PAY_TYPE
+, EXTRACT_DATE
+, ROW_NUMBER() OVER(PARTITION BY DATA_ID, ALLOCATED_DEPARTMENT, HOME_DEPARTMENT ORDER BY EXTRACT_DATE DESC) AS rn
+
+FROM `tim_wilson`.`BRONZE`.`src_allocatedhoursandearnings`
+WHERE 1 = 1
+   AND NET_HOURS != 0
+   AND DATE IS NOT NULL
+)
+
+SELECT * FROM details
+WHERE 1 = 1
+    AND rn = 1
+  ) AS x
+;
+
+-- sherri query
+
+-- Original query 269290 records
+SELECT COUNT(*)
+FROM `landing`.`kinetic`.`SALES_SHERRIGMQUERY_ALLCOMPANIES`
+;
+
+-- NULL and 2025-07-21T19:29:00.000+00:00
+SELECT DISTINCT Extract_Date
+FROM `landing`.`kinetic`.`SALES_SHERRIGMQUERY_ALLCOMPANIES`
+;
+
+-- 2
+SELECT COUNT(*)
+FROM `landing`.`kinetic`.`SALES_SHERRIGMQUERY_ALLCOMPANIES`
+WHERE Extract_Date IS NULL
+;
+
+-- 269288 records
+SELECT COUNT(*)
+FROM `landing`.`kinetic`.`SALES_SHERRIGMQUERY_ALLCOMPANIES`
+WHERE Extract_Date IS NOT NULL
+;
+
+-- 06/08/2025
+
+DROP SCHEMA tim_wilson.kinetic CASCADE
+;

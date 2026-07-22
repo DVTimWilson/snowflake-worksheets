@@ -1,0 +1,473 @@
+WITH source_data AS (
+    SELECT a.DEPARTMENT_HK, a.DEPARTMENT_HASHDIFF, a.ALLOCATED_LEDGER_CODE, a.DEPT, a.ENTITY, a.SITE, a.LOAD_DATETIME, a.RECORD_SOURCE
+    FROM `tim_wilson`.`bronze`.`stg_department_dayforce` AS a
+    WHERE a.DEPARTMENT_HK IS NOT NULL
+),
+
+unique_source_records AS (
+    SELECT
+        sd.DEPARTMENT_HK, sd.DEPARTMENT_HASHDIFF, sd.ALLOCATED_LEDGER_CODE, sd.DEPT, sd.ENTITY, sd.SITE, sd.LOAD_DATETIME, sd.RECORD_SOURCE
+    FROM source_data AS sd
+
+    QUALIFY sd.DEPARTMENT_HASHDIFF !=
+        LAG(sd.DEPARTMENT_HASHDIFF, 1, CAST('FFFFFFFF' AS BINARY)) OVER (
+            PARTITION BY sd.DEPARTMENT_HK
+            ORDER BY sd.LOAD_DATETIME ASC
+        )
+),
+
+records_to_insert AS (
+    SELECT usr.DEPARTMENT_HK, usr.DEPARTMENT_HASHDIFF AS HASHDIFF, usr.ALLOCATED_LEDGER_CODE, usr.DEPT, usr.ENTITY, usr.SITE, usr.LOAD_DATETIME, usr.RECORD_SOURCE
+    FROM unique_source_records AS usr
+)
+
+SELECT * FROM records_to_insert
+;
+
+WITH source_data AS (
+    SELECT a.DEPARTMENT_HK, a.DEPARTMENT_HASHDIFF, a.ALLOCATED_LEDGER_CODE, a.DEPT, a.ENTITY, a.SITE, a.LOAD_DATETIME, a.RECORD_SOURCE
+    FROM `tim_wilson`.`bronze`.`stg_department_dayforce` AS a
+    WHERE a.DEPARTMENT_HK IS NOT NULL
+),
+
+latest_records AS (
+    SELECT current_records.DEPARTMENT_HK, current_records.HASHDIFF, current_records.LOAD_DATETIME
+    FROM `tim_wilson`.`silver`.`sat_department_dayforce` AS current_records
+    JOIN (
+        SELECT DISTINCT source_data.DEPARTMENT_HK
+        FROM source_data
+    ) AS source_records
+        ON source_records.DEPARTMENT_HK = current_records.DEPARTMENT_HK
+    QUALIFY ROW_NUMBER() OVER (
+        PARTITION BY current_records.DEPARTMENT_HK
+        ORDER BY current_records.LOAD_DATETIME DESC
+    ) = 1
+),
+
+unique_source_records AS (
+    SELECT
+        sd.DEPARTMENT_HK, sd.DEPARTMENT_HASHDIFF, sd.ALLOCATED_LEDGER_CODE, sd.DEPT, sd.ENTITY, sd.SITE, sd.LOAD_DATETIME, sd.RECORD_SOURCE
+    FROM source_data AS sd
+    LEFT OUTER JOIN latest_records AS lr
+        ON sd.DEPARTMENT_HK = lr.DEPARTMENT_HK
+
+    QUALIFY sd.DEPARTMENT_HASHDIFF !=
+        LAG(sd.DEPARTMENT_HASHDIFF, 1,
+            COALESCE(
+                lr.HASHDIFF,
+                CAST('FFFFFFFF' AS BINARY)
+            )
+        ) OVER (
+            PARTITION BY sd.DEPARTMENT_HK
+            ORDER BY sd.LOAD_DATETIME ASC
+        )
+),
+
+records_to_insert AS (
+    SELECT usr.DEPARTMENT_HK, usr.DEPARTMENT_HASHDIFF AS HASHDIFF, usr.ALLOCATED_LEDGER_CODE, usr.DEPT, usr.ENTITY, usr.SITE, usr.LOAD_DATETIME, usr.RECORD_SOURCE
+    FROM unique_source_records AS usr
+)
+
+SELECT * FROM records_to_insert
+;
+
+WITH 
+
+row_rank_1 AS (
+    SELECT rr.COMPANY_HK, rr.COMPANY_ID, rr.LOAD_DATETIME, rr.RECORD_SOURCE
+    FROM `tim_wilson`.`bronze`.`stg_company` AS rr
+    WHERE rr.COMPANY_HK IS NOT NULL
+    QUALIFY ROW_NUMBER() OVER(
+        PARTITION BY rr.COMPANY_HK
+        ORDER BY rr.LOAD_DATETIME
+    ) = 1
+),
+
+
+
+row_rank_2 AS (
+    SELECT rr.COMPANY_HK, rr.COMPANY_ID, rr.LOAD_DATETIME, rr.RECORD_SOURCE
+    FROM `tim_wilson`.`bronze`.`stg_master_ecore_companies_ref` AS rr
+    WHERE rr.COMPANY_HK IS NOT NULL
+    QUALIFY ROW_NUMBER() OVER(
+        PARTITION BY rr.COMPANY_HK
+        ORDER BY rr.LOAD_DATETIME
+    ) = 1
+),
+
+
+
+row_rank_3 AS (
+    SELECT rr.COMPANY_HK, rr.COMPANY_ID, rr.LOAD_DATETIME, rr.RECORD_SOURCE
+    FROM `tim_wilson`.`bronze`.`stg_master_product_categories_non_kinetic_ref` AS rr
+    WHERE rr.COMPANY_HK IS NOT NULL
+    QUALIFY ROW_NUMBER() OVER(
+        PARTITION BY rr.COMPANY_HK
+        ORDER BY rr.LOAD_DATETIME
+    ) = 1
+),
+
+
+
+row_rank_4 AS (
+    SELECT rr.COMPANY_HK, rr.COMPANY_ID, rr.LOAD_DATETIME, rr.RECORD_SOURCE
+    FROM `tim_wilson`.`bronze`.`stg_departmentmapping` AS rr
+    WHERE rr.COMPANY_HK IS NOT NULL
+    QUALIFY ROW_NUMBER() OVER(
+        PARTITION BY rr.COMPANY_HK
+        ORDER BY rr.LOAD_DATETIME
+    ) = 1
+),
+
+
+
+row_rank_5 AS (
+    SELECT rr.COMPANY_HK, rr.COMPANY_ID, rr.LOAD_DATETIME, rr.RECORD_SOURCE
+    FROM `tim_wilson`.`bronze`.`stg_allocated_department_mapping_ref` AS rr
+    WHERE rr.COMPANY_HK IS NOT NULL
+    QUALIFY ROW_NUMBER() OVER(
+        PARTITION BY rr.COMPANY_HK
+        ORDER BY rr.LOAD_DATETIME
+    ) = 1
+),
+
+
+
+row_rank_6 AS (
+    SELECT rr.COMPANY_HK, rr.COMPANY_ID, rr.LOAD_DATETIME, rr.RECORD_SOURCE
+    FROM `tim_wilson`.`bronze`.`stg_porcptdatefilter` AS rr
+    WHERE rr.COMPANY_HK IS NOT NULL
+    QUALIFY ROW_NUMBER() OVER(
+        PARTITION BY rr.COMPANY_HK
+        ORDER BY rr.LOAD_DATETIME
+    ) = 1
+),
+
+
+
+row_rank_7 AS (
+    SELECT rr.COMPANY_HK, rr.COMPANY_ID, rr.LOAD_DATETIME, rr.RECORD_SOURCE
+    FROM `tim_wilson`.`bronze`.`stg_trial_balance_company_ref` AS rr
+    WHERE rr.COMPANY_HK IS NOT NULL
+    QUALIFY ROW_NUMBER() OVER(
+        PARTITION BY rr.COMPANY_HK
+        ORDER BY rr.LOAD_DATETIME
+    ) = 1
+),
+
+
+
+row_rank_8 AS (
+    SELECT rr.COMPANY_HK, rr.COMPANY_ID, rr.LOAD_DATETIME, rr.RECORD_SOURCE
+    FROM `tim_wilson`.`bronze`.`stg_sales_sherrigmquery_allcompanies` AS rr
+    WHERE rr.COMPANY_HK IS NOT NULL
+    QUALIFY ROW_NUMBER() OVER(
+        PARTITION BY rr.COMPANY_HK
+        ORDER BY rr.LOAD_DATETIME
+    ) = 1
+),
+
+
+
+row_rank_9 AS (
+    SELECT rr.COMPANY_HK, rr.COMPANY_ID, rr.LOAD_DATETIME, rr.RECORD_SOURCE
+    FROM `tim_wilson`.`bronze`.`stg_quickbooks_outbound_historic_hti` AS rr
+    WHERE rr.COMPANY_HK IS NOT NULL
+    QUALIFY ROW_NUMBER() OVER(
+        PARTITION BY rr.COMPANY_HK
+        ORDER BY rr.LOAD_DATETIME
+    ) = 1
+),
+
+
+
+row_rank_10 AS (
+    SELECT rr.COMPANY_HK, rr.COMPANY_ID, rr.LOAD_DATETIME, rr.RECORD_SOURCE
+    FROM `tim_wilson`.`bronze`.`stg_quickbooks_outbound_historic_dgh` AS rr
+    WHERE rr.COMPANY_HK IS NOT NULL
+    QUALIFY ROW_NUMBER() OVER(
+        PARTITION BY rr.COMPANY_HK
+        ORDER BY rr.LOAD_DATETIME
+    ) = 1
+),
+
+
+
+row_rank_11 AS (
+    SELECT rr.COMPANY_HK, rr.COMPANY_ID, rr.LOAD_DATETIME, rr.RECORD_SOURCE
+    FROM `tim_wilson`.`bronze`.`stg_quickbooks_outbound_historic_edge` AS rr
+    WHERE rr.COMPANY_HK IS NOT NULL
+    QUALIFY ROW_NUMBER() OVER(
+        PARTITION BY rr.COMPANY_HK
+        ORDER BY rr.LOAD_DATETIME
+    ) = 1
+),
+
+
+
+row_rank_12 AS (
+    SELECT rr.COMPANY_HK, rr.COMPANY_ID, rr.LOAD_DATETIME, rr.RECORD_SOURCE
+    FROM `tim_wilson`.`bronze`.`stg_quickbooks_outbound_prc` AS rr
+    WHERE rr.COMPANY_HK IS NOT NULL
+    QUALIFY ROW_NUMBER() OVER(
+        PARTITION BY rr.COMPANY_HK
+        ORDER BY rr.LOAD_DATETIME
+    ) = 1
+),
+
+
+
+row_rank_13 AS (
+    SELECT rr.COMPANY_HK, rr.COMPANY_ID, rr.LOAD_DATETIME, rr.RECORD_SOURCE
+    FROM `tim_wilson`.`bronze`.`stg_quickbooks_outbound_360` AS rr
+    WHERE rr.COMPANY_HK IS NOT NULL
+    QUALIFY ROW_NUMBER() OVER(
+        PARTITION BY rr.COMPANY_HK
+        ORDER BY rr.LOAD_DATETIME
+    ) = 1
+),
+
+
+
+row_rank_14 AS (
+    SELECT rr.COMPANY_HK, rr.COMPANY_ID, rr.LOAD_DATETIME, rr.RECORD_SOURCE
+    FROM `tim_wilson`.`bronze`.`stg_quickbooks_outbound_crc` AS rr
+    WHERE rr.COMPANY_HK IS NOT NULL
+    QUALIFY ROW_NUMBER() OVER(
+        PARTITION BY rr.COMPANY_HK
+        ORDER BY rr.LOAD_DATETIME
+    ) = 1
+),
+
+
+
+row_rank_15 AS (
+    SELECT rr.COMPANY_HK, rr.COMPANY_ID, rr.LOAD_DATETIME, rr.RECORD_SOURCE
+    FROM `tim_wilson`.`bronze`.`stg_quickbooks_outbound_dos` AS rr
+    WHERE rr.COMPANY_HK IS NOT NULL
+    QUALIFY ROW_NUMBER() OVER(
+        PARTITION BY rr.COMPANY_HK
+        ORDER BY rr.LOAD_DATETIME
+    ) = 1
+),
+
+
+
+row_rank_16 AS (
+    SELECT rr.COMPANY_HK, rr.COMPANY_ID, rr.LOAD_DATETIME, rr.RECORD_SOURCE
+    FROM `tim_wilson`.`bronze`.`stg_quickbooks_outbound_eti` AS rr
+    WHERE rr.COMPANY_HK IS NOT NULL
+    QUALIFY ROW_NUMBER() OVER(
+        PARTITION BY rr.COMPANY_HK
+        ORDER BY rr.LOAD_DATETIME
+    ) = 1
+),
+
+
+
+row_rank_17 AS (
+    SELECT rr.COMPANY_HK, rr.COMPANY_ID, rr.LOAD_DATETIME, rr.RECORD_SOURCE
+    FROM `tim_wilson`.`bronze`.`stg_quickbooks_outbound_etr` AS rr
+    WHERE rr.COMPANY_HK IS NOT NULL
+    QUALIFY ROW_NUMBER() OVER(
+        PARTITION BY rr.COMPANY_HK
+        ORDER BY rr.LOAD_DATETIME
+    ) = 1
+),
+
+
+
+row_rank_18 AS (
+    SELECT rr.COMPANY_HK, rr.COMPANY_ID, rr.LOAD_DATETIME, rr.RECORD_SOURCE
+    FROM `tim_wilson`.`bronze`.`stg_quickbooks_outbound_tss` AS rr
+    WHERE rr.COMPANY_HK IS NOT NULL
+    QUALIFY ROW_NUMBER() OVER(
+        PARTITION BY rr.COMPANY_HK
+        ORDER BY rr.LOAD_DATETIME
+    ) = 1
+),
+
+
+
+row_rank_19 AS (
+    SELECT rr.COMPANY_HK, rr.COMPANY_ID, rr.LOAD_DATETIME, rr.RECORD_SOURCE
+    FROM `tim_wilson`.`bronze`.`stg_quickbooks_inbound_sales_360` AS rr
+    WHERE rr.COMPANY_HK IS NOT NULL
+    QUALIFY ROW_NUMBER() OVER(
+        PARTITION BY rr.COMPANY_HK
+        ORDER BY rr.LOAD_DATETIME
+    ) = 1
+),
+
+
+
+row_rank_20 AS (
+    SELECT rr.COMPANY_HK, rr.COMPANY_ID, rr.LOAD_DATETIME, rr.RECORD_SOURCE
+    FROM `tim_wilson`.`bronze`.`stg_quickbooks_inbound_sales_crc` AS rr
+    WHERE rr.COMPANY_HK IS NOT NULL
+    QUALIFY ROW_NUMBER() OVER(
+        PARTITION BY rr.COMPANY_HK
+        ORDER BY rr.LOAD_DATETIME
+    ) = 1
+),
+
+
+
+row_rank_21 AS (
+    SELECT rr.COMPANY_HK, rr.COMPANY_ID, rr.LOAD_DATETIME, rr.RECORD_SOURCE
+    FROM `tim_wilson`.`bronze`.`stg_quickbooks_inbound_sales_prc` AS rr
+    WHERE rr.COMPANY_HK IS NOT NULL
+    QUALIFY ROW_NUMBER() OVER(
+        PARTITION BY rr.COMPANY_HK
+        ORDER BY rr.LOAD_DATETIME
+    ) = 1
+),
+
+
+
+row_rank_22 AS (
+    SELECT rr.COMPANY_HK, rr.COMPANY_ID, rr.LOAD_DATETIME, rr.RECORD_SOURCE
+    FROM `tim_wilson`.`bronze`.`stg_quickbooks_inbound_sales_tss` AS rr
+    WHERE rr.COMPANY_HK IS NOT NULL
+    QUALIFY ROW_NUMBER() OVER(
+        PARTITION BY rr.COMPANY_HK
+        ORDER BY rr.LOAD_DATETIME
+    ) = 1
+),
+
+stage_union AS (
+    SELECT * FROM row_rank_1
+    UNION ALL
+    SELECT * FROM row_rank_2
+    UNION ALL
+    SELECT * FROM row_rank_3
+    UNION ALL
+    SELECT * FROM row_rank_4
+    UNION ALL
+    SELECT * FROM row_rank_5
+    UNION ALL
+    SELECT * FROM row_rank_6
+    UNION ALL
+    SELECT * FROM row_rank_7
+    UNION ALL
+    SELECT * FROM row_rank_8
+    UNION ALL
+    SELECT * FROM row_rank_9
+    UNION ALL
+    SELECT * FROM row_rank_10
+    UNION ALL
+    SELECT * FROM row_rank_11
+    UNION ALL
+    SELECT * FROM row_rank_12
+    UNION ALL
+    SELECT * FROM row_rank_13
+    UNION ALL
+    SELECT * FROM row_rank_14
+    UNION ALL
+    SELECT * FROM row_rank_15
+    UNION ALL
+    SELECT * FROM row_rank_16
+    UNION ALL
+    SELECT * FROM row_rank_17
+    UNION ALL
+    SELECT * FROM row_rank_18
+    UNION ALL
+    SELECT * FROM row_rank_19
+    UNION ALL
+    SELECT * FROM row_rank_20
+    UNION ALL
+    SELECT * FROM row_rank_21
+    UNION ALL
+    SELECT * FROM row_rank_22
+),
+
+row_rank_union AS (
+    SELECT ru.*
+    FROM stage_union AS ru
+    WHERE ru.COMPANY_HK IS NOT NULL
+    QUALIFY ROW_NUMBER() OVER(
+        PARTITION BY ru.COMPANY_HK
+        ORDER BY ru.LOAD_DATETIME, ru.RECORD_SOURCE ASC
+    ) = 1
+),
+
+
+records_to_insert AS (
+    SELECT a.COMPANY_HK, a.COMPANY_ID, a.LOAD_DATETIME, a.RECORD_SOURCE
+    FROM row_rank_union AS a
+    LEFT ANTI JOIN `tim_wilson`.`silver`.`hub_company` AS d
+    ON a.COMPANY_HK = d.COMPANY_HK
+    -- WHERE d.COMPANY_HK IS NULL
+)
+
+SELECT * FROM records_to_insert
+;
+
+WITH source_data AS (
+  SELECT
+    a.DEPARTMENT_HK,
+    a.DEPARTMENT_HASHDIFF,
+    a.ALLOCATED_LEDGER_CODE,
+    a.DEPT,
+    a.ENTITY,
+    a.SITE,
+    a.LOAD_DATETIME,
+    a.RECORD_SOURCE
+  FROM
+    `tim_wilson`.`bronze`.`stg_department_dayforce` AS a
+  WHERE
+    a.DEPARTMENT_HK IS NOT NULL
+),
+latest_records AS (
+  SELECT
+    current_records.DEPARTMENT_HK,
+    current_records.HASHDIFF,
+    current_records.LOAD_DATETIME
+  FROM
+    `tim_wilson`.`silver`.`sat_department_dayforce` AS current_records
+    LEFT SEMI JOIN source_data
+        ON source_data.DEPARTMENT_HK = current_records.DEPARTMENT_HK
+  QUALIFY
+    ROW_NUMBER() OVER (
+        PARTITION BY current_records.DEPARTMENT_HK
+        ORDER BY current_records.LOAD_DATETIME DESC
+      ) = 1
+),
+unique_source_records AS (
+  SELECT
+    sd.DEPARTMENT_HK,
+    sd.DEPARTMENT_HASHDIFF,
+    sd.ALLOCATED_LEDGER_CODE,
+    sd.DEPT,
+    sd.ENTITY,
+    sd.SITE,
+    sd.LOAD_DATETIME,
+    sd.RECORD_SOURCE
+  FROM
+    source_data AS sd
+      LEFT OUTER JOIN latest_records AS lr
+        ON sd.DEPARTMENT_HK = lr.DEPARTMENT_HK
+  QUALIFY
+    sd.DEPARTMENT_HASHDIFF != LAG(
+      sd.DEPARTMENT_HASHDIFF, 1, COALESCE(lr.HASHDIFF, CAST('FFFFFFFF' AS BINARY))
+    ) OVER (PARTITION BY sd.DEPARTMENT_HK ORDER BY sd.LOAD_DATETIME ASC)
+),
+records_to_insert AS (
+  SELECT
+    usr.DEPARTMENT_HK,
+    usr.DEPARTMENT_HASHDIFF AS HASHDIFF,
+    usr.ALLOCATED_LEDGER_CODE,
+    usr.DEPT,
+    usr.ENTITY,
+    usr.SITE,
+    usr.LOAD_DATETIME,
+    usr.RECORD_SOURCE
+  FROM
+    unique_source_records AS usr
+)
+SELECT
+  *
+FROM
+  records_to_insert
+;
+

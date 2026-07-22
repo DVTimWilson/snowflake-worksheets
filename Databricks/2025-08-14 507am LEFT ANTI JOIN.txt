@@ -1,0 +1,55 @@
+with left_table as (
+
+  select
+    BUSINESS_UNIT_ID as id
+
+  from `tim_wilson`.`bronze`.`stg_sales_sherrigmquery_allcompanies`
+
+  where BUSINESS_UNIT_ID is not null
+    and 1=1
+
+),
+
+right_table as (
+
+  select
+    BUSINESSUNIT_C as id
+
+  from `tim_wilson`.`psa_kinetic`.`psa_sales_sherrigmquery_allcompanies`
+
+  where BUSINESSUNIT_C is not null
+    and 1=1
+
+),
+
+exceptions as (
+
+  select
+    left_table.id
+
+  from left_table
+
+  left anti join right_table
+         on left_table.id = right_table.id
+  )
+
+select * from exceptions
+;
+
+-- 356663
+  select
+    COUNT(*)
+
+  from `tim_wilson`.`bronze`.`stg_sales_sherrigmquery_allcompanies`
+
+  where BUSINESS_UNIT_ID is not null
+;
+
+-- 352038
+  select
+    COUNT(*)
+
+  from `tim_wilson`.`psa_kinetic`.`psa_sales_sherrigmquery_allcompanies`
+
+  where BUSINESSUNIT_C is not null
+;

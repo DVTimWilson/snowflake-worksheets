@@ -1,0 +1,144 @@
+-- 440226
+SELECT COUNT(*)
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+;
+
+-- 440208
+SELECT COUNT(*)
+FROM (SELECT COUNT(DISTINCT *) FROM tim_wilson.gold_coreview.mart_outbound_transactions)
+;
+
+-- ETI-56015-2
+SELECT UNIQUE_KEY
+        , INVOICE_DATE
+        , INVOICE_NUMBER
+        , CUSTOMER
+        , PRODUCT_ID
+        , PRODUCT_DESCRIPTION
+        , COREVIEW_PRODUCT_CATEGORY
+        , SITE
+        , BU
+        , ENTITY
+        , IS_INTERNAL_TRANSFER
+        , IS_ACQUIRED_AT_INVOICE_DATE
+        , IS_ACQUIRED_NOW
+        , SALES_DOLLAR
+        , COGS_DOLLAR
+        , UNIT_COST
+        , GROSS_MARGIN_DOLLAR
+        , GROSS_MARGIN_PCT
+        , QUANTITY
+        , UOM
+        , UOM_FLAG
+        , WEIGHT_LBS
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+GROUP BY UNIQUE_KEY
+        , INVOICE_DATE
+        , INVOICE_NUMBER
+        , CUSTOMER
+        , PRODUCT_ID
+        , PRODUCT_DESCRIPTION
+        , COREVIEW_PRODUCT_CATEGORY
+        , SITE
+        , BU
+        , ENTITY
+        , IS_INTERNAL_TRANSFER
+        , IS_ACQUIRED_AT_INVOICE_DATE
+        , IS_ACQUIRED_NOW
+        , SALES_DOLLAR
+        , COGS_DOLLAR
+        , UNIT_COST
+        , GROSS_MARGIN_DOLLAR
+        , GROSS_MARGIN_PCT
+        , QUANTITY
+        , UOM
+        , UOM_FLAG
+        , WEIGHT_LBS
+HAVING COUNT(*) > 1
+;
+
+-- 440226
+SELECT COUNT(*)
+FROM tim_wilson.silver.bsat_combined_outbound_invoice_v2
+;
+
+-- 440226
+SELECT COUNT(*)
+FROM (SELECT DISTINCT * FROM tim_wilson.silver.bsat_combined_outbound_invoice_v2) AS x
+;
+
+SELECT *
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+WHERE UNIQUE_KEY = 'ETI-56015-2'
+;
+
+SELECT *
+FROM tim_wilson.silver.bsat_combined_outbound_invoice_v2
+WHERE UNIQUE_KEY = 'ETI-56015-2'
+;
+
+-- 38204
+SELECT COUNT(*)
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+WHERE PRODUCT_ID IS NULL OR UNIT_COST IS NULL
+;
+
+-- 2538
+SELECT COUNT(*)
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+WHERE PRODUCT_ID IS NULL
+;
+
+-- 35497
+SELECT COUNT(*)
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+WHERE UNIT_COST IS NULL
+;
+
+SELECT *
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+WHERE PRODUCT_ID IS NULL OR UNIT_COST IS NULL
+;
+
+-- dbt "ENTITY NOT IN ('HTI', 'EDGE', 'DGH', 'ETR', 'ETI')"
+-- 360 CRC DGH DOS EDGE ETI ETR HTI PRC PTS TSS
+SELECT ENTITY, COUNT(*)
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+WHERE PRODUCT_ID IS NULL OR UNIT_COST IS NULL GROUP BY ENTITY
+ORDER BY 1
+;
+
+-- 11
+SELECT COUNT(*)
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+WHERE PRODUCT_ID IS NULL AND UNIT_COST IS NULL
+;
+
+-- 2223610
+SELECT COUNT(*)
+FROM tim_wilson.gold_coreview.mart_inventory_transactions
+;
+
+-- 2223610
+SELECT COUNT(*)
+FROM (SELECT DISTINCT * FROM tim_wilson.gold_coreview.mart_inventory_transactions) AS x
+;
+
+-- 06/03/2026
+
+-- Genuinely different records!
+-- The differences are not selected in the mart
+SELECT *
+FROM tim_wilson.silver.bsat_combined_outbound_invoice_v2
+WHERE UNIQUE_KEY = 'ETI-56015-2'
+;
+
+SELECT *
+FROM tim_wilson.silver.sat_outbound_invoice_quickbooks_eti_v2
+WHERE UNIQUE_KEY = 'ETI-56015-2'
+;
+
+SELECT *
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+WHERE UNIQUE_KEY = 'ETI-56015-2'
+;

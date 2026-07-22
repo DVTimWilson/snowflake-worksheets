@@ -1,0 +1,16 @@
+DROP TABLE psa.dayforce.psa_allocatedhoursandearnings
+;
+
+-- 2024-01-01T05:00:00.000+00:00
+-- 2025-10-21T04:00:00.000+00:00
+SELECT
+  MIN(PartTran_TranDate), MAX(PartTran_TranDate)
+FROM landing.raw_baq_explore.inventoryusage_test
+;
+
+-- 2025-09-23T00:00:00.000+00:00
+-- 2025-10-23T08:00:07.000+00:00
+SELECT
+  MIN(EXTRACT_DATE), MAX(EXTRACT_DATE)
+FROM landing.kinetic.stockstat
+;

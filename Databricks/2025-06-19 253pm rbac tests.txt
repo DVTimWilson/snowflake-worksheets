@@ -1,0 +1,31 @@
+SHOW GRANTS `tim.wilson@data-vault.com` ON CATALOG develop
+;
+
+SHOW GRANTS `alex.higgs@data-vault.com` ON CATALOG develop
+;
+
+SHOW GRANTS vault_admin ON CATALOG develop
+;
+
+SHOW GRANTS `362892eb-ea7e-4ba2-a7d8-dd555707a02a` ON CATALOG develop
+;
+
+SHOW GRANTS developer ON CATALOG develop
+;
+
+
+SHOW GRANTS `tim.wilson@data-vault.com` ON SCHEMA develop.landing
+;
+
+SHOW GRANTS `alex.higgs@data-vault.com` ON SCHEMA develop.landing
+;
+
+SHOW GRANTS vault_admin ON SCHEMA develop.landing
+;
+
+SHOW GRANTS `362892eb-ea7e-4ba2-a7d8-dd555707a02a` ON SCHEMA develop.landing
+;
+
+SHOW GRANTS developer ON SCHEMA develop.landing
+;
+

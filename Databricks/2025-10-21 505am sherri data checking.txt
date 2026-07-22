@@ -1,0 +1,126 @@
+SELECT INVOICEDATE, COUNT(*)
+FROM develop.silver.sat_outbound_invoice_kinetic
+WHERE INVOICEDATE BETWEEN '2025-08-01' AND '2025-09-30'
+GROUP BY INVOICEDATE
+ORDER BY INVOICEDATE
+;
+
+SELECT EXTRACT_DATE, COUNT(*)
+FROM develop.silver.sat_outbound_invoice_kinetic
+WHERE EXTRACT_DATE >= '2025-08-01'
+GROUP BY EXTRACT_DATE
+ORDER BY EXTRACT_DATE DESC
+;
+
+SELECT INVOICE_DATE, COUNT(*)
+FROM develop.gold_coreview.mart_outbound_transactions
+WHERE INVOICE_DATE BETWEEN '2025-08-01' AND '2025-09-30'
+GROUP BY INVOICE_DATE
+ORDER BY INVOICE_DATE
+;
+
+SELECT INVOICEDATE, COUNT(*)
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE INVOICEDATE >= '2025-08-01' 
+--AND DATE(Extract_Date) = '2025-10-24'
+GROUP BY INVOICEDATE
+ORDER BY INVOICEDATE
+;
+
+SELECT COUNT(*)
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+-- WHERE DATE(Extract_Date) = '2025-10-23'
+WHERE DATE(Extract_Date) = '2025-10-24'
+;
+
+-- 303495 before
+-- 303960 after
+SELECT COUNT(*)
+FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+;
+
+-- 20408
+SELECT COUNT(*)
+FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+WHERE DATE(Extract_Date) = '2025-10-23'
+;
+
+-- 2025-10-23T17:16:40.000+00:00
+SELECT Extract_Date
+FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+WHERE DATE(Extract_Date) = '2025-10-23'
+;
+
+-- 465
+SELECT COUNT(*)
+FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+WHERE DATE(Extract_Date) = '2025-10-24'
+;
+
+SELECT DISTINCT Extract_Date
+FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+ORDER BY 1 DESC;
+
+-- 12
+SELECT COUNT(*)
+FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+WHERE DATE(Extract_Date) = '2025-10-22'
+;
+
+SELECT *
+FROM develop.meta.waterlevels
+WHERE TABLE_NAME = '`develop`.`bronze`.`stg_sales_sherrigmquery_allcompanies`'
+ORDER BY WATERLEVEL_TS DESC
+;
+
+SELECT *
+FROM uat.meta.waterlevels
+WHERE TABLE_NAME = '`uat`.`bronze`.`stg_sales_sherrigmquery_allcompanies`'
+ORDER BY WATERLEVEL_TS DESC
+;
+
+DELETE FROM develop.meta.waterlevels
+WHERE TABLE_NAME = '`develop`.`bronze`.`stg_sales_sherrigmquery_allcompanies`'
+-- AND WATERLEVEL_TS = '2025-10-23T17:16:40.000+00:00'
+AND WATERLEVEL_TS = '2025-10-24T11:00:07.000+00:00'
+;
+
+INSERT INTO develop.meta.waterlevels
+SELECT
+REPLACE(TABLE_NAME, '`uat`', '`develop`') AS TABLE_NAME
+, LOAD_DATETIME_COLUMN_NAME
+, WATERLEVEL_TS
+, STARTED_AT_TS
+FROM uat.meta.waterlevels
+;
+
+
+
+SELECT *
+FROM tim_wilson.meta.waterlevels
+WHERE TABLE_NAME = '`tim_wilson`.`bronze`.`stg_sales_sherrigmquery_allcompanies`'
+ORDER BY WATERLEVEL_TS DESC
+;
+
+-- 20392 
+UPDATE psa.kinetic.psa_sales_sherrigmquery_allcompanies
+  SET extract_date = '2025-10-24T12:00:00.000+00:00'
+WHERE extract_date = '2025-10-23T17:16:40.000+00:00'
+;
+
+-- 20392
+UPDATE landing.kinetic.sales_sherrigmquery_allcompanies
+  SET extract_date = '2025-10-24T12:00:00.000+00:00'
+WHERE extract_date = '2025-10-23T17:16:40.000+00:00'
+;
+
+
+SELECT DISTINCT Extract_Date
+FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+ORDER BY 1 DESC
+;
+
+SELECT DISTINCT Extract_Date
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+ORDER BY 1 DESC
+;

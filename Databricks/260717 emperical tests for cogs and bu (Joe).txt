@@ -1,0 +1,207 @@
+SELECT *
+FROM landing.reftables.bu_site_part_costs
+WHERE ABS(`Std. Burden`) + ABS(`Std. Labor`) + ABS(`Std. Material Burden`) + ABS(`Std. Material`) + ABS(`Std. Subcontract`) = 0
+ORDER BY 1, 2;
+
+SELECT * FROM landing.reftables.consolidated_part_master
+-- WHERE Part_Num LIKE 'SBR-000031'
+;
+
+SELECT *
+FROM joe_barter.gold_coreview.mart_outbound_transactions
+WHERE 1=1
+-- AND PRODUCT_ID = 'SBR-000031'
+AND ENTITY = 'EII'
+and site = 'Ozark'
+AND BU = 'Rubber Processing'
+-- AND UNIQUE_KEY LIKE 'EII-725103-3%'
+AND RECORD_SOURCE <> 'KINETIC.TRANSORDER'
+;
+SELECT *
+FROM joe_barter.gold_coreview.mart_outbound_transactions
+WHERE 1=1
+-- AND PRODUCT_ID = 'SBR-000031'
+AND ENTITY = 'DRC'
+-- AND UNIQUE_KEY LIKE '%-CS'
+AND UNIQUE_KEY LIKE 'DRC-228323-2%'
+;
+SELECT *
+FROM joe_barter.gold_coreview.mart_outbound_transactions
+WHERE 1=1
+-- AND PRODUCT_ID = 'SBR-000031'
+---AND ENTITY = 'DRC'
+AND UNIQUE_KEY LIKE '%-FI'
+AND RECORD_SOURCE = 'KINETIC.TRANSORDER'
+
+;
+
+SELECT DISTINCT SITE, RECORD_SOURCE
+FROM uat.gold_coreview.mart_outbound_transactions
+-- WHERE UNIQUE_KEY LIKE '%FI'
+
+-- WHERE PRODUCT_ID = 'SBR-000031'
+WHERE RECORD_SOURCE LIKE 'KINETIC%'
+ORDER BY site ASC
+;
+SELECT SITE, COUNT(*)
+FROM uat.gold_coreview.mart_outbound_transactions
+GROUP BY SITE
+;
+SELECT * FROM develop.silver.sat_plant_kinetic_latest
+;
+
+SELECT DISTINCT COMPANY, SITE, `Costing ID`, `Default Site Cost ID`
+FROM landing.reftables.bu_site_part_costs
+ORDER BY 1,2,3,4
+;
+
+SELECT DISTINCT a.COMPANY, a.SITE, CITY, Costing_ID
+FROM joe_barter.silver.ref_sat_bu_site_part_costs_latest a 
+INNER JOIN joe_barter.silver.sat_plant_kinetic_latest b 
+ON a.SITE = b.PLANT
+AND a.Company = b.COMPANY
+ORDER BY 1,2,3,4
+;
+--everything 385342
+--kin 385342
+SELECT COUNT(*)
+FROM joe_barter.silver.sat_outbound_invoice_kinetic_latest as kin
+LEFT OUTER JOIN `joe_barter`.`silver`.`sat_plant_kinetic_latest` as plant
+    ON -- Case-insensitive equality for ad-hoc use
+UPPER(kin.COMPANY) = UPPER(plant.COMPANY)
+    AND -- Case-insensitive equality for ad-hoc use
+UPPER(kin.PLANT) = UPPER(plant.PLANT)
+INNER JOIN joe_barter.silver.ref_sat_bu_site_part_costs_latest as stdcosts 
+    ON -- Case-insensitive equality for ad-hoc use
+UPPER(kin.COMPANY) = UPPER(stdcosts.COMPANY)
+    AND -- Case-insensitive equality for ad-hoc use
+UPPER(kin.PLANT) = UPPER(stdcosts.SITE)
+-- UPPER(COALESCE(NULLIF(plant.CITY, ''), 'Uncategorized')) = UPPER(stdcosts.SITE)
+    AND -- Case-insensitive equality for ad-hoc use
+UPPER(kin.PARTNUM) = UPPER(stdcosts.PART)
+WHERE kin.COMPANY IN ('EII', 'DRC')
+
+;
+SELECT *
+FROM joe_barter.gold_coreview.mart_outbound_transactions
+WHERE 1=1
+AND ENTITY = 'EII'
+AND GROSS_MARGIN_DOLLAR != 0
+;
+SELECT COUNT(*)
+FROM uat.gold_coreview.mart_outbound_transactions
+WHERE 1=1
+AND ENTITY = 'EII'
+;
+SELECT DISTINCT SITE, ENTITY
+FROM joe_barter.gold_coreview.mart_outbound_transactions
+WHERE 1=1
+-- AND PRODUCT_ID = 'SBR-000031'
+---AND ENTITY = 'DRC'
+-- AND UNIQUE_KEY LIKE '%-FI'
+AND RECORD_SOURCE LIKE 'KINETIC.%'
+-- AND SITE = 'Uncategorized'
+;
+
+SELECT COUNT(*)
+FROM joe_barter.gold_coreview.mart_outbound_transactions
+WHERE 1=1
+-- AND PRODUCT_ID = 'SBR-000031'
+---AND ENTITY = 'DRC'
+-- AND UNIQUE_KEY LIKE '%-FI'
+-- AND UNIT_COST = 0
+-- AND SITE = 'Uncategorized'
+;
+SELECT COUNT(*)
+FROM uat.gold_coreview.mart_outbound_transactions
+WHERE 1=1
+-- AND PRODUCT_ID = 'SBR-000031'
+---AND ENTITY = 'DRC'
+-- AND UNIQUE_KEY LIKE '%-FI'
+-- AND UNIT_COST = 0
+-- AND SITE = 'Uncategorized'
+;
+SELECT a.ENTITY,a.INVOICE_DATE, a.INVOICE_NUMBER, a.CUSTOMER,a.PRODUCT_ID, a.UNIT_COST AS NEW_COST, b.UNIT_COST AS OLD_COST
+FROM joe_barter.gold_coreview.mart_outbound_transactions as a
+INNER JOIN uat.gold_coreview.mart_outbound_transactions as b
+ON a.UNIQUE_KEY = b.UNIQUE_KEY
+WHERE 1=1
+-- AND a.ENTITY = 'EII'
+AND a.GROSS_MARGIN_DOLLAR != 0
+AND ROUND(a.UNIT_COST,2) != ROUND(b.UNIT_COST,2)
+AND b.UNIT_COST <> 0
+ORDER BY a.UNIQUE_KEY
+;
+
+SELECT COUNT(*)
+FROM joe_barter.gold_coreview.mart_inventory_usage
+WHERE 1=1
+-- AND PRODUCT_ID = 'SBR-000031'
+---AND ENTITY = 'DRC'
+-- AND UNIQUE_KEY LIKE '%-FI'
+AND EXTCOST = 0
+-- AND SITE = 'Uncategorized'
+;
+SELECT COUNT(*)
+FROM uat.gold_coreview.mart_inventory_usage
+WHERE 1=1
+AND EXTCOST = 0
+;
+
+select *
+
+from uat.gold_coreview.mart_inventory_stock_levels
+
+where ENTITY = 'ECS' and INVENTORY_ITEM_ID = 'SBA-354403'
+;
+select *
+
+from joe_barter.gold_coreview.mart_inventory_stock_levels_backfill
+
+where ENTITY = 'ECS' and INVENTORY_ITEM_ID = 'SBA-354403'
+ORDER BY DATE DESC
+;
+
+SELECT ENTITY, SITE,sum(sales_dollar) as SALES, SUM(COGS_DOLLAR) AS COGS, SUM(GROSS_MARGIN_DOLLAR) AS MARGIN, try_divide(SUM(GROSS_MARGIN_DOLLAR), SUM(COGS_DOLLAR)) AS pct
+FROM joe_barter.gold_coreview.mart_outbound_transactions
+WHERE ENTITY IN ('ERP', 'ECS', 'ETC')
+GROUP BY 1,2
+ORDER BY 1,3 desc
+;
+
+SELECT DISTINCT a.COMPANY, a.SITE, CITY, Costing_ID
+FROM joe_barter.silver.ref_sat_bu_site_part_costs_latest a 
+INNER JOIN joe_barter.silver.sat_plant_kinetic_latest b 
+ON a.SITE = b.PLANT
+AND a.Company = b.COMPANY
+ORDER BY 1,2,3,4
+;
+
+SELECT  COMPANY, SITE, STD_TOTAL_COST,COUNT(*) as total
+FROM joe_barter.silver.ref_sat_bu_site_part_costs_latest a
+WHERE SITE IN ('GREENVL', 'MEXIA', 'BARBRTON')
+AND COMPANY IN ('ECS', 'ETC', 'ERP')
+GROUP BY 1,2,3
+ORDER BY 1,3 asc
+;
+
+SELECT DISTINCT kin.COMPANY, plant.CITY, kin.PARTNUM, stdcosts.STD_TOTAL_COST, kin.DOCUNITCOST
+FROM joe_barter.silver.sat_outbound_invoice_kinetic_latest as kin
+LEFT OUTER JOIN `joe_barter`.`silver`.`sat_plant_kinetic_latest` as plant
+    ON -- Case-insensitive equality for ad-hoc use
+UPPER(kin.COMPANY) = UPPER(plant.COMPANY)
+    AND -- Case-insensitive equality for ad-hoc use
+UPPER(kin.PLANT) = UPPER(plant.PLANT)
+INNER JOIN joe_barter.silver.ref_sat_bu_site_part_costs_latest as stdcosts 
+    ON -- Case-insensitive equality for ad-hoc use
+UPPER(kin.COMPANY) = UPPER(stdcosts.COMPANY)
+    AND -- Case-insensitive equality for ad-hoc use
+UPPER(kin.PLANT) = UPPER(stdcosts.SITE)
+-- UPPER(COALESCE(NULLIF(plant.CITY, ''), 'Uncategorized')) = UPPER(stdcosts.SITE)
+    AND -- Case-insensitive equality for ad-hoc use
+UPPER(kin.PARTNUM) = UPPER(stdcosts.PART)
+WHERE plant.PLANT IN ('GREENVL', 'MEXIA', 'BARBRTON')
+AND kin.COMPANY IN ('ECS', 'ETC', 'ERP')
+
+-- AND stdcosts.STD_TOTAL_COST <> 0
+ORDER BY kin.PARTNUM

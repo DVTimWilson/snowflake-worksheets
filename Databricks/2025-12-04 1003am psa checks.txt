@@ -1,0 +1,44 @@
+SELECT DISTINCT EXTRACT_DATE
+FROM tim_wilson.psa_kinetic.psa_resgrpeff
+ORDER BY 1 DESC
+;
+
+SELECT EXTRACT_DATE, COUNT(*)
+FROM tim_wilson.psa_kinetic.psa_resgrpeff
+GROUP BY EXTRACT_DATE
+ORDER BY 1 DESC
+;
+
+SELECT DISTINCT EXTRACT_DATE
+FROM tim_wilson.psa_kinetic.psa_coparts
+ORDER BY 1 DESC
+;
+
+SELECT EXTRACT_DATE, COUNT(*)
+FROM tim_wilson.psa_kinetic.psa_coparts
+GROUP BY EXTRACT_DATE
+ORDER BY 1 DESC
+;
+
+SELECT DISTINCT EXTRACT_DATE
+FROM tim_wilson.psa_quickbooks.psa_quickbooks_staging_360_v2
+ORDER BY 1 DESC
+;
+
+SELECT EXTRACT_DATE, COUNT(*)
+FROM tim_wilson.psa_quickbooks.psa_quickbooks_staging_360_v2
+GROUP BY EXTRACT_DATE
+ORDER BY 1 DESC
+;
+
+SELECT EXTRACT_DATE, COUNT(*)
+FROM tim_wilson.psa_quickbooks.psa_quickbooks_staging_360
+GROUP BY EXTRACT_DATE
+ORDER BY 1 DESC
+;
+
+SELECT DISTINCT EXTRACT_DATE
+FROM tim_wilson.psa_refs.psa_trial_balance_natural_mapping_ref
+ORDER BY 1 DESC
+;
+

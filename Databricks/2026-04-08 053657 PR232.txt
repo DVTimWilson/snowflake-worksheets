@@ -1,0 +1,96 @@
+-- DROP VIEW tim_wilson.bronze.raw_porcptdatefilter
+-- ;
+-- DROP VIEW tim_wilson.bronze.raw_departmentmapping
+-- ;
+-- DROP VIEW tim_wilson.bronze.raw_orderhed
+-- ;
+-- DROP VIEW tim_wilson.bronze.raw_orderrel
+-- ;
+-- DROP VIEW tim_wilson.bronze.raw_shipdtl
+-- ;
+-- DROP VIEW tim_wilson.bronze.raw_shiphead
+-- ;
+-- DROP VIEW tim_wilson.bronze.raw_shipto
+-- ;
+-- DROP VIEW tim_wilson.bronze.raw_shipvia
+-- ;
+
+
+-- DROP VIEW develop.bronze.raw_porcptdatefilter
+-- ;
+-- DROP VIEW develop.bronze.raw_departmentmapping
+-- ;
+-- DROP VIEW develop.bronze.raw_orderhed
+-- ;
+-- DROP VIEW develop.bronze.raw_orderrel
+-- ;
+-- DROP VIEW develop.bronze.raw_shipdtl
+-- ;
+-- DROP VIEW develop.bronze.raw_shiphead
+-- ;
+-- DROP VIEW develop.bronze.raw_shipto
+-- ;
+-- DROP VIEW develop.bronze.raw_shipvia
+-- ;
+
+
+-- DROP VIEW uat.bronze.raw_porcptdatefilter
+-- ;
+-- DROP VIEW uat.bronze.raw_departmentmapping
+-- ;
+-- DROP VIEW uat.bronze.raw_orderhed
+-- ;
+-- DROP VIEW uat.bronze.raw_orderrel
+-- ;
+-- DROP VIEW uat.bronze.raw_shipdtl
+-- ;
+-- DROP VIEW uat.bronze.raw_shiphead
+-- ;
+-- DROP VIEW uat.bronze.raw_shipto
+-- ;
+-- DROP VIEW uat.bronze.raw_shipvia
+-- ;
+
+
+CREATE OR REPLACE TABLE psa_prod.backup.psa_kinetic_part_master_ref_20260409 AS
+SELECT * FROM psa_prod.refs.psa_kinetic_part_master_ref
+;
+
+-- 6600308
+SELECT COUNT(*)
+FROM psa_prod.refs.psa_kinetic_part_master_ref
+;
+
+-- 6600308
+SELECT COUNT(*)
+FROM psa_prod.backup.psa_kinetic_part_master_ref_20260409
+;
+
+-- DROP TABLE psa_prod.refs.psa_kinetic_part_master_ref
+-- ;
+
+DROP VIEW production.bronze.raw_porcptdatefilter
+;
+DROP VIEW production.bronze.raw_departmentmapping
+;
+
+SELECT *
+FROM psa_prod.refs.psa_kinetic_part_master_ref
+;
+
+-- 59804
+SELECT COUNT(*)
+FROM (
+SELECT DISTINCT PART_COMPANY, PART_PARTNUM
+FROM psa_prod.refs.psa_kinetic_part_master_ref
+) AS x
+;
+
+-- 59804
+SELECT COUNT(*)
+FROM (
+SELECT DISTINCT PART_COMPANY, PART_PARTNUM
+FROM psa_prod.backup.psa_kinetic_part_master_ref_20260409
+) AS x
+;
+

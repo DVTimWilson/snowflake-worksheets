@@ -1,0 +1,69 @@
+WITH objs AS (
+  SELECT table_catalog, table_schema, table_name, table_type
+  FROM develop.information_schema.tables
+  WHERE table_schema IN ('bronze','silver')
+),
+downstream AS (
+  SELECT DISTINCT source_table_catalog, source_table_schema, source_table_name
+  FROM system.access.table_lineage
+  WHERE source_table_catalog = 'develop'
+    AND source_table_schema IN ('bronze','silver')
+    AND target_table_full_name IS NOT NULL
+    AND target_table_full_name != source_table_full_name
+)
+SELECT o.table_schema, o.table_name, o.table_type
+FROM objs o
+LEFT OUTER JOIN downstream d
+  ON o.table_schema = d.source_table_schema
+  AND o.table_name = d.source_table_name
+WHERE d.source_table_name IS NULL
+ORDER BY o.table_schema, o.table_name
+;
+
+WITH objs AS (
+  SELECT table_catalog, table_schema, table_name, table_type
+  FROM uat.information_schema.tables
+  WHERE table_schema IN ('bronze','silver')
+),
+downstream AS (
+  SELECT DISTINCT source_table_catalog, source_table_schema, source_table_name
+  FROM system.access.table_lineage
+  WHERE source_table_catalog = 'uat'
+    AND source_table_schema IN ('bronze','silver')
+    AND target_table_full_name IS NOT NULL
+    AND target_table_full_name != source_table_full_name
+)
+SELECT o.table_schema, o.table_name, o.table_type
+FROM objs o
+LEFT OUTER JOIN downstream d
+  ON o.table_schema = d.source_table_schema
+  AND o.table_name = d.source_table_name
+WHERE d.source_table_name IS NULL
+ORDER BY o.table_schema, o.table_name
+;
+
+WITH objs AS (
+  SELECT table_catalog, table_schema, table_name, table_type
+  FROM production.information_schema.tables
+  WHERE table_schema IN ('bronze','silver')
+),
+downstream AS (
+  SELECT DISTINCT source_table_catalog, source_table_schema, source_table_name
+  FROM system.access.table_lineage
+  WHERE source_table_catalog = 'production'
+    AND source_table_schema IN ('bronze','silver')
+    AND target_table_full_name IS NOT NULL
+    AND target_table_full_name != source_table_full_name
+)
+SELECT o.table_schema, o.table_name, o.table_type
+FROM objs o
+LEFT OUTER JOIN downstream d
+  ON o.table_schema = d.source_table_schema
+  AND o.table_name = d.source_table_name
+WHERE d.source_table_name IS NULL
+ORDER BY o.table_schema, o.table_name
+;
+
+SELECT DISTINCT target_type
+FROM system.access.table_lineage
+;

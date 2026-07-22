@@ -1,0 +1,193 @@
+GRANT SELECT ON TABLE joe_barter.silver.sat_inventory_stock_levels_historic_20260721 TO `twilson@ecoreintl.com`
+;
+
+-- 5248411
+SELECT COUNT(*)
+FROM uat.silver.sat_inventory_stock_levels AS a
+;
+
+-- Create column list
+SELECT *
+FROM uat.silver.sat_inventory_stock_levels AS a
+LIMIT 1
+;
+
+-- Check for duplicately loaded records
+SELECT *
+FROM (
+SELECT ROW_NUMBER() OVER (PARTITION BY a.INVENTORY_STOCK_LEVELS_LHK ORDER BY a.INVENTORY_STOCK_LEVELS_LHK) AS rn, a.* 
+FROM uat.silver.sat_inventory_stock_levels AS a
+
+INNER JOIN joe_barter.silver.sat_inventory_stock_levels_historic_20260721 AS b
+ON a.INVENTORY_STOCK_LEVELS_LHK = b.INVENTORY_STOCK_LEVELS_LHK
+) AS x
+WHERE rn = 2
+;
+
+-- Work out how to select duplicately loaded records
+SELECT ROW_NUMBER() OVER (PARTITION BY a.INVENTORY_STOCK_LEVELS_LHK ORDER BY a.INVENTORY_STOCK_LEVELS_LHK) AS rn, a.* 
+FROM uat.silver.sat_inventory_stock_levels AS a
+
+LEFT OUTER JOIN joe_barter.silver.sat_inventory_stock_levels_historic_20260721 AS b
+ON a.INVENTORY_STOCK_LEVELS_LHK = b.INVENTORY_STOCK_LEVELS_LHK
+
+WHERE a.LOAD_DATETIME BETWEEN '2026-07-21T10:18:00.000+00:00' AND '2026-07-21T10:19:00.000+00:00'
+;
+
+SELECT *
+FROM (
+
+SELECT CASE WHEN b.INVENTORY_STOCK_LEVELS_LHK IS NOT NULL THEN ROW_NUMBER() OVER (PARTITION BY a.INVENTORY_STOCK_LEVELS_LHK ORDER BY a.INVENTORY_STOCK_LEVELS_LHK) ELSE 0 END AS rn, a.* 
+FROM uat.silver.sat_inventory_stock_levels AS a
+
+LEFT OUTER JOIN joe_barter.silver.sat_inventory_stock_levels_historic_20260721 AS b
+ON a.INVENTORY_STOCK_LEVELS_LHK = b.INVENTORY_STOCK_LEVELS_LHK
+
+) AS x
+-- WHERE rn = 2
+-- AND LOAD_DATETIME BETWEEN '2026-07-21T10:18:00.000+00:00' AND '2026-07-21T10:19:00.000+00:00'
+-- ORDER BY LOAD_DATETIME DESC
+;
+
+-- 5246361 (2050 fewer)
+SELECT COUNT(*)
+FROM (
+
+SELECT CASE WHEN b.INVENTORY_STOCK_LEVELS_LHK IS NOT NULL THEN ROW_NUMBER() OVER (PARTITION BY a.INVENTORY_STOCK_LEVELS_LHK ORDER BY a.INVENTORY_STOCK_LEVELS_LHK) ELSE 0 END AS rn, a.* 
+FROM uat.silver.sat_inventory_stock_levels AS a
+
+LEFT OUTER JOIN joe_barter.silver.sat_inventory_stock_levels_historic_20260721 AS b
+ON a.INVENTORY_STOCK_LEVELS_LHK = b.INVENTORY_STOCK_LEVELS_LHK
+
+) AS x
+WHERE NOT (rn = 2
+AND LOAD_DATETIME BETWEEN '2026-07-21T10:18:00.000+00:00' AND '2026-07-21T10:19:00.000+00:00')
+;
+
+-- Select correct records only, then rename tables in GUI
+CREATE TABLE uat.silver.sat_inventory_stock_levels_temp AS
+SELECT INVENTORY_STOCK_LEVELS_LHK, HASHDIFF, PART_PARTDESCRIPTION, PART_CLASSID, PART_PRODCODE, PARTCLASS_BU_C, PART_COSTMETHOD, PARTCOST_COSTID, PARTBIN_DIMCODE, PARTCOST_STDMATERIALCOST, PARTCOST_STDLABORCOST, PARTCOST_STDBURDENCOST, PARTCOST_STDSUBCONTCOST, PARTCOST_STDMTLBURCOST, CALCULATED_TOTALCOST, CALCULATED_EXTMTL, CALCULATED_EXTLBR, CALCULATED_EXTBDN, CALCULATED_EXTSUBCON, CALCULATED_EXTMTLBDN, CALCULATED_EXTTOTAL, PLANT_PLANT, PART_IUM, PARTCLASS_DESCRIPTION, PARTWHSE_ONHANDQTY, PARTWHSE_WAREHOUSECODE, WHSEBIN_NONNETTABLE, PARTWHSE_DEMANDQTY, PARTWHSE_ALLOCATEDQTY, PARTBIN_PARTNUM, PARTBIN_COMPANY, PLANT_NAME, PARTBIN_WAREHOUSECODE, PARTBIN_BINNUM, PARTBIN_LOTNUM, PARTBIN_ONHANDQTY, INVENTORY_DATE, EXTRACT_DATE, UNIQUE_KEY, LOAD_DATETIME, RECORD_SOURCE
+FROM (
+
+SELECT CASE WHEN b.INVENTORY_STOCK_LEVELS_LHK IS NOT NULL THEN ROW_NUMBER() OVER (PARTITION BY a.INVENTORY_STOCK_LEVELS_LHK ORDER BY a.INVENTORY_STOCK_LEVELS_LHK) ELSE 0 END AS rn, a.* 
+FROM uat.silver.sat_inventory_stock_levels AS a
+
+LEFT OUTER JOIN joe_barter.silver.sat_inventory_stock_levels_historic_20260721 AS b
+ON a.INVENTORY_STOCK_LEVELS_LHK = b.INVENTORY_STOCK_LEVELS_LHK
+
+) AS x
+WHERE NOT (rn = 2 AND LOAD_DATETIME BETWEEN '2026-07-21T10:18:00.000+00:00' AND '2026-07-21T10:19:00.000+00:00')
+;
+
+-- Correct count after the above CREATE TABLE and rename
+-- 5246361
+SELECT COUNT(*)
+FROM uat.silver.sat_inventory_stock_levels_temp
+;
+
+SELECT DISTINCT extract_date
+FROM landing.kinetic.stockstat
+ORDER BY 1 DESC
+;
+
+SELECT DISTINCT extract_date
+FROM psa.kinetic.psa_inventory_stockstat
+ORDER BY 1 DESC
+;
+
+--
+-- Backfill
+--
+
+GRANT USAGE ON SCHEMA joe_barter.gold_coreview TO `twilson@ecoreintl.com`
+;
+
+GRANT SELECT ON TABLE joe_barter.gold_coreview.mart_inventory_stock_levels TO `twilson@ecoreintl.com`
+;
+
+GRANT SELECT ON TABLE joe_barter.gold_coreview.mart_inventory_stock_levels_backfill TO `twilson@ecoreintl.com`
+;
+
+WITH inventory_with_gaps AS (
+    SELECT 
+        UNIQUE_KEY
+        , DATE
+        , INVENTORY_ITEM_ID
+        , INVENTORY_ITEM_DESCRIPTION
+        , CLASS_ID
+        , PROD_CODE
+        , COREVIEW_PRODUCT_CATEGORY
+        , PRODUCT_STAGE
+        , PRODUCT_TYPE
+        , ENTITY
+        , BU
+        , SITE
+        , WAREHOUSE_CODE
+        , EXTENDED_COST
+        , UNIT_COST
+        , UOM
+        , QUANTITY
+        , UNIT_WEIGHT
+        , WEIGHT_LBS
+        , IS_ACQUIRED_DATE
+        , IS_ACQUIRED_NOW
+        , META_LOAD_DATETIME
+        , RECORD_SOURCE
+        , MIN(DATE) OVER () AS MIN_DATE_OVERALL
+        , MAX(DATE) OVER () AS MAX_DATE_OVERALL
+        , LEAD(DATE, 1, CURRENT_DATE()) OVER (PARTITION BY INVENTORY_ITEM_ID, INVENTORY_ITEM_DESCRIPTION, ENTITY, SITE, WAREHOUSE_CODE ORDER BY DATE) AS LEAD_DATE
+    FROM `joe_barter`.`gold_coreview`.`mart_inventory_stock_levels`
+    WHERE INVENTORY_ITEM_ID NOT ILIKE 'SAMP%'
+    -- AND ENTITY = 'ECS' AND UPPER(SITE) IN ('MEXIA', 'GREENVILLE')
+    -- AND DATE BETWEEN '2026-07-10' AND '2026-07-13'
+),
+
+cross_join_data AS (
+    SELECT cal.date_day AS dim_date, inv.*
+    FROM `tim_wilson`.`silver`.`dim_calendar_usa` AS cal
+
+    INNER JOIN inventory_with_gaps AS inv
+    ON cal.date_day >= inv.DATE
+    AND cal.date_day < inv.LEAD_DATE
+
+    WHERE cal.date_day BETWEEN inv.MIN_DATE_OVERALL AND inv.MAX_DATE_OVERALL
+)
+
+SELECT
+    dim_date
+    , UNIQUE_KEY
+    , DATE
+    , INVENTORY_ITEM_ID
+    , INVENTORY_ITEM_DESCRIPTION
+    , CLASS_ID
+    , PROD_CODE
+    , COREVIEW_PRODUCT_CATEGORY
+    , PRODUCT_STAGE
+    , PRODUCT_TYPE
+    , ENTITY
+    , BU
+    , SITE
+    , WAREHOUSE_CODE
+    , EXTENDED_COST
+    , UNIT_COST
+    , UOM
+    , QUANTITY
+    , UNIT_WEIGHT
+    , WEIGHT_LBS
+    , IS_ACQUIRED_DATE
+    , IS_ACQUIRED_NOW
+    , META_LOAD_DATETIME
+    , RECORD_SOURCE
+FROM cross_join_data
+WHERE 1=1
+    AND ENTITY = 'ECS' AND UPPER(SITE) IN ('MEXIA', 'GREENVILLE')
+    AND DATE BETWEEN '2026-07-03' AND '2026-07-06'
+ORDER BY dim_date DESC, entity, site, inventory_item_id, inventory_item_description
+;
+
+SELECT *
+FROM `production`.`gold_coreview`.`mart_inventory_stock_levels_backfill`
+WHERE 1=1
+    AND ENTITY = 'ECS' AND UPPER(SITE) IN ('MEXIA', 'GREENVILLE')
+    AND DATE BETWEEN '2026-07-03' AND '2026-07-06'
+;

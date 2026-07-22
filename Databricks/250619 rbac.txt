@@ -1,0 +1,93 @@
+-- 1. Create the Unity Catalog
+CREATE CATALOG IF NOT EXISTS manufacturing_catalog;
+
+-- 2. Create Schemas
+CREATE SCHEMA IF NOT EXISTS manufacturing_catalog.landing;
+CREATE SCHEMA IF NOT EXISTS manufacturing_catalog.bronze;
+CREATE SCHEMA IF NOT EXISTS manufacturing_catalog.silver;
+CREATE SCHEMA IF NOT EXISTS manufacturing_catalog.gold_mfg;
+
+-- 3. Create Roles
+CREATE ROLE IF NOT EXISTS superadmin;
+CREATE ROLE IF NOT EXISTS developer;
+CREATE ROLE IF NOT EXISTS mfg_user;
+CREATE ROLE IF NOT EXISTS dbt_service;
+
+-- 4. Grant Permissions
+
+-- Superadmin: Full access to everything
+GRANT ALL PRIVILEGES ON CATALOG manufacturing_catalog TO ROLE superadmin;
+GRANT ALL PRIVILEGES ON SCHEMA manufacturing_catalog.landing TO ROLE superadmin;
+GRANT ALL PRIVILEGES ON SCHEMA manufacturing_catalog.bronze TO ROLE superadmin;
+GRANT ALL PRIVILEGES ON SCHEMA manufacturing_catalog.silver TO ROLE superadmin;
+GRANT ALL PRIVILEGES ON SCHEMA manufacturing_catalog.gold_mfg TO ROLE superadmin;
+
+-- Developer: Full access to objects, but not catalog-level changes
+GRANT USAGE ON CATALOG manufacturing_catalog TO ROLE developer;
+GRANT USAGE, CREATE, SELECT, MODIFY ON SCHEMA manufacturing_catalog.landing TO ROLE developer;
+GRANT USAGE, CREATE, SELECT, MODIFY ON SCHEMA manufacturing_catalog.bronze TO ROLE developer;
+GRANT USAGE, CREATE, SELECT, MODIFY ON SCHEMA manufacturing_catalog.silver TO ROLE developer;
+GRANT USAGE, CREATE, SELECT, MODIFY ON SCHEMA manufacturing_catalog.gold_mfg TO ROLE developer;
+
+-- mfg_user: Read-only access to gold_mfg schema
+GRANT USAGE ON CATALOG manufacturing_catalog TO ROLE mfg_user;
+GRANT USAGE ON SCHEMA manufacturing_catalog.gold_mfg TO ROLE mfg_user;
+GRANT SELECT ON SCHEMA manufacturing_catalog.gold_mfg TO ROLE mfg_user;
+
+-- dbt_service: Full DML and DDL access on all schemas
+GRANT USAGE ON CATALOG manufacturing_catalog TO ROLE dbt_service;
+GRANT USAGE, CREATE, SELECT, INSERT, UPDATE, DELETE, DROP ON SCHEMA manufacturing_catalog.landing TO ROLE dbt_service;
+GRANT USAGE, CREATE, SELECT, INSERT, UPDATE, DELETE, DROP ON SCHEMA manufacturing_catalog.bronze TO ROLE dbt_service;
+GRANT USAGE, CREATE, SELECT, INSERT, UPDATE, DELETE, DROP ON SCHEMA manufacturing_catalog.silver TO ROLE dbt_service;
+GRANT USAGE, CREATE, SELECT, INSERT, UPDATE, DELETE, DROP ON SCHEMA manufacturing_catalog.gold_mfg TO ROLE dbt_service;
+
+
+To assign users to roles in **Databricks Unity Catalog**, you typically use the `GRANT` statement. Here's how it works:
+
+---
+
+### 🔐 **Assigning Users to Roles**
+
+You can assign a user (or group or service principal) to a role using:
+
+```sql
+GRANT ROLE <role_name> TO <principal>;
+```
+
+Where `<principal>` can be:
+- A **user** (e.g., `user@example.com`)
+- A **group** (e.g., `developers`)
+- A **service principal** (for automation or tools like dbt)
+
+---
+
+### ✅ **Examples**
+
+#### 1. Assign a user to the `superadmin` role:
+```sql
+GRANT ROLE superadmin TO `admin_user@example.com`;
+```
+
+#### 2. Assign a group to the `developer` role:
+```sql
+GRANT ROLE developer TO `dev_team`;
+```
+
+#### 3. Assign a service principal to the `dbt_service` role:
+```sql
+GRANT ROLE dbt_service TO `dbt_service_principal`;
+```
+
+#### 4. Assign a user to the `mfg_user` role:
+```sql
+GRANT ROLE mfg_user TO `mfg_analyst@example.com`;
+```
+
+---
+
+### 📌 Notes
+
+- You must have **`GRANT` privileges** on the role to assign it.
+- You can also manage roles and assignments via the **Databricks UI** under **Data > Permissions** or **Admin Console** if you're an account admin.
+
+Would you like a script that includes example user assignments, or a downloadable `.sql` file with everything bundled?

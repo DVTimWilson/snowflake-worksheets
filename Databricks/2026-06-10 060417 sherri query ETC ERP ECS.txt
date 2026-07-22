@@ -1,0 +1,173 @@
+--
+-- 10/06/2026  First attempt
+--
+
+-- SELECT DISTINCT Company
+-- FROM landing_workato_test.kinetic.sales_sherrigmquery_allcompanies
+-- ;
+
+-- SELECT DISTINCT InvoiceDate
+-- FROM landing_workato_test.kinetic.sales_sherrigmquery_allcompanies
+-- ORDER BY 1
+-- ;
+
+-- SELECT *
+-- FROM landing_workato_test.kinetic.sales_sherrigmquery_allcompanies
+-- ORDER BY Company, InvoiceDate, InvoiceNum, InvoiceLine
+-- ;
+
+SELECT *
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE Company IN ('ETC', 'ERP', 'ECS')
+
+        QUALIFY
+                RANK() OVER (PARTITION BY INVOICENUM
+                                        ,INVOICETYPE
+                                        ,INVOICELINE
+                                        ,COMPANY
+                                        ,INVOICEDATE 
+                                   ORDER BY EXTRACT_DATE DESC) = 1
+            AND
+                ROW_NUMBER() OVER (PARTITION BY Company
+                                        , InvoiceNum
+                                        , InvoiceDate
+                                        , InvoiceType
+                                        , Name
+                                        , InvoiceLine
+                                        , SellingShipQty
+                                        , DocUnitPrice
+                                        , DocTotalMiscChrg
+                                        , DocUnitCost
+                                        , ShipToCustNum
+                                        , ShipToAddress1
+                                        , ShipToAddress2
+                                        , SoldToState
+                                        , GroupCode
+                                        , TerritoryID
+                                        , Character03
+                                        , Formula
+                                        , Width
+                                        , SFSold
+                                        , Market2_c
+                                        , ProjectName_c
+                                        , BillToCountry
+                                        , RequestDate
+                                        , NeedByDate
+                                        , CustSegment_c 
+                                   ORDER BY EXTRACT_DATE DESC) = 1
+
+ORDER BY Company, InvoiceDate, InvoiceNum, InvoiceLine
+;
+
+--
+-- 22/06/2026  Second attempt
+--
+
+SET use_cached_result = false
+;
+
+SELECT Company, InvoiceDate, COUNT(*)
+FROM landing_workato_test.kinetic.sales_sherrigmquery_allcompanies
+GROUP BY Company, InvoiceDate
+ORDER BY Company, InvoiceDate
+;
+
+SELECT Company, InvoiceDate, COUNT(*)
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE Company IN ('ETC', 'ERP', 'ECS')
+GROUP BY Company, InvoiceDate
+ORDER BY Company, InvoiceDate
+;
+
+WITH a AS (
+SELECT Company, InvoiceDate, COUNT(*) AS acnt
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE Company IN ('ETC', 'ERP', 'ECS')
+GROUP BY Company, InvoiceDate
+)
+,
+
+b AS (
+SELECT Company, InvoiceDate, COUNT(*) AS bcnt
+FROM landing_workato_test.kinetic.sales_sherrigmquery_allcompanies
+WHERE Company IN ('ETC', 'ERP', 'ECS')
+GROUP BY Company, InvoiceDate
+)
+
+SELECT a.Company, a.InvoiceDate, a.acnt AS old_count, b.bcnt AS new_count, b.bcnt - a.acnt AS difference
+FROM a
+
+INNER JOIN b
+ON a.company =  b.company
+AND a.InvoiceDate = b.InvoiceDate
+
+ORDER BY a.Company, a.InvoiceDate
+;
+
+-- 107026
+SELECT COUNT(*)
+FROM landing.kinetic.sales_sherrigmquery_allcompanies AS a
+WHERE Company IN ('ETC', 'ERP', 'ECS')
+;
+
+-- 142503
+SELECT COUNT(*)
+FROM landing_workato_test.kinetic.sales_sherrigmquery_allcompanies AS a
+WHERE Company IN ('ETC', 'ERP', 'ECS')
+;
+
+-- 35461
+SELECT SUM(difference)
+FROM (
+WITH a AS (
+SELECT Company, InvoiceDate, COUNT(*) AS acnt
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE Company IN ('ETC', 'ERP', 'ECS')
+GROUP BY Company, InvoiceDate
+)
+,
+
+b AS (
+SELECT Company, InvoiceDate, COUNT(*) AS bcnt
+FROM landing_workato_test.kinetic.sales_sherrigmquery_allcompanies
+WHERE Company IN ('ETC', 'ERP', 'ECS')
+GROUP BY Company, InvoiceDate
+)
+
+SELECT a.Company, a.InvoiceDate, a.acnt AS old_count, b.bcnt AS new_count, b.bcnt - a.acnt AS difference
+FROM a
+
+INNER JOIN b
+ON a.company =  b.company
+AND a.InvoiceDate = b.InvoiceDate
+
+ORDER BY a.Company, a.InvoiceDate
+) AS x
+;
+
+-- 2026-06-19
+SELECT MAX(InvoiceDate)
+FROM landing_workato_test.kinetic.sales_sherrigmquery_allcompanies AS a
+WHERE Company IN ('ETC', 'ERP', 'ECS')
+;
+
+-- 2026-04-13
+SELECT MIN(InvoiceDate)
+FROM landing_workato_test.kinetic.sales_sherrigmquery_allcompanies AS a
+WHERE Company IN ('ETC', 'ERP', 'ECS')
+;
+
+-- 2026-06-19
+SELECT MAX(InvoiceDate)
+FROM landing.kinetic.sales_sherrigmquery_allcompanies AS a
+WHERE Company IN ('ETC', 'ERP', 'ECS')
+;
+
+-- 2026-04-13
+SELECT MIN(InvoiceDate)
+FROM landing.kinetic.sales_sherrigmquery_allcompanies AS a
+WHERE Company IN ('ETC', 'ERP', 'ECS')
+;
+
+
+

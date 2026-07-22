@@ -1,0 +1,254 @@
+SELECT SUM(SALES_DOLLAR), SUM(WEIGHT_LBS), MONTH(INVOICE_DATE), ENTITY
+, COREVIEW_PRODUCT_CATEGORY
+FROM joe_barter.gold_coreview.mart_outbound_transactions
+WHERE YEAR(INVOICE_DATE) = 2025
+
+-- AND MONTH(INVOICE_DATE) = 8
+AND ENTITY = 'CRC'
+-- AND COREVIEW_PRODUCT_CATEGORY = 'Tipping Fees'
+GROUP BY ENTITY, MONTH(INVOICE_DATE)
+,COREVIEW_PRODUCT_CATEGORY
+ORDER BY ENTITY, MONTH(INVOICE_DATE) DESC
+ ;
+
+ SELECT SUM(SALES_DOLLAR), SUM(WEIGHT_LBS), MONTH(INVOICE_DATE), ENTITY
+-- , COREVIEW_PRODUCT_CATEGORY
+FROM develop.gold_coreview.mart_outbound_transactions_v2
+WHERE YEAR(INVOICE_DATE) = 2025
+
+-- AND MONTH(INVOICE_DATE) = 8
+-- AND ENTITY = 'TSS'
+-- AND COREVIEW_PRODUCT_CATEGORY = 'Tipping Fees'
+GROUP BY ENTITY, MONTH(INVOICE_DATE)
+-- ,COREVIEW_PRODUCT_CATEGORY
+ORDER BY ENTITY, MONTH(INVOICE_DATE) DESC
+ ;
+-- ;
+-- SELECT * FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+-- WHERE EXTRACT_DATE = '2025-12-10T15:16:19.000+00:00'
+-- -- ORDER BY Extract_Date DESC
+
+
+SELECT UNIQUE_KEY, COUNT(*)
+FROM develop.silver.sat_outbound_invoice_quickbooks_crc_v2_latest
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) >1
+
+;
+with x as (
+SELECT UNIQUE_KEY, COUNT(*)
+-- FROM psa.quickbooks.psa_quickbooks_staging_crc_v2
+FROM develop.silver.sat_outbound_invoice_quickbooks_crc_v2_latest
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) >1
+),
+
+y as (
+SELECT SUM(AMOUNT) as dollars, MONTH(DATE) as month
+FROM x
+INNER JOIN psa.quickbooks.psa_quickbooks_staging_crc_v2 USING (INDEX)
+GROUP BY MONTH(DATE)
+ORDER BY MONTH(DATE)
+)
+
+SELECT (dollars*2)/3, month
+FROM y
+;SELECT DISTINCT Extract_Date
+FROM psa.quickbooks.psa_quickbooks_staging_crc_v2
+;
+SELECT SUM(AMOUNT)
+FROM develop.silver.sat_outbound_invoice_quickbooks_crc_v2_latest
+WHERE UNIQUE_KEY IN (
+'CRC-4-1'
+,'CRC-3-1'
+,'CRC-24489-2'
+,'CRC-24362-2'
+,'CRC-26446-4'
+,'CRC-30903-2'
+,'CRC-26446-5'
+,'CRC-4-2'
+,'CRC-2-1'
+,'CRC-26401-1'
+,'CRC-30919-1'
+,'CRC-2-10'
+,'CRC-30920-1'
+,'CRC-26446-3'
+,'CRC-24489-1'
+,'CRC-26417-1'
+,'CRC-2-5'
+,'CRC-4-3'
+,'CRC-2-2'
+,'CRC-24362-1'
+,'CRC-4-4'
+,'CRC-24409-1'
+,'CRC-2-6'
+,'CRC-2-4'
+,'CRC-2-7'
+,'CRC-2-9'
+,'CRC-2-3'
+,'CRC-2-8'
+)
+-- ORDER BY UNIQUE_KEY
+;
+SELECT DISTINCT ACCOUNTTYPE
+FROM develop.silver.sat_outbound_invoice_quickbooks_crc_v2_latest
+;
+SELECT COUNT(*), MONTH(DATE)
+FROM develop.silver.sat_outbound_invoice_quickbooks_crc_v2_latest
+WHERE 1=1
+AND YEAR(DATE) = 2025
+GROUP BY MONTH(DATE)
+ORDER BY MONTH(DATE) DESC
+;
+SELECT COUNT(*), MONTH(DATE)
+FROM develop.silver.sat_outbound_invoice_quickbooks_crc_latest
+WHERE 1=1
+AND YEAR(DATE) = 2025
+GROUP BY MONTH(DATE)
+ORDER BY MONTH(DATE) DESC
+;
+
+SELECT SUM(AMOUNT), MONTH(DATE)
+FROM develop.silver.sat_outbound_invoice_quickbooks_crc_v2_latest
+WHERE 1=1
+AND YEAR(DATE) = 2025
+AND TYPE IN ('Invoice'
+, 'Credit Memo'
+, 'General Journal'
+)
+AND ACCOUNTTYPE = 'Income'
+GROUP BY MONTH(DATE)
+ORDER BY MONTH(DATE) DESC
+;
+
+SELECT *
+FROM develop.silver.sat_outbound_invoice_quickbooks_crc_v2_latest
+WHERE 1=1
+AND NUM IN (
+  '29769'
+,'29770'
+,'29771'
+,'29772'
+,'29773'
+,'29774'
+,'29775'
+,'29776'
+,'29777'
+,'29778'
+,'29780'
+,'29781'
+,'29782'
+,'29783'
+,'29784'
+,'29785'
+,'29787'
+,'29788'
+,'29789'
+,'29790'
+,'29792'
+,'29793'
+,'29794'
+,'29795'
+,'29796'
+,'29797'
+
+)
+;
+SELECT DISTINCT Extract_Date
+FROM landing.quickbooks.outbound_sales_crc_v2
+WHERE 1=1
+-- AND Extract_Date
+;
+-- 2025-12-16T09:30:03.000+00:00
+SELECT SUM(AMOUNT),MONTH(DATE)
+FROM landing.quickbooks.outbound_sales_crc_v2
+WHERE 1=1
+AND YEAR(DATE) = 2025
+-- AND Extract_Date = '2025-12-15T15:18:58.000+00:00'
+AND Extract_Date = '2025-12-16T09:30:03.000+00:00'
+GROUP BY MONTH(DATE)
+ORDER BY MONTH(DATE) DESC
+;
+SELECT DISTINCT Extract_Date
+FROM joe_barter.psa_quickbooks.psa_quickbooks_staging_crc_v2
+WHERE 1=1
+AND YEAR(DATE) = 2025
+-- AND Extract_Date = '2025-12-15T15:18:58.000+00:00'
+AND Extract_Date = '2025-12-16T09:30:03.000+00:00'
+-- GROUP BY MONTH(DATE)
+-- ORDER BY MONTH(DATE) DESC
+;
+SELECT DISTINCT EXTRACT_DATE
+FROM joe_barter.silver.sat_outbound_invoice_quickbooks_crc_v2
+WHERE 1=1
+AND YEAR(DATE) = 2025
+-- AND Extract_Date = '2025-12-15T15:18:58.000+00:00'
+-- AND Extract_Date = '2025-12-16T09:30:03.000+00:00'
+-- GROUP BY MONTH(DATE)
+-- ORDER BY MONTH(DATE) DESC
+;
+SELECT SUM(SALES_DOLLAR),MONTH(INVOICE_DATE)
+FROM joe_barter.gold_coreview.mart_outbound_transactions
+WHERE 1=1
+AND YEAR(INVOICE_DATE) = 2025
+AND ENTITY = 'CRC'
+-- AND Extract_Date = '2025-12-15T15:18:58.000+00:00'
+-- AND Extract_Date = '2025-12-16T09:30:03.000+00:00'
+GROUP BY MONTH(INVOICE_DATE)
+ORDER BY MONTH(INVOICE_DATE) DESC
+;
+SELECT SUM(SALES_DOLLAR),MONTH(INVOICE_DATE)
+FROM joe_barter.silver.br_outbound_invoice_quickbooks_v2
+WHERE 1=1
+AND YEAR(INVOICE_DATE) = 2025
+AND ENTITY = 'CRC'
+-- AND Extract_Date = '2025-12-15T15:18:58.000+00:00'
+-- AND Extract_Date = '2025-12-16T09:30:03.000+00:00'
+GROUP BY MONTH(INVOICE_DATE)
+ORDER BY MONTH(INVOICE_DATE) DESC
+;
+
+SELECT DISTINCT EXTRACT_DATE
+FROM `joe_barter`.`silver`.`sat_outbound_invoice_quickbooks_crc_v2`
+QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY INVOICE_LINE_LHK
+    ORDER BY EXTRACT_DATE DESC
+) = 1
+;
+
+SELECT *
+FROM landing.quickbooks.outbound_sales_crc_v2
+WHERE 1=1
+AND YEAR(DATE) = 2025
+-- AND Extract_Date = '2025-12-15T15:18:58.000+00:00'
+AND Extract_Date = '2025-12-16T09:30:03.000+00:00'
+-- GROUP BY MONTH(DATE)
+-- ORDER BY MONTH(DATE) DESC
+;
+SELECT *
+FROM landing.quickbooks.outbound_sales_prc_v2
+WHERE 1=1
+AND YEAR(DATE) = 2025
+-- AND Extract_Date = '2025-12-15T15:18:58.000+00:00'
+AND Extract_Date = '2025-12-16T09:30:03.000+00:00'
+-- GROUP BY MONTH(DATE)
+-- ORDER BY MONTH(DATE) DESC
+;
+SELECT *
+FROM landing.quickbooks.outbound_sales_tss_v2
+WHERE 1=1
+AND YEAR(DATE) = 2025
+-- AND Extract_Date = '2025-12-15T15:18:58.000+00:00'
+AND Extract_Date = '2025-12-16T09:30:03.000+00:00'
+-- GROUP BY MONTH(DATE)
+-- ORDER BY MONTH(DATE) DESC
+;
+SELECT *
+FROM landing.quickbooks.outbound_sales_360_v2
+WHERE 1=1
+AND YEAR(DATE) = 2025
+-- AND Extract_Date = '2025-12-15T15:18:58.000+00:00'
+AND Extract_Date = '2025-12-16T09:30:03.000+00:00'
+-- GROUP BY MONTH(DATE)
+-- ORDER BY MONTH(DATE) DESC
+;

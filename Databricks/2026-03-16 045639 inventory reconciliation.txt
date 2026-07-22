@@ -1,0 +1,28 @@
+SELECT *
+FROM landing.kinetic.stockstat
+WHERE PartBin_PartNum = 'L000036-04-89-1903'
+AND Extract_Date BETWEEN '2025-10-01' AND '2026-01-31'
+ORDER BY Extract_Date, PartBin_BinNum
+;
+
+SELECT *
+FROM landing.kinetic.parttran
+WHERE PartNum = 'L000036-04-89-1903'
+AND TranDate BETWEEN '2025-10-01' AND '2026-01-31'
+ORDER BY TranDate, TranNum
+;
+
+SELECT DISTINCT INVENTORY_ITEM_ID
+FROM tim_wilson.gold_coreview.mart_inventory_stock_levels_v2
+ORDER BY INVENTORY_ITEM_ID
+;
+
+-- SELECT COUNT(*) FROM (
+SELECT DISTINCT PARTNUM, PARTDESCRIPTION
+FROM tim_wilson.gold_coreview.mart_inventory_transactions
+WHERE RECORD_SOURCE LIKE 'KINETIC%'
+AND PARTNUM = 'S-8114'
+-- AND PARTNUM NOT ILIKE 'SAMP%'
+ORDER BY PARTNUM
+-- ) AS x
+;

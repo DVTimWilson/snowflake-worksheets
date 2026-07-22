@@ -1,0 +1,478 @@
+SELECT *
+FROM develop.silver.br_eti_tons_to_qty
+;
+
+SELECT DISTINCT UOM
+FROM develop.silver.br_eti_tons_to_qty
+ORDER BY UOM
+;
+
+SELECT PRODUCT_ID, QUANTITY, UOM, WEIGHT_LBS
+FROM develop.silver.br_outbound_invoice_quickbooks_v2
+WHERE ENTITY = 'ETI'
+;
+
+SELECT DISTINCT UOM
+FROM tim_wilson.silver.br_eti_tons_to_qty
+WHERE COMPANY = 'ETI'
+;
+
+SELECT ITEM, ITEMDESCRIPTION, QTY, UOM
+FROM tim_wilson.silver.br_eti_tons_to_qty
+WHERE COMPANY = 'ETI'
+ORDER BY ITEM, QTY
+;
+
+SELECT DISTINCT UOM
+FROM tim_wilson.silver.br_outbound_invoice_quickbooks_v2
+WHERE ENTITY = 'ETI'
+;
+
+SELECT PRODUCT_ID, QUANTITY, UOM, WEIGHT_LBS
+FROM tim_wilson.silver.br_outbound_invoice_quickbooks_v2
+WHERE ENTITY = 'ETI'
+-- AND UOM != 'LB'
+ORDER BY PRODUCT_ID, QUANTITY
+;
+
+-- 15230530.455830	4112000.413009	19659827.96000000
+SELECT SUM(SALES_DOLLAR), SUM(GROSS_MARGIN_DOLLAR), SUM(WEIGHT_LBS)
+FROM develop.silver.br_outbound_invoice_quickbooks_v2
+WHERE ENTITY = 'ETI'
+;
+
+-- 15187517.205830	4102764.475279	109754660.00000000
+SELECT SUM(SALES_DOLLAR), SUM(GROSS_MARGIN_DOLLAR), SUM(WEIGHT_LBS)
+FROM tim_wilson.silver.br_outbound_invoice_quickbooks_v2
+WHERE ENTITY = 'ETI'
+;
+
+SELECT *
+FROM tim_wilson.silver.ref_sat_master_product_categories_non_kinetic_latest
+WHERE COMPANY_ID = 'ETI'
+ORDER BY ITEM
+;
+
+SELECT DISTINCT COMPANY_ID
+FROM tim_wilson.silver.ref_sat_master_product_categories_non_kinetic_latest
+ORDER BY COMPANY_ID
+;
+
+SELECT PRODUCT_ID, QUANTITY, UOM, WEIGHT_LBS
+FROM tim_wilson.silver.br_outbound_invoice_quickbooks_v2
+WHERE ENTITY = 'ETI'
+-- AND UOM != 'LB'
+-- AND PRODUCT_ID = 'Buffings (Buffing)'
+AND PRODUCT_ID LIKE 'Drop%'
+ORDER BY PRODUCT_ID, QUANTITY
+;
+
+-- 248229618.450700	102843296.647037	17241839896.77170000
+SELECT SUM(SALES_DOLLAR), SUM(GROSS_MARGIN_DOLLAR), SUM(WEIGHT_LBS)
+FROM develop.silver.br_outbound_invoice_quickbooks_v2
+WHERE ENTITY != 'ETI'
+;
+
+-- 248228573.450700	102733073.778727	17241838796.77170000
+SELECT SUM(SALES_DOLLAR), SUM(GROSS_MARGIN_DOLLAR), SUM(WEIGHT_LBS)
+FROM uat.silver.br_outbound_invoice_quickbooks_v2
+WHERE ENTITY != 'ETI'
+;
+
+-- 248153512.168700	102525089.314098	17241839896.77170000
+SELECT SUM(SALES_DOLLAR), SUM(GROSS_MARGIN_DOLLAR), SUM(WEIGHT_LBS)
+FROM production.silver.br_outbound_invoice_quickbooks_v2
+WHERE ENTITY != 'ETI'
+;
+
+-- 252789324.920700	104395264.621642	17247726096.77170000
+-- 252789057.320700	101251340.293273	  690689429.05070000  additionally join mpc on company
+-- 252788729.320700	104405099.601274	17762998964.27716000  allow for unjoined product categgories
+SELECT SUM(SALES_DOLLAR), SUM(GROSS_MARGIN_DOLLAR), SUM(WEIGHT_LBS)
+FROM tim_wilson.silver.br_outbound_invoice_quickbooks_v2
+WHERE ENTITY != 'ETI'
+;
+
+-- 0
+SELECT ITEM, COUNT(*)
+FROM tim_wilson.silver.ref_sat_master_product_categories_non_kinetic_latest
+GROUP BY ITEM
+HAVING COUNT(*) > 1
+;
+
+-- Uncategorized
+-- LB
+-- BG
+-- TON
+-- EA
+SELECT DISTINCT UOM
+FROM tim_wilson.silver.br_outbound_invoice_quickbooks_v2
+;
+
+SELECT COREVIEW_PRODUCT_CATEGORY, COUNT(*)
+FROM tim_wilson.silver.ref_sat_master_product_categories_non_kinetic_latest
+GROUP BY COREVIEW_PRODUCT_CATEGORY
+HAVING COUNT(*) > 1
+;
+
+-- check COMPANYCODE + ITEM combinations
+WITH combined_qb AS(
+
+SELECT 
+
+INVOICE_LINE_LHK
+,INVOICELINE
+,UNIQUE_KEY
+,NUM
+,NAME
+,DATE
+,ITEM
+,ITEMDESCRIPTION
+,PLANT
+,COMPANY AS COMPANYCODE
+,AMOUNT
+,QTY
+,UOM
+,LOAD_DATETIME
+,RECORD_SOURCE
+,HASHDIFF
+,TYPE
+,ACCOUNTTYPE
+
+ FROM `tim_wilson`.`silver`.`br_360_april_2024_quantity_fix`
+UNION
+SELECT 
+
+INVOICE_LINE_LHK
+,INVOICELINE
+,UNIQUE_KEY
+,NUM
+,NAME
+,DATE
+,ITEM
+,ITEMDESCRIPTION
+,PLANT
+,COMPANY AS COMPANYCODE
+,AMOUNT
+,QTY
+,UOM
+,LOAD_DATETIME
+,RECORD_SOURCE
+,HASHDIFF
+,TYPE
+,ACCOUNTTYPE
+
+ FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_crc_v2_latest`
+UNION
+SELECT 
+
+INVOICE_LINE_LHK
+,INVOICELINE
+,UNIQUE_KEY
+,NUM
+,NAME
+,DATE
+,ITEM
+,ITEMDESCRIPTION
+,PLANT
+,COMPANY AS COMPANYCODE
+,AMOUNT
+,QTY
+,UOM
+,LOAD_DATETIME
+,RECORD_SOURCE
+,HASHDIFF
+,TYPE
+,ACCOUNTTYPE
+
+ FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_dos_v2_latest`
+UNION
+SELECT 
+
+INVOICE_LINE_LHK
+,INVOICELINE
+,UNIQUE_KEY
+,NUM
+,NAME
+,DATE
+,ITEM
+,ITEMDESCRIPTION
+,PLANT
+,COMPANY AS COMPANYCODE
+,AMOUNT
+,QTY
+,UOM
+,LOAD_DATETIME
+,RECORD_SOURCE
+,HASHDIFF
+,TYPE
+,ACCOUNTTYPE
+
+ FROM `tim_wilson`.`silver`.`br_eti_tons_to_qty`
+UNION
+SELECT 
+
+INVOICE_LINE_LHK
+,INVOICELINE
+,UNIQUE_KEY
+,NUM
+,NAME
+,DATE
+,ITEM
+,ITEMDESCRIPTION
+,PLANT
+,COMPANY AS COMPANYCODE
+,AMOUNT
+,QTY
+,UOM
+,LOAD_DATETIME
+,RECORD_SOURCE
+,HASHDIFF
+,TYPE
+,ACCOUNTTYPE
+
+ FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_etr_v2_latest`
+UNION
+SELECT 
+
+INVOICE_LINE_LHK
+,INVOICELINE
+,UNIQUE_KEY
+,NUM
+,NAME
+,DATE
+,ITEM
+,ITEMDESCRIPTION
+,PLANT
+,COMPANY AS COMPANYCODE
+,AMOUNT
+,QTY
+,UOM
+,LOAD_DATETIME
+,RECORD_SOURCE
+,HASHDIFF
+,TYPE
+,ACCOUNTTYPE
+
+ FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_prc_v2_latest`
+UNION
+SELECT 
+
+INVOICE_LINE_LHK
+,INVOICELINE
+,UNIQUE_KEY
+,NUM
+,NAME
+,DATE
+,ITEM
+,ITEMDESCRIPTION
+,PLANT
+,COMPANY AS COMPANYCODE
+,AMOUNT
+,QTY
+,UOM
+,LOAD_DATETIME
+,RECORD_SOURCE
+,HASHDIFF
+,TYPE
+,ACCOUNTTYPE
+
+ FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_tss_v2_latest`
+UNION
+SELECT 
+
+INVOICE_LINE_LHK
+,INVOICELINE
+,UNIQUE_KEY
+,NUM
+,NAME
+,DATE
+,ITEM
+,ITEMDESCRIPTION
+,PLANT
+,COMPANY AS COMPANYCODE
+,AMOUNT
+,QTY
+,UOM
+,LOAD_DATETIME
+,RECORD_SOURCE
+,HASHDIFF
+,TYPE
+,ACCOUNTTYPE
+
+ FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_pts_v2_latest`
+UNION
+SELECT 
+
+INVOICE_LINE_LHK
+,INVOICELINE
+,UNIQUE_KEY
+,NUM
+,NAME
+,DATE
+,ITEM
+,ITEMDESCRIPTION
+,PLANT
+,COMPANYCODE
+,AMOUNT
+,QTY
+,UOM
+,LOAD_DATETIME
+,RECORD_SOURCE
+,HASHDIFF
+,TYPE
+,ACCOUNTTYPE
+
+ FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_dgh`
+UNION
+SELECT 
+
+INVOICE_LINE_LHK
+,INVOICELINE
+,UNIQUE_KEY
+,NUM
+,NAME
+,DATE
+,ITEM
+,ITEMDESCRIPTION
+,PLANT
+,COMPANYCODE
+,AMOUNT
+,QTY
+,UOM
+,LOAD_DATETIME
+,RECORD_SOURCE
+,HASHDIFF
+,TYPE
+,ACCOUNTTYPE
+
+ FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_edge`
+UNION
+SELECT 
+
+INVOICE_LINE_LHK
+,INVOICELINE
+,UNIQUE_KEY
+,NUM
+,NAME
+,DATE
+,ITEM
+,ITEMDESCRIPTION
+,PLANT
+,COMPANYCODE
+,AMOUNT
+,QTY
+,UOM
+,LOAD_DATETIME
+,RECORD_SOURCE
+,HASHDIFF
+,TYPE
+,ACCOUNTTYPE
+
+ FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_hti`
+
+)
+
+SELECT 
+-- COUNT(*)  -- 92976
+-- DISTINCT qb.companycode, qb.item  -- 841
+-- DISTINCT qb.companycode, qb.item, mpc.item  -- 841
+-- DISTINCT qb.companycode  -- 360, CRC, DGH, DOS, EDGE, ETI, ETR, HTI, PRC, PTS, TSS
+-- DISTINCT mpc.COMPANY_ID  -- NULL, 360, CRC, DOS, ETI, ETR, PRC, TSS
+      qb.QTY AS QUANTITY
+     , CASE WHEN qb.COMPANYCODE = 'ETI' THEN UPPER(qb.UOM)
+            ELSE CASE
+  WHEN UPPER(TRIM(mpc.SOLD_BY_UNIT_OF_MEASURE)) IS NULL OR UPPER(TRIM(mpc.SOLD_BY_UNIT_OF_MEASURE)) IN ('', '-1', '0', 'NULL') THEN 'Uncategorized'
+  ELSE COALESCE(
+         element_at(
+           map_from_arrays(
+             array('EACH', 'LOAD'),
+             array('EA', 'LD')
+           ),
+           UPPER(TRIM(mpc.SOLD_BY_UNIT_OF_MEASURE))
+         ),
+         UPPER(TRIM(mpc.SOLD_BY_UNIT_OF_MEASURE))
+       )
+END
+       END AS UOM
+     , CASE WHEN qb.COMPANYCODE = 'ETI' THEN CAST(qb.QTY AS DECIMAL(38,8))
+            ELSE 
+
+(
+  
+    CAST(COALESCE(TRY_MULTIPLY(qb.QTY, mpc.POUNDS_PER_SOLD_BY_UNIT) , 0) AS DECIMAL(38,8))
+  
+)
+       END AS WEIGHT_LBS
+,qb.*
+,mpc.*
+FROM combined_qb as qb
+
+LEFT OUTER JOIN `tim_wilson`.`silver`.`ref_sat_master_product_categories_non_kinetic_latest` as mpc
+    ON -- Case-insensitive equality for ad-hoc use
+UPPER(qb.ITEM) = UPPER(mpc.ITEM)
+
+LEFT OUTER JOIN (
+    SELECT Business_Segment 
+           , Company_Code
+    FROM `tim_wilson`.`silver`.`ref_master_ecore_companies` AS x
+) AS mec
+    ON -- Case-insensitive equality for ad-hoc use
+UPPER(qb.COMPANYCODE) = UPPER(mec.COMPANY_CODE)
+    
+LEFT OUTER JOIN `tim_wilson`.`silver`.`br_outbound_invoice_cogspc_pc_lookup` AS cogspc
+ON DATE_PART('YEAR', CAST(DATE_ADD(MONTH, -3, CAST(qb.date AS TIMESTAMP)) AS DATE)) = cogspc.year
+AND DATE_PART('QUARTER', CAST(DATE_ADD(MONTH, -3, CAST(qb.date AS TIMESTAMP)) AS DATE)) = cogspc.quarter
+AND UPPER(COALESCE(mpc.COREVIEW_PRODUCT_CATEGORY, 'Uncategorized')) = UPPER(cogspc.COREVIEW_PRODUCT_CATEGORY)
+
+LEFT OUTER JOIN `tim_wilson`.`silver`.`br_outbound_invoice_cogspc_bu_lookup` AS cogsbu
+ON DATE_PART('YEAR', CAST(DATE_ADD(MONTH, -3, CAST(qb.date AS TIMESTAMP)) AS DATE)) = cogsbu.year
+AND DATE_PART('QUARTER', CAST(DATE_ADD(MONTH, -3, CAST(qb.date AS TIMESTAMP)) AS DATE)) = cogsbu.quarter
+AND -- Case-insensitive equality for ad-hoc use
+UPPER(mec.BUSINESS_SEGMENT) = UPPER(cogsbu.BU)
+
+WHERE 1=1
+AND TYPE <> 'Inventory Adjust'
+AND ACCOUNTTYPE <> 'Cost of Goods Sold'
+AND mpc.COMPANY_ID IS NULL
+;
+
+SELECT *
+FROM `tim_wilson`.`silver`.`ref_sat_master_product_categories_non_kinetic_latest`
+WHERE COMPANY_ID IS NULL
+;
+
+-- Check quantity and margin calculation
+SELECT 
+QUANTITY
+, UOM
+, UNIT_COST
+, SALES_DOLLAR
+, *
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+LIMIT 100
+;
+
+-- UOM
+-- HR
+-- Uncategorized
+-- LD
+-- GT
+-- MT
+-- LOAD
+-- MILE
+-- MI
+-- LB
+-- %
+--
+-- EACH
+-- BG
+-- TON
+-- EA
+-- null
+SELECT DISTINCT UOM
+FROM tim_wilson.silver.br_outbound_invoice_quickbooks_v2
+-- WHERE UOM = ''
+-- WHERE UOM IS NULL
+-- WHERE UOM = '%' 
+;

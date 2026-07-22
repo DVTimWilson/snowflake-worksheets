@@ -1,0 +1,449 @@
+/*
+  Budget seed table
+*/
+
+SELECT DISTINCT company_code, business_unit_name
+FROM landing.reftables.budget_seed_table
+ORDER BY company_code, business_unit_name
+;
+
+-- 324
+SELECT *
+FROM landing.reftables.budget_seed_table
+;
+
+/*
+  br_combined_outbound_invoice_line
+*/
+
+  WITH sats as (
+SELECT 
+
+INVOICE_LINE_LHK
+, UNIQUE_KEY
+, INVOICE_DATE
+, INVOICE_NUMBER
+, INVOICELINE
+, CUSTOMER
+, PRODUCT_ID
+, PRODUCT_DESCRIPTION
+, COREVIEW_PRODUCT_CATEGORY
+, SITE
+, BU
+, ENTITY
+, SALES_DOLLAR
+, COGS_DOLLAR
+, UNIT_COST
+, GROSS_MARGIN_DOLLAR
+, GROSS_MARGIN_PCT
+, QUANTITY
+, COGSPC_SOURCE
+, WEIGHT_LBS
+, LOAD_DATETIME
+, RECORD_SOURCE
+
+
+FROM `tim_wilson`.`silver`.`br_outbound_invoice_sherri`
+
+UNION
+
+SELECT 
+
+INVOICE_LINE_LHK
+, UNIQUE_KEY
+, INVOICE_DATE
+, INVOICE_NUMBER
+, INVOICELINE
+, CUSTOMER
+, PRODUCT_ID
+, PRODUCT_DESCRIPTION
+, COREVIEW_PRODUCT_CATEGORY
+, SITE
+, BU
+, ENTITY
+, SALES_DOLLAR
+, COGS_DOLLAR
+, UNIT_COST
+, GROSS_MARGIN_DOLLAR
+, GROSS_MARGIN_PCT
+, QUANTITY
+, COGSPC_SOURCE
+, WEIGHT_LBS
+, LOAD_DATETIME
+, RECORD_SOURCE
+
+
+FROM `tim_wilson`.`silver`.`br_outbound_invoice_quickbooks`
+
+UNION
+
+SELECT 
+
+INVOICE_LINE_LHK
+, UNIQUE_KEY
+, INVOICE_DATE
+, INVOICE_NUMBER
+, INVOICELINE
+, CUSTOMER
+, PRODUCT_ID
+, PRODUCT_DESCRIPTION
+, COREVIEW_PRODUCT_CATEGORY
+, SITE
+, BU
+, ENTITY
+, SALES_DOLLAR
+, COGS_DOLLAR
+, UNIT_COST
+, GROSS_MARGIN_DOLLAR
+, GROSS_MARGIN_PCT
+, QUANTITY
+, COGSPC_SOURCE
+, WEIGHT_LBS
+, LOAD_DATETIME
+, RECORD_SOURCE
+
+
+FROM `tim_wilson`.`silver`.`bsat_outbound_invoice_contra_cogs`
+)
+
+SELECT sats.*
+,CASE WHEN x.acquisition_date <= sats.invoice_date THEN '1'
+  ELSE '0' END AS is_acquired_at_invoice_date
+,CASE WHEN x.acquisition_date <= sats.invoice_date THEN '1'
+  ELSE '0' END AS is_internal_transfer
+, CASE WHEN UPPER(x.invoice_company_name) = UPPER(sats.customer) THEN '1'
+  ELSE '0' END AS is_acquired_now
+-- SELECT DISTINCT entity, bu
+FROM sats
+LEFT JOIN `tim_wilson`.`silver`.`br_ref_outbound_invoice_ecore_companies` as x
+    ON UPPER(sats.customer) = UPPER(x.invoice_company_name)
+ORDER BY entity, bu
+;
+
+SELECT YEAR(invoice_date), entity, bu, product_id, SUM(sales_dollar)
+FROM tim_wilson.silver.br_combined_outbound_invoice_line
+WHERE invoice_date IS NOT NULL
+GROUP BY YEAR(invoice_date), entity, bu, product_id
+ORDER BY YEAR(invoice_date), entity, bu, product_id
+;
+
+SELECT YEAR(invoice_date), entity, bu, SUM(sales_dollar)
+FROM tim_wilson.silver.br_combined_outbound_invoice_line
+WHERE invoice_date IS NOT NULL
+GROUP BY YEAR(invoice_date), entity, bu
+ORDER BY YEAR(invoice_date), entity, bu
+;
+
+SELECT YEAR(invoice_date), MONTH(invoice_date), entity, bu, SUM(sales_dollar)
+FROM tim_wilson.silver.br_combined_outbound_invoice_line
+WHERE invoice_date IS NOT NULL
+GROUP BY YEAR(invoice_date), MONTH(invoice_date), entity, bu
+ORDER BY YEAR(invoice_date), MONTH(invoice_date), entity, bu
+;
+
+WITH annual_sales AS (
+  SELECT YEAR(invoice_date) AS year, entity, bu, SUM(sales_dollar) AS annual_sales
+  FROM tim_wilson.silver.br_combined_outbound_invoice_line
+  WHERE invoice_date IS NOT NULL
+  GROUP BY YEAR(invoice_date), entity, bu
+),
+
+annual_sales_by_product_category AS (
+  SELECT YEAR(invoice_date) AS year, entity, bu, product_id, SUM(sales_dollar) AS product_category_annual_sales
+  FROM tim_wilson.silver.br_combined_outbound_invoice_line
+  WHERE invoice_date IS NOT NULL
+  GROUP BY YEAR(invoice_date), entity, bu, product_id
+)
+
+SELECT apc.*
+  , as.annual_sales
+  , apc.product_category_annual_sales / NULLIF(as.annual_sales, 0) AS proportion
+  , ROUND(apc.product_category_annual_sales / NULLIF(as.annual_sales, 0) * 100, 2) AS percentage
+FROM annual_sales_by_product_category AS apc
+INNER JOIN annual_sales AS as
+ON apc.year = as.year
+AND apc.entity = as.entity
+AND apc.bu = as.bu
+ORDER BY apc.year, apc.entity, apc.bu, apc.product_id
+;
+
+SELECT YEAR(invoice_date) AS year
+  , entity
+  , bu
+  , product_id
+  , SUM(sales_dollar) AS product_category_annual_sales
+  , SUM(SUM(sales_dollar)) OVER (PARTITION BY YEAR(invoice_date), entity, bu) AS annual_sales
+  , SUM(sales_dollar) / NULLIF(SUM(SUM(sales_dollar)) OVER (PARTITION BY YEAR(invoice_date), entity, bu), 0) AS proportion
+FROM tim_wilson.silver.br_combined_outbound_invoice_line
+WHERE invoice_date IS NOT NULL
+AND entity = '360'
+GROUP BY YEAR(invoice_date), entity, bu, product_id
+ORDER BY year, entity, bu, product_id
+;
+
+WITH proportions AS (
+  SELECT YEAR(invoice_date) AS year
+  , entity
+  , bu
+  , product_id
+  , SUM(sales_dollar) AS product_category_annual_sales
+  , SUM(SUM(sales_dollar)) OVER (PARTITION BY YEAR(invoice_date), entity, bu) AS annual_sales
+  , SUM(sales_dollar) / NULLIF(SUM(SUM(sales_dollar)) OVER (PARTITION BY YEAR(invoice_date), entity, bu), 0) AS proportion
+  FROM tim_wilson.silver.br_combined_outbound_invoice_line
+  WHERE invoice_date IS NOT NULL
+  GROUP BY YEAR(invoice_date), entity, bu, product_id
+),
+
+sales_budgets AS (
+  SELECT
+    company_code
+    , CASE WHEN UPPER(business_unit_name) = 'CONSTRUCTION' THEN 'OS'
+        ELSE business_unit_name
+      END AS business_unit_name
+    , business_unit_key
+    , goal_name
+    , total_goal
+    , date_sk
+    , spread
+    , date
+    , month
+    , year
+  FROM tim_wilson.bronze.raw_sales_budgets
+)
+
+SELECT rst.company_code
+  , rst.business_unit_name
+  , rst.year
+  , rst.month
+  , rst.total_goal
+  , pr.product_id
+  , rst.total_goal * pr.proportion AS product_category_goal
+FROM sales_budgets AS rst
+
+LEFT OUTER JOIN proportions AS pr
+ON rst.year = pr.year
+AND rst.company_code = pr.entity
+AND rst.business_unit_name = pr.bu
+
+WHERE pr.entity = 'SAI'
+
+ORDER BY rst.year, rst.month, rst.company_code, rst.business_unit_name, pr.product_id
+;
+
+SELECT YEAR(invoice_date), MONTH(invoice_date), entity, bu, product_id, SUM(sales_dollar)
+FROM tim_wilson.silver.br_combined_outbound_invoice_line
+WHERE invoice_date IS NOT NULL
+AND entity = 'SAI'
+GROUP BY YEAR(invoice_date), MONTH(invoice_date), entity, bu, product_id
+ORDER BY YEAR(invoice_date), MONTH(invoice_date), entity, bu, product_id
+;
+
+WITH proportions AS (
+  SELECT YEAR(invoice_date) AS year
+  , entity
+  , bu
+  , product_id
+  -- , MIN(coreview_product_category) AS min_coreview_product_category
+  , MAX(coreview_product_category) AS max_coreview_product_category
+  , SUM(sales_dollar) AS product_category_annual_sales
+  , SUM(SUM(sales_dollar)) OVER (PARTITION BY YEAR(invoice_date), entity, bu) AS annual_sales
+  , SUM(sales_dollar) / NULLIF(SUM(SUM(sales_dollar)) OVER (PARTITION BY YEAR(invoice_date), entity, bu), 0) AS proportion
+  FROM tim_wilson.silver.br_combined_outbound_invoice_line
+  WHERE invoice_date IS NOT NULL
+  GROUP BY YEAR(invoice_date), entity, bu, product_id
+),
+
+sales_budgets AS (
+  SELECT
+    company_code
+    , CASE WHEN UPPER(business_unit_name) = 'CONSTRUCTION' THEN 'OS'
+        ELSE business_unit_name
+      END AS business_unit_name
+    , business_unit_key
+    , goal_name
+    , total_goal
+    , date_sk
+    , spread
+    , date
+    , month
+    , year
+  FROM tim_wilson.bronze.raw_sales_budgets
+),
+
+proportioned_sales_budgets AS (
+SELECT rst.company_code
+  , rst.business_unit_name
+  , rst.year
+  , rst.month
+  , rst.total_goal
+  , pr.product_id
+  -- , rst.total_goal * pr.proportion AS product_category_goal
+  -- , pr.min_coreview_product_category
+  , pr.max_coreview_product_category
+FROM sales_budgets AS rst
+
+LEFT OUTER JOIN proportions AS pr
+ON rst.year = pr.year
+AND rst.company_code = pr.entity
+AND rst.business_unit_name = pr.bu
+
+-- WHERE pr.entity = 'SAI'
+-- WHERE pr.entity = 'PRC'
+
+),
+
+actuals AS (
+SELECT YEAR(invoice_date) AS year, MONTH(invoice_date) AS month, entity, bu, product_id, SUM(SUM(sales_dollar)) OVER (PARTITION BY YEAR(invoice_date), MONTH(invoice_date), entity, bu) AS total_sales, SUM(sales_dollar) AS total_product_category_sales
+FROM tim_wilson.silver.br_combined_outbound_invoice_line AS actuals
+WHERE invoice_date IS NOT NULL
+GROUP BY YEAR(invoice_date), MONTH(invoice_date), entity, bu, product_id
+)
+
+SELECT actuals.year
+, actuals.month
+, actuals.entity
+, actuals.bu
+, actuals.product_id
+-- , budgets.min_coreview_product_category
+, budgets.max_coreview_product_category AS coreview_product_category
+, ROUND(actuals.total_sales, 2) AS total_sales
+, ROUND(budgets.total_goal, 2) AS total_goal
+, ROUND(actuals.total_product_category_sales, 2) AS total_product_id_sales
+, ROUND(actuals.total_product_category_sales / NULLIF(actuals.total_sales, 0) * budgets.total_goal, 2) AS product_id_goal
+-- , ROUND(budgets.product_category_goal, 2) AS product_id_goal
+FROM actuals
+
+LEFT OUTER JOIN proportioned_sales_budgets AS budgets
+ON actuals.year = budgets.year
+AND actuals.month = budgets.month
+AND actuals.entity = budgets.company_code
+AND actuals.bu = budgets.business_unit_name
+AND actuals.product_id = budgets.product_id
+
+WHERE 1 = 1
+
+-- AND entity = 'SAI'
+AND entity = 'PRC'
+
+AND budgets.year = 2024
+
+-- GROUP BY actuals.year, actuals.month, entity, bu, actuals.product_id
+ORDER BY actuals.year, actuals.month, actuals.entity, actuals.bu, actuals.product_id
+;
+
+-- 14/10/2025
+
+-- Working with product category and plant
+
+WITH proportions AS (
+  SELECT YEAR(invoice_date) AS year
+  , entity
+  , bu
+  , site
+  , coreview_product_category
+  , SUM(sales_dollar) AS product_category_annual_sales
+  , SUM(SUM(sales_dollar)) OVER (PARTITION BY YEAR(invoice_date), entity, bu) AS annual_sales
+  , SUM(sales_dollar) / NULLIF(SUM(SUM(sales_dollar)) OVER (PARTITION BY YEAR(invoice_date), entity, bu), 0) AS proportion
+  FROM tim_wilson.silver.br_combined_outbound_invoice_line
+  WHERE invoice_date IS NOT NULL
+  AND entity = 'PRC'
+  GROUP BY YEAR(invoice_date), entity, bu, site, coreview_product_category
+  ORDER BY year, entity, bu, site, coreview_product_category
+),
+
+sales_budgets AS (
+  SELECT
+    company_code
+    , CASE WHEN UPPER(business_unit_name) = 'CONSTRUCTION' THEN 'OS'
+        ELSE business_unit_name
+      END AS business_unit_name
+    , business_unit_key
+    , goal_name
+    , total_goal
+    , date_sk
+    , spread
+    , date
+    , month
+    , year
+  FROM tim_wilson.bronze.raw_sales_budgets
+),
+
+sales_budgets_with_proportions AS (
+SELECT DISTINCT
+  rst.year AS budget_year
+  , rst.month AS budget_month
+  , rst.company_code
+  , rst.business_unit_name
+  , pr.site
+  , pr.coreview_product_category || ' Budget' AS coreview_product_category
+  , pr.product_category_annual_sales AS product_category_annual_sales
+  , pr.annual_sales AS annual_sales
+  , pr.proportion AS proportion
+  , rst.total_goal
+  , rst.total_goal * pr.proportion AS site_plus_product_category_goal
+FROM sales_budgets AS rst
+
+LEFT OUTER JOIN proportions AS pr
+ON rst.year = pr.year + 1
+AND rst.company_code = pr.entity
+AND rst.business_unit_name = pr.bu
+)
+
+SELECT *
+FROM sales_budgets_with_proportions
+WHERE company_code = 'PRC'
+AND budget_year = 2024
+AND budget_month = 1
+ORDER BY budget_year, budget_month, company_code, business_unit_name, site, coreview_product_category
+;
+
+,
+
+actuals AS (
+SELECT YEAR(invoice_date) AS year
+, MONTH(invoice_date) AS month
+, entity
+, bu
+, site
+, coreview_product_category
+, SUM(sales_dollar) AS total_product_category_sales
+, SUM(SUM(sales_dollar)) OVER (PARTITION BY YEAR(invoice_date), MONTH(invoice_date), entity, bu) AS total_sales
+FROM tim_wilson.silver.br_combined_outbound_invoice_line AS actuals
+WHERE invoice_date IS NOT NULL
+GROUP BY YEAR(invoice_date), MONTH(invoice_date), entity, bu, site, coreview_product_category
+)
+
+-- SELECT *
+-- FROM actuals
+-- WHERE entity = 'PRC'
+-- ;
+
+SELECT actuals.year
+, actuals.month
+, actuals.entity
+, actuals.bu
+, actuals.site
+, actuals.coreview_product_category
+, actuals.total_product_category_sales AS site_plus_product_category_sales
+, actuals.total_sales AS total_sales
+, budgets.total_goal AS total_goal
+, budgets.proportion AS previous_year_proportion_for_site_plus_product_category
+, budgets.site_plus_product_category_goal AS site_plus_product_category_goal
+FROM actuals
+
+LEFT OUTER JOIN sales_budgets_with_proportions AS budgets
+ON actuals.year = budgets.budget_year
+AND actuals.month = budgets.budget_month
+AND actuals.entity = budgets.company_code
+AND actuals.bu = budgets.business_unit_name
+AND actuals.site = budgets.site
+AND actuals.coreview_product_category || ' Budget' = budgets.coreview_product_category
+
+WHERE 1 = 1
+
+AND entity = 'PRC'
+AND budgets.budget_year = 2024
+AND budgets.budget_month = 1
+
+ORDER BY actuals.year, actuals.month, actuals.entity, actuals.bu, actuals.site, actuals.coreview_product_category
+;

@@ -1,0 +1,97 @@
+--
+-- SANDBOX
+--
+
+-- TRUNCATE TABLE tim_wilson.psa_kinetic.psa_kinetic_trialbalancerec
+-- ;
+
+INSERT INTO TABLE tim_wilson.psa_kinetic.psa_kinetic_trialbalancerec
+SELECT * FROM tim_wilson.psa_kinetic.psa_kinetic_trialbalancerec_old_columns
+;
+
+-- TRUNCATE TABLE tim_wilson.psa_kinetic.psa_kinetic_multiscrap
+-- ;
+
+-- INSERT INTO TABLE tim_wilson.psa_kinetic.psa_kinetic_multiscrap
+-- SELECT * FROM tim_wilson.psa_kinetic.psa_kinetic_multiscrap_old_columns
+-- ;
+
+--
+-- DEVELOP / UAT
+--
+
+CREATE TABLE psa.kinetic.psa_kinetic_trialbalancerec_old_columns AS
+SELECT * FROM psa.kinetic.psa_kinetic_trialbalancerec
+;
+
+-- DROP TABLE psa.kinetic.psa_kinetic_trialbalancerec
+-- ;
+
+CREATE TABLE psa.kinetic.psa_kinetic_trialbalancerec AS
+SELECT * FROM tim_wilson.psa_kinetic.psa_kinetic_trialbalancerec
+;
+
+-- TRUNCATE TABLE psa.kinetic.psa_kinetic_trialbalancerec
+-- ;
+
+-- INSERT INTO TABLE psa.kinetic.psa_kinetic_trialbalancerec
+-- SELECT * FROM psa.kinetic.psa_kinetic_trialbalancerec_old_columns
+-- ;
+
+CREATE TABLE psa.kinetic.psa_kinetic_multiscrap_old_columns AS
+SELECT * FROM psa.kinetic.psa_kinetic_multiscrap
+;
+
+-- DROP TABLE psa.kinetic.psa_kinetic_multiscrap
+-- ;
+
+CREATE TABLE psa.kinetic.psa_kinetic_multiscrap AS
+SELECT * FROM tim_wilson.psa_kinetic.psa_kinetic_multiscrap
+;
+
+-- TRUNCATE TABLE psa.kinetic.psa_kinetic_multiscrap
+-- ;
+
+-- INSERT INTO TABLE psa.kinetic.psa_kinetic_multiscrap
+-- SELECT * FROM psa.kinetic.psa_kinetic_multiscrap_old_columns
+-- ;
+
+--
+-- PRODUCTION to do still
+--
+
+CREATE TABLE psa_prod.kinetic.psa_kinetic_trialbalancerec_old_columns AS
+SELECT * FROM psa_prod.kinetic.psa_kinetic_trialbalancerec
+;
+
+-- DROP TABLE psa_prod.kinetic.psa_kinetic_trialbalancerec
+-- ;
+
+CREATE TABLE psa_prod.kinetic.psa_kinetic_trialbalancerec AS
+SELECT * FROM tim_wilson.psa_kinetic.psa_kinetic_trialbalancerec
+;
+
+-- TRUNCATE TABLE psa_prod.kinetic.psa_kinetic_trialbalancerec
+-- ;
+
+INSERT INTO TABLE psa_prod.kinetic.psa_kinetic_trialbalancerec
+SELECT * FROM psa_prod.kinetic.psa_kinetic_trialbalancerec_old_columns
+;
+
+-- CREATE TABLE psa_prod.kinetic.psa_kinetic_multiscrap_old_columns AS
+-- SELECT * FROM psa_prod.kinetic.psa_kinetic_multiscrap
+-- ;
+
+-- -- DROP TABLE psa_prod.kinetic.psa_kinetic_multiscrap
+-- -- ;
+
+-- CREATE TABLE psa_prod.kinetic.psa_kinetic_multiscrap AS
+-- SELECT * FROM tim_wilson.psa_kinetic.psa_kinetic_multiscrap
+-- ;
+
+-- -- TRUNCATE TABLE psa_prod.kinetic.psa_kinetic_multiscrap
+-- -- ;
+
+-- INSERT INTO TABLE psa_prod.kinetic.psa_kinetic_multiscrap
+-- SELECT * FROM psa_prod.kinetic.psa_kinetic_multiscrap_old_columns
+-- ;

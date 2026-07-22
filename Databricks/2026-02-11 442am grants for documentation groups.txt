@@ -1,0 +1,31 @@
+REVOKE USE CATALOG ON CATALOG develop FROM documentation
+;
+GRANT BROWSE ON CATALOG develop TO documentation
+;
+
+
+REVOKE USE CATALOG ON CATALOG uat FROM documentation
+;
+GRANT BROWSE ON CATALOG uat TO documentation
+;
+
+
+REVOKE USE CATALOG ON CATALOG production FROM documentation_prod
+;
+GRANT BROWSE ON CATALOG production TO documentation_prod
+;
+
+
+SHOW GRANTS `documentation` ON CATALOG develop
+;
+SHOW GRANTS `documentation` ON CATALOG uat
+;
+
+
+SHOW GRANTS `developer` ON CATALOG develop
+;
+SHOW GRANTS `developer` ON CATALOG production
+;
+
+
+

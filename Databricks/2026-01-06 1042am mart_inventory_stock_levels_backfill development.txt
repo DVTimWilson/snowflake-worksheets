@@ -1,0 +1,1012 @@
+WITH inventory_with_gaps AS (
+    SELECT 
+        UNIQUE_KEY
+        , DATE
+        , INVENTORY_ITEM_ID
+        , INVENTORY_ITEM_DESCRIPTION
+        , COREVIEW_PRODUCT_CATEGORY
+        , ENTITY
+        , BU
+        , SITE
+        , TOTAL_VALUE
+        , UNIT_COST
+        , UOM
+        , QUANTITY
+        , UNIT_WEIGHT
+        , WEIGHT_LBS
+        , IS_ACQUIRED_DATE
+        , IS_ACQUIRED_NOW
+        , META_LOAD_DATETIME
+        , RECORD_SOURCE
+        , HASHDIFF
+    FROM `tim_wilson`.`silver`.`bsat_combined_inventory_stock_levels`
+--     WHERE INVENTORY_ITEM_DESCRIPTION = '01 Inventory Parts (Inventory Part)'
+    QUALIFY ROW_NUMBER () OVER (PARTITION BY DATE, INVENTORY_ITEM_ID, INVENTORY_ITEM_DESCRIPTION ORDER BY QUANTITY DESC) = 1
+    ORDER BY DATE
+),
+
+inventory_cross_join AS (
+    SELECT 
+        calendar.date_day AS dim_date
+        , inventory.INVENTORY_ITEM_ID AS dim_itemtype
+        , inventory.INVENTORY_ITEM_DESCRIPTION AS dim_item
+        , inventory.ENTITY AS dim_entity
+    FROM `tim_wilson`.`silver`.`dim_calendar_usa` AS calendar
+
+    CROSS JOIN inventory_with_gaps AS inventory
+
+    -- WHERE calendar.date_day >= '2024-10-08'
+)
+-- SELECT * FROM inventory_cross_join ORDER BY dim_date, date
+,
+
+rows_to_process AS (
+    SELECT DISTINCT inventory_cross_join.dim_date, inventory_cross_join.dim_itemtype, inventory_cross_join.dim_item, inventory_cross_join.dim_entity, inventory.*
+    FROM inventory_cross_join
+
+    LEFT OUTER JOIN inventory_with_gaps AS inventory
+    ON inventory_cross_join.dim_date = inventory.date
+    AND COALESCE(inventory_cross_join.dim_itemtype, '') = COALESCE(inventory.INVENTORY_ITEM_ID, '')
+    AND COALESCE(inventory_cross_join.dim_item, '') = COALESCE(inventory.INVENTORY_ITEM_DESCRIPTION, '')
+    AND COALESCE(inventory_cross_join.dim_entity, '') = COALESCE(inventory.ENTITY, '')
+)
+-- SELECT * FROM rows_to_process ORDER BY dim_date, date
+,
+
+mart AS (
+SELECT
+    dim_date
+    , dim_itemtype
+    , dim_item
+    , CASE WHEN DATE IS NULL THEN LAG(UNIQUE_KEY) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE UNIQUE_KEY
+      END AS UNIQUE_KEY
+    , CASE WHEN DATE IS NULL THEN LAG(DATE) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE DATE
+      END AS DATE
+    , CASE WHEN DATE IS NULL THEN LAG(INVENTORY_ITEM_ID) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE INVENTORY_ITEM_ID
+      END AS INVENTORY_ITEM_ID
+    , CASE WHEN DATE IS NULL THEN LAG(INVENTORY_ITEM_DESCRIPTION) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE INVENTORY_ITEM_DESCRIPTION
+      END AS INVENTORY_ITEM_DESCRIPTION
+    , CASE WHEN DATE IS NULL THEN LAG(COREVIEW_PRODUCT_CATEGORY) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE COREVIEW_PRODUCT_CATEGORY
+      END AS COREVIEW_PRODUCT_CATEGORY
+    , CASE WHEN DATE IS NULL THEN LAG(ENTITY) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE ENTITY
+      END AS ENTITY
+    , CASE WHEN DATE IS NULL THEN LAG(BU) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE BU
+      END AS BU
+    , CASE WHEN DATE IS NULL THEN LAG(SITE) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE SITE
+      END AS SITE
+    , CASE WHEN DATE IS NULL THEN LAG(TOTAL_VALUE) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE TOTAL_VALUE
+      END AS TOTAL_VALUE
+    , CASE WHEN DATE IS NULL THEN LAG(UNIT_COST) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE UNIT_COST
+      END AS UNIT_COST
+    , CASE WHEN DATE IS NULL THEN LAG(UOM) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE UOM
+      END AS UOM
+    , CASE WHEN DATE IS NULL THEN LAG(QUANTITY) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE QUANTITY
+      END AS QUANTITY
+    , CASE WHEN DATE IS NULL THEN LAG(UNIT_WEIGHT) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE UNIT_WEIGHT
+      END AS UNIT_WEIGHT
+    , CASE WHEN DATE IS NULL THEN LAG(WEIGHT_LBS) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE WEIGHT_LBS
+      END AS WEIGHT_LBS
+    , CASE WHEN DATE IS NULL THEN LAG(IS_ACQUIRED_DATE) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE IS_ACQUIRED_DATE
+      END AS IS_ACQUIRED_DATE
+    , CASE WHEN DATE IS NULL THEN LAG(IS_ACQUIRED_NOW) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE IS_ACQUIRED_NOW
+      END AS IS_ACQUIRED_NOW
+    , CASE WHEN META_LOAD_DATETIME IS NULL THEN LAG(META_LOAD_DATETIME) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE META_LOAD_DATETIME
+      END AS META_LOAD_DATETIME
+    , CASE WHEN DATE IS NULL THEN LAG(RECORD_SOURCE) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE RECORD_SOURCE
+      END AS RECORD_SOURCE
+    , CASE WHEN DATE IS NULL THEN LAG(HASHDIFF) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE HASHDIFF
+      END AS HASHDIFF
+FROM rows_to_process
+
+ORDER BY dim_date ASC, dim_itemtype, dim_item
+)
+
+-- 102,444,068
+-- 92,556,263 WHERE QUANTITY IS NOT NULL
+SELECT COUNT(*)
+FROM mart
+WHERE QUANTITY IS NOT NULL
+;
+
+
+WITH inventory_with_gaps AS (
+    SELECT 
+        UNIQUE_KEY
+        , DATE
+        , INVENTORY_ITEM_ID
+        , INVENTORY_ITEM_DESCRIPTION
+        , COREVIEW_PRODUCT_CATEGORY
+        , ENTITY
+        , BU
+        , SITE
+        , TOTAL_VALUE
+        , UNIT_COST
+        , UOM
+        , QUANTITY
+        , UNIT_WEIGHT
+        , WEIGHT_LBS
+        , IS_ACQUIRED_DATE
+        , IS_ACQUIRED_NOW
+        , META_LOAD_DATETIME
+        , RECORD_SOURCE
+        , HASHDIFF
+    FROM `tim_wilson`.`silver`.`bsat_combined_inventory_stock_levels`
+--     WHERE INVENTORY_ITEM_DESCRIPTION = '01 Inventory Parts (Inventory Part)'
+    QUALIFY ROW_NUMBER () OVER (PARTITION BY DATE, INVENTORY_ITEM_ID, INVENTORY_ITEM_DESCRIPTION ORDER BY QUANTITY DESC) = 1
+    ORDER BY DATE
+),
+
+inventory_cross_join AS (
+    SELECT 
+        calendar.date_day AS dim_date
+        , inventory.INVENTORY_ITEM_ID AS dim_itemtype
+        , inventory.INVENTORY_ITEM_DESCRIPTION AS dim_item
+        , inventory.ENTITY AS dim_entity
+    FROM `tim_wilson`.`silver`.`dim_calendar_usa` AS calendar
+
+    CROSS JOIN inventory_with_gaps AS inventory
+
+    -- WHERE calendar.date_day >= '2024-10-08'
+)
+-- SELECT * FROM inventory_cross_join ORDER BY dim_date, date
+,
+
+rows_to_process AS (
+    SELECT DISTINCT inventory_cross_join.dim_date, inventory_cross_join.dim_itemtype, inventory_cross_join.dim_item, inventory_cross_join.dim_entity, inventory.*
+    FROM inventory_cross_join
+
+    LEFT OUTER JOIN inventory_with_gaps AS inventory
+    ON inventory_cross_join.dim_date = inventory.date
+    AND COALESCE(inventory_cross_join.dim_itemtype, '') = COALESCE(inventory.INVENTORY_ITEM_ID, '')
+    AND COALESCE(inventory_cross_join.dim_item, '') = COALESCE(inventory.INVENTORY_ITEM_DESCRIPTION, '')
+    AND COALESCE(inventory_cross_join.dim_entity, '') = COALESCE(inventory.ENTITY, '')
+)
+
+-- 102,444,068
+SELECT COUNT(*) FROM rows_to_process
+;
+
+SELECT *
+FROM develop.gold_coreview.mart_inventory_stock_levels
+WHERE DATE < '2025-09-25'
+ORDER BY DATE
+;
+
+SELECT *
+FROM tim_wilson.silver.br_inventory_stock_levels_kinetic_step_0
+ORDER BY PARTBIN_PARTNUM, PART_PARTDESCRIPTION, INVENTORY_DATE
+;
+
+
+ WITH inventory_with_gaps AS (
+    SELECT 
+        UNIQUE_KEY
+        , DATE
+        , INVENTORY_ITEM_ID
+        , INVENTORY_ITEM_DESCRIPTION
+        , COREVIEW_PRODUCT_CATEGORY
+        , ENTITY
+        , BU
+        , SITE
+        , TOTAL_VALUE
+        , UNIT_COST
+        , UOM
+        , QUANTITY
+        , UNIT_WEIGHT
+        , WEIGHT_LBS
+        , IS_ACQUIRED_DATE
+        , IS_ACQUIRED_NOW
+        , META_LOAD_DATETIME
+        , RECORD_SOURCE
+        , HASHDIFF
+    FROM `tim_wilson`.`silver`.`bsat_combined_inventory_stock_levels`
+--    WHERE INVENTORY_ITEM_DESCRIPTION = '01 Inventory Parts (Inventory Part)'
+    -- QUALIFY ROW_NUMBER () OVER (PARTITION BY DATE, INVENTORY_ITEM_ID, INVENTORY_ITEM_DESCRIPTION, ENTITY, SITE ORDER BY QUANTITY DESC) = 1
+--    ORDER BY DATE
+)
+-- SELECT COUNT(*) FROM inventory_with_gaps  -- 817838  -- 824824  -- 1654911  -- 905933  -- 902591
+-- SELECT * FROM inventory_with_gaps ORDER BY DATE
+,
+
+inventory_cross_join AS (
+    SELECT 
+        calendar.date_day AS dim_date
+        , inventory.DATE AS date  -- this column is for test purposes only
+        , inventory.INVENTORY_ITEM_ID AS dim_itemtype
+        , inventory.INVENTORY_ITEM_DESCRIPTION AS dim_item
+        , inventory.ENTITY AS dim_entity
+        , inventory.SITE AS dim_site
+--        , inventory.QUANTITY AS quantity  -- this column is for test purposes only
+    FROM `tim_wilson`.`silver`.`dim_calendar_usa` AS calendar
+
+    CROSS JOIN inventory_with_gaps AS inventory
+
+--    WHERE calendar.date_day >= '2024-10-08'
+--    QUALIFY (ROW_NUMBER() OVER (PARTITION BY DATE, INVENTORY_ITEM_ID, INVENTORY_ITEM_DESCRIPTION, ENTITY ORDER BY QUANTITY DESC)) = 2
+--    LIMIT 10
+)
+-- SELECT DISTINCT * FROM inventory_cross_join ORDER BY dim_date , date
+-- SELECT COUNT(*) FROM inventory_cross_join  -- 76640
+-- SELECT COUNT(*) FROM (SELECT DISTINCT * FROM inventory_cross_join) AS x  -- 76640
+-- SELECT COUNT(*) FROM inventory_cross_join  -- 8363211388
+-- SELECT COUNT(*) FROM `tim_wilson`.`silver`.`dim_calendar_usa` -- 10226
+-- SELECT 10.226 * 817.838  -- 8363.211388
+-- SELECT 10.226 * 902.591  -- 9229.895566
+-- SELECT COUNT(*) FROM (SELECT DISTINCT inventory_cross_join.dim_date, inventory_cross_join.dim_itemtype, inventory_cross_join.dim_item, inventory_cross_join.dim_entity, inventory_cross_join.dim_site FROM inventory_cross_join) AS x  -- 102444068
+-- SELECT COUNT(*) FROM (SELECT DISTINCT inventory_cross_join.dim_date, inventory_cross_join.dim_itemtype, inventory_cross_join.dim_item, inventory_cross_join.dim_entity, inventory_cross_join.dim_site FROM inventory_cross_join)  -- 116,433,236
+-- SELECT COUNT(*) FROM (SELECT inventory_cross_join.dim_date, inventory_cross_join.dim_itemtype, inventory_cross_join.dim_item, inventory_cross_join.dim_entity, inventory_cross_join.dim_site FROM inventory_cross_join)  -- 9,229,895,566
+SELECT inventory_cross_join.dim_date, inventory_cross_join.dim_itemtype, inventory_cross_join.dim_item, inventory_cross_join.dim_entity, inventory_cross_join.dim_site
+FROM inventory_cross_join
+GROUP BY inventory_cross_join.dim_date, inventory_cross_join.dim_itemtype, inventory_cross_join.dim_item, inventory_cross_join.dim_entity, inventory_cross_join.dim_site
+HAVING COUNT(*) > 1
+LIMIT 10
+,
+
+rows_to_process AS (
+    SELECT inventory_cross_join.dim_date, inventory_cross_join.dim_itemtype, inventory_cross_join.dim_item, inventory_cross_join.dim_entity, inventory_cross_join.dim_site, inventory.*
+    FROM (SELECT DISTINCT inventory_cross_join.dim_date, inventory_cross_join.dim_itemtype, inventory_cross_join.dim_item, inventory_cross_join.dim_entity, inventory_cross_join.dim_site FROM inventory_cross_join) AS inventory_cross_join
+--    FROM inventory_cross_join
+
+    LEFT OUTER JOIN inventory_with_gaps AS inventory
+    ON inventory_cross_join.dim_date = inventory.date
+    AND COALESCE(inventory_cross_join.dim_itemtype, '') = COALESCE(inventory.INVENTORY_ITEM_ID, '')
+    AND COALESCE(inventory_cross_join.dim_item, '') = COALESCE(inventory.INVENTORY_ITEM_DESCRIPTION, '')
+    AND COALESCE(inventory_cross_join.dim_entity, '') = COALESCE(inventory.ENTITY, '')
+    AND COALESCE(inventory_cross_join.dim_site, '') = COALESCE(inventory.SITE, '')
+)
+-- 102,444,068
+-- 102,790,471 DISTINCT
+-- 9,248,844,846 without DISTINCT
+-- 9,229,895,566 = 10226 * 902591
+-- 116,433,236
+-- SELECT COUNT(*) FROM rows_to_process
+,
+
+mart AS (
+SELECT
+    dim_date
+    , dim_entity
+    , dim_site
+    , dim_itemtype
+    , dim_item
+    , date
+    , CASE WHEN DATE IS NULL THEN LAG(UNIQUE_KEY) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE UNIQUE_KEY
+      END AS UNIQUE_KEY
+    , CASE WHEN DATE IS NULL THEN LAG(DATE) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE DATE
+      END AS DATE
+    , CASE WHEN DATE IS NULL THEN LAG(INVENTORY_ITEM_ID) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE INVENTORY_ITEM_ID
+      END AS INVENTORY_ITEM_ID
+    , CASE WHEN DATE IS NULL THEN LAG(INVENTORY_ITEM_DESCRIPTION) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE INVENTORY_ITEM_DESCRIPTION
+      END AS INVENTORY_ITEM_DESCRIPTION
+    , CASE WHEN DATE IS NULL THEN LAG(COREVIEW_PRODUCT_CATEGORY) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE COREVIEW_PRODUCT_CATEGORY
+      END AS COREVIEW_PRODUCT_CATEGORY
+    , CASE WHEN DATE IS NULL THEN LAG(ENTITY) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE ENTITY
+      END AS ENTITY
+    , CASE WHEN DATE IS NULL THEN LAG(BU) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE BU
+      END AS BU
+    , CASE WHEN DATE IS NULL THEN LAG(SITE) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE SITE
+      END AS SITE
+    , CASE WHEN DATE IS NULL THEN LAG(TOTAL_VALUE) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE TOTAL_VALUE
+      END AS TOTAL_VALUE
+    , CASE WHEN DATE IS NULL THEN LAG(UNIT_COST) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE UNIT_COST
+      END AS UNIT_COST
+    , CASE WHEN DATE IS NULL THEN LAG(UOM) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE UOM
+      END AS UOM
+    , CASE WHEN DATE IS NULL THEN LAG(QUANTITY) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE QUANTITY
+      END AS QUANTITY
+    , CASE WHEN DATE IS NULL THEN LAG(UNIT_WEIGHT) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE UNIT_WEIGHT
+      END AS UNIT_WEIGHT
+    , CASE WHEN DATE IS NULL THEN LAG(WEIGHT_LBS) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE WEIGHT_LBS
+      END AS WEIGHT_LBS
+    , CASE WHEN DATE IS NULL THEN LAG(IS_ACQUIRED_DATE) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE IS_ACQUIRED_DATE
+      END AS IS_ACQUIRED_DATE
+    , CASE WHEN DATE IS NULL THEN LAG(IS_ACQUIRED_NOW) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE IS_ACQUIRED_NOW
+      END AS IS_ACQUIRED_NOW
+    , CASE WHEN META_LOAD_DATETIME IS NULL THEN LAG(META_LOAD_DATETIME) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE META_LOAD_DATETIME
+      END AS META_LOAD_DATETIME
+    , CASE WHEN DATE IS NULL THEN LAG(RECORD_SOURCE) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE RECORD_SOURCE
+      END AS RECORD_SOURCE
+    , CASE WHEN DATE IS NULL THEN LAG(HASHDIFF) IGNORE NULLS OVER (PARTITION BY dim_itemtype, dim_item, dim_entity ORDER BY dim_date)
+      ELSE HASHDIFF
+      END AS HASHDIFF
+FROM rows_to_process
+
+WHERE dim_item = '01 Inventory Parts (Inventory Part)'
+AND dim_date >= '2024-10-08'
+
+ORDER BY dim_date ASC, dim_entity, dim_site, dim_itemtype, dim_item
+)
+
+SELECT *
+FROM mart
+
+;
+
+-- 23427
+SELECT COUNT(*)
+FROM tim_wilson.silver.br_combined_quickbooks_stock_status_step_0
+;
+
+-- 23427
+SELECT COUNT(*)
+FROM (SELECT DISTINCT * FROM tim_wilson.silver.br_combined_quickbooks_stock_status_step_0) AS x
+;
+
+-- 23427
+SELECT COUNT(*)
+FROM (
+SELECT *
+FROM tim_wilson.silver.br_combined_quickbooks_stock_status_step_0
+QUALIFY ROW_NUMBER () OVER (PARTITION BY DATE, ITEM, COMPANY ORDER BY ONHAND DESC) = 1
+)
+;
+
+-- 23427
+SELECT COUNT(*)
+FROM tim_wilson.silver.br_combined_quickbooks_stock_status_step_1
+;
+
+-- 23427
+SELECT COUNT(*)
+FROM (SELECT DISTINCT * FROM tim_wilson.silver.br_combined_quickbooks_stock_status_step_1) AS x
+;
+
+-- 22672
+-- 23427 there is a god!!!
+SELECT COUNT(*)
+FROM (
+SELECT *
+FROM tim_wilson.silver.br_combined_quickbooks_stock_status_step_1
+QUALIFY (ROW_NUMBER () OVER (PARTITION BY DATE, INVENTORY_ITEM_ID, INVENTORY_ITEM_DESCRIPTION, ENTITY ORDER BY QUANTITY DESC)) = 1
+)
+;
+
+-- 23427
+SELECT COUNT(*)
+FROM (
+SELECT *
+FROM tim_wilson.silver.br_combined_quickbooks_stock_status_step_1
+QUALIFY (ROW_NUMBER () OVER (PARTITION BY DATE, UNIQUE_KEY, INVENTORY_ITEM_ID, INVENTORY_ITEM_DESCRIPTION, ENTITY ORDER BY QUANTITY DESC)) = 1
+)
+;
+
+SELECT *
+FROM tim_wilson.silver.br_combined_quickbooks_stock_status_step_1
+QUALIFY (ROW_NUMBER () OVER (PARTITION BY DATE, INVENTORY_ITEM_ID, INVENTORY_ITEM_DESCRIPTION, ENTITY ORDER BY QUANTITY DESC)) > 1
+ORDER BY INVENTORY_ITEM_ID, INVENTORY_ITEM_DESCRIPTION, ENTITY, DATE
+;
+
+-- 1654911
+SELECT COUNT(*)
+FROM tim_wilson.silver.br_combined_inventory_stock_levels_step_0
+;
+
+-- 1654911
+SELECT COUNT(*)
+FROM (SELECT DISTINCT * FROM tim_wilson.silver.br_combined_inventory_stock_levels_step_0) AS x
+;
+
+-- 824824
+SELECT COUNT(*)
+FROM (
+SELECT *
+FROM tim_wilson.silver.br_combined_inventory_stock_levels_step_0
+QUALIFY ROW_NUMBER () OVER (PARTITION BY DATE, INVENTORY_ITEM_ID, INVENTORY_ITEM_DESCRIPTION, ENTITY ORDER BY QUANTITY DESC) = 1
+)
+;
+
+-- 905989
+SELECT COUNT(*)
+FROM (
+SELECT *
+FROM tim_wilson.silver.br_combined_inventory_stock_levels_step_0
+QUALIFY ROW_NUMBER () OVER (PARTITION BY DATE, UNIQUE_KEY, INVENTORY_ITEM_ID, INVENTORY_ITEM_DESCRIPTION, ENTITY ORDER BY QUANTITY DESC) = 1
+)
+;
+
+SELECT 
+    ROW_NUMBER () OVER (PARTITION BY DATE, INVENTORY_ITEM_ID, INVENTORY_ITEM_DESCRIPTION, ENTITY ORDER BY QUANTITY DESC) AS rn
+    , *
+FROM tim_wilson.silver.br_combined_inventory_stock_levels_step_0
+QUALIFY ROW_NUMBER () OVER (PARTITION BY DATE, INVENTORY_ITEM_ID, INVENTORY_ITEM_DESCRIPTION, ENTITY ORDER BY QUANTITY DESC) != 1
+;
+
+-- 1654911
+SELECT COUNT(*)
+FROM tim_wilson.silver.bsat_combined_inventory_stock_levels
+;
+
+-- 1654911
+SELECT COUNT(*)
+FROM (SELECT DISTINCT * FROM tim_wilson.silver.bsat_combined_inventory_stock_levels) AS x
+;
+
+-- 824824
+SELECT COUNT(*)
+FROM (
+SELECT *
+FROM tim_wilson.silver.bsat_combined_inventory_stock_levels
+QUALIFY ROW_NUMBER () OVER (PARTITION BY DATE, INVENTORY_ITEM_ID, INVENTORY_ITEM_DESCRIPTION, ENTITY ORDER BY QUANTITY DESC) = 1
+)
+;
+
+-- 905234
+SELECT COUNT(*)
+FROM (
+SELECT *
+FROM tim_wilson.silver.bsat_combined_inventory_stock_levels
+QUALIFY ROW_NUMBER () OVER (PARTITION BY DATE, UNIQUE_KEY, INVENTORY_ITEM_ID, INVENTORY_ITEM_DESCRIPTION, ENTITY ORDER BY QUANTITY DESC) = 1
+)
+;
+
+SELECT *
+FROM tim_wilson.silver.bsat_combined_inventory_stock_levels
+QUALIFY ROW_NUMBER () OVER (PARTITION BY DATE, UNIQUE_KEY, INVENTORY_ITEM_ID, INVENTORY_ITEM_DESCRIPTION, ENTITY ORDER BY QUANTITY DESC) != 1
+;
+
+SELECT 
+    ROW_NUMBER () OVER (PARTITION BY DATE, UNIQUE_KEY, INVENTORY_ITEM_ID, INVENTORY_ITEM_DESCRIPTION, ENTITY ORDER BY QUANTITY DESC) AS rn
+    , *
+FROM tim_wilson.silver.bsat_combined_inventory_stock_levels
+WHERE UNIQUE_KEY = 'Baberton-20240604'
+ORDER BY DATE, INVENTORY_ITEM_DESCRIPTION, rn
+;
+
+SELECT 
+    ROW_NUMBER () OVER (PARTITION BY DATE, UNIQUE_KEY, INVENTORY_ITEM_ID, INVENTORY_ITEM_DESCRIPTION, ENTITY ORDER BY QUANTITY DESC) AS rn
+    , *
+FROM tim_wilson.silver.br_combined_inventory_stock_levels_step_0
+WHERE UNIQUE_KEY = 'Baberton-20240604'
+ORDER BY DATE, INVENTORY_ITEM_DESCRIPTION, rn
+;
+
+SELECT *
+FROM tim_wilson.silver.sat_quickbooks_stock_status_crc
+WHERE UNIQUE_KEY = 'Baberton-20240604'
+;
+
+SELECT *
+FROM tim_wilson.silver.sat_quickbooks_stock_status_crc_latest
+WHERE UNIQUE_KEY = 'Baberton-20240604'
+;
+
+SELECT *
+FROM tim_wilson.silver.sat_quickbooks_stock_status_crc
+WHERE ITEM IS NULL
+;
+
+SELECT *
+FROM tim_wilson.silver.sat_quickbooks_stock_status_crc_latest
+WHERE ITEM IS NULL
+;
+
+SELECT 
+    ROW_NUMBER () OVER (PARTITION BY DATE, UNIQUE_KEY, INVENTORY_ITEM_ID, INVENTORY_ITEM_DESCRIPTION, ENTITY ORDER BY QUANTITY DESC) AS rn
+    , *
+FROM tim_wilson.silver.bsat_combined_inventory_stock_levels
+WHERE UNIQUE_KEY = 'Buffalo-GRN-000002-20250923'
+ORDER BY DATE, INVENTORY_ITEM_DESCRIPTION, rn
+;
+
+SELECT *
+FROM tim_wilson.silver.sat_inventory_stock_levels
+WHERE UNIQUE_KEY = 'Buffalo-GRN-000002-20250923'
+;
+
+SELECT *
+FROM tim_wilson.silver.sat_inventory_stock_levels_latest
+WHERE UNIQUE_KEY = 'Buffalo-GRN-000002-20250923'
+;
+
+-- br_inventory_stock_levels_kinetic_step_0
+SELECT *
+FROM tim_wilson.silver.br_inventory_stock_levels_kinetic_step_0
+WHERE UNIQUE_KEY = 'Buffalo-GRN-000002-20250923'
+;
+
+SELECT *
+FROM tim_wilson.silver.br_inventory_stock_levels_kinetic_step_1
+WHERE UNIQUE_KEY = 'Buffalo-GRN-000002-20250923'
+;
+
+-- GRN-000002
+SELECT *
+FROM tim_wilson.silver.sat_inventory_stock_levels
+WHERE PARTBIN_PARTNUM = 'GRN-000002'
+AND PLANT_PLANT = 'Buffalo'
+;
+
+SELECT DISTINCT PLANT_PLANT
+FROM tim_wilson.silver.sat_inventory_stock_levels
+ORDER BY 1
+;
+
+-- qzdxjw/di+fmAkgsnI1G+A==
+-- iTU22wF5a8AUk+bo1wrjjA==
+
+WITH joe AS (
+SELECT 
+    ROW_NUMBER () OVER (PARTITION BY DATE, UNIQUE_KEY, INVENTORY_ITEM_ID, INVENTORY_ITEM_DESCRIPTION, ENTITY ORDER BY QUANTITY DESC) AS rn
+    , *
+FROM tim_wilson.silver.bsat_combined_inventory_stock_levels
+WHERE UNIQUE_KEY = 'Buffalo-GRN-000002-20250923'
+ORDER BY DATE, INVENTORY_ITEM_DESCRIPTION, rn
+)
+
+SELECT *
+FROM tim_wilson.silver.sat_inventory_stock_levels AS tim
+
+INNER JOIN joe
+ON tim.INVENTORY_STOCK_LEVELS_LHK = joe.INVENTORY_STOCK_LEVELS_LHK
+;
+
+SELECT *
+FROM tim_wilson.silver.sat_inventory_stock_levels AS tim
+WHERE INVENTORY_STOCK_LEVELS_LHK = 'qzdxjw/di+fmAkgsnI1G+A=='
+;
+
+SELECT *
+FROM tim_wilson.silver.sat_inventory_stock_levels AS tim
+WHERE INVENTORY_STOCK_LEVELS_LHK = TO_BINARY('qzdxjw/di+fmAkgsnI1G+A==', 'BASE64')
+;
+
+--
+-- 08/01/2026
+--
+
+-- Focussing on UNIQUE_KEY and its components
+
+SELECT UNIQUE_KEY, *
+FROM tim_wilson.silver.bstg_combined_inventory_stock_levels
+LIMIT 100
+;
+
+-- 0
+SELECT UNIQUE_KEY, *
+FROM tim_wilson.silver.bstg_combined_inventory_stock_levels
+WHERE INSTR(UNIQUE_KEY, '-') = 0
+;
+
+-- 0
+SELECT UNIQUE_KEY, *
+FROM tim_wilson.silver.bstg_combined_inventory_stock_levels
+WHERE INSTR(UNIQUE_KEY, '|') > 0
+;
+
+-- 0
+SELECT UNIQUE_KEY, SITE, *
+FROM tim_wilson.silver.bstg_combined_inventory_stock_levels
+WHERE INSTR(UNIQUE_KEY, SITE) != 1
+;
+
+-- 0
+SELECT UNIQUE_KEY, SITE, *
+FROM tim_wilson.silver.bstg_combined_inventory_stock_levels
+WHERE INSTR(UNIQUE_KEY, UPPER(SITE)) != 1
+;
+
+-- 1
+-- 0
+SELECT UNIQUE_KEY, SITE, *
+FROM tim_wilson.silver.bstg_combined_inventory_stock_levels
+WHERE NOT INSTR(UNIQUE_KEY, INVENTORY_ITEM_ID) > LEN(SITE)
+;
+
+-- 0
+SELECT UNIQUE_KEY, SITE, *
+FROM tim_wilson.silver.bstg_combined_inventory_stock_levels
+WHERE NOT INSTR(UNIQUE_KEY, UPPER(INVENTORY_ITEM_ID)) > LEN(SITE)
+;
+
+-- 0
+SELECT UNIQUE_KEY, SITE, *
+FROM tim_wilson.silver.bstg_combined_inventory_stock_levels
+WHERE INVENTORY_ITEM_ID IS NULL
+;
+
+-- 2
+-- 0
+SELECT UNIQUE_KEY, SITE, *
+FROM tim_wilson.silver.bstg_combined_inventory_stock_levels
+WHERE INVENTORY_ITEM_ID = ''
+;
+
+-- 2 tim_wilson, 0
+-- 25329 develop
+-- 3596 production
+SELECT COUNT(*)  -- UNIQUE_KEY, SITE, *
+FROM tim_wilson.silver.bstg_combined_inventory_stock_levels
+WHERE COALESCE(INVENTORY_ITEM_ID, '') = ''
+;
+
+-- 10168 tim_wilson, 0
+SELECT UNIQUE_KEY, SITE, *
+FROM tim_wilson.silver.bstg_combined_inventory_stock_levels
+WHERE COALESCE(SITE, '') = ''
+;
+
+-- 10168 tim_wilson, 0
+-- 10964 develop
+-- 1107  production
+SELECT COUNT(*)
+FROM tim_wilson.silver.bstg_combined_inventory_stock_levels
+WHERE COALESCE(SITE, '') = ''
+;
+
+-- 0 tim_wilson
+-- 0 develop
+-- 0  production
+SELECT COUNT(*)
+FROM tim_wilson.silver.bstg_combined_inventory_stock_levels
+WHERE DATE IS NULL
+;
+
+-- 1654874, 905989, 902591
+SELECT COUNT(*)
+FROM tim_wilson.silver.bstg_combined_inventory_stock_levels
+;
+
+-- 905968, 905968, 905989, 902591
+SELECT COUNT(*)
+FROM (SELECT DISTINCT UNIQUE_KEY FROM tim_wilson.silver.bstg_combined_inventory_stock_levels) AS x
+;
+
+-- 21
+SELECT UNIQUE_KEY, COUNT(*) AS record_count
+FROM tim_wilson.silver.bstg_combined_inventory_stock_levels
+GROUP BY UNIQUE_KEY
+HAVING COUNT(*) > 1
+ORDER BY RECORD_COUNT DESC
+;
+
+-- 42
+SELECT *
+FROM tim_wilson.silver.bstg_combined_inventory_stock_levels
+WHERE UNIQUE_KEY IN
+(
+  SELECT UNIQUE_KEY
+  FROM tim_wilson.silver.bstg_combined_inventory_stock_levels
+  GROUP BY UNIQUE_KEY
+  HAVING COUNT(*) > 1
+)
+ORDER BY UNIQUE_KEY, DATE, QUANTITY
+;
+
+-- QUICKBOOKS.STOCKSTAT_360 all environments
+SELECT DISTINCT RECORD_SOURCE
+FROM tim_wilson.silver.bstg_combined_inventory_stock_levels
+WHERE COALESCE(SITE, '') = ''
+;
+
+SELECT INVENTORY_ITEM_DESCRIPTION
+FROM tim_wilson.silver.bstg_combined_inventory_stock_levels
+WHERE COALESCE(INVENTORY_ITEM_ID, '') = ''
+;
+
+SELECT *
+FROM tim_wilson.silver.bstg_combined_inventory_stock_levels
+WHERE INVENTORY_ITEM_ID = 'RMR-001200'
+ORDER BY DATE
+;
+
+-- 905989, 870474, 902591
+SELECT COUNT(*)
+FROM tim_wilson.silver.bstg_combined_inventory_stock_levels
+;
+
+-- 905989, 870474, 902591
+SELECT COUNT(*)
+FROM (SELECT DISTINCT * FROM tim_wilson.silver.bstg_combined_inventory_stock_levels) AS x
+;
+
+-- 902591, 870474, 902591
+SELECT COUNT(*)
+FROM (SELECT DISTINCT UNIQUE_KEY FROM tim_wilson.silver.bstg_combined_inventory_stock_levels) AS x
+;
+
+-- 902591, 870474, 902591
+SELECT COUNT(*)
+FROM (SELECT DISTINCT INVENTORY_STOCK_LEVELS_HK FROM tim_wilson.silver.bstg_combined_inventory_stock_levels) AS x
+;
+
+-- now 0
+SELECT UNIQUE_KEY, COUNT(*) AS record_count
+FROM tim_wilson.silver.bstg_combined_inventory_stock_levels
+GROUP BY UNIQUE_KEY
+HAVING record_count > 1
+;
+
+-- 2, 1
+SELECT *
+FROM tim_wilson.silver.br_combined_inventory_stock_levels_step_0
+WHERE UNIQUE_KEY ILIKE 'YORK-LMNT-000507-20251213'
+;
+
+-- 2
+SELECT *
+FROM tim_wilson.silver.bstg_combined_inventory_stock_levels
+WHERE UNIQUE_KEY = 'EII|YORK|LMNT-000507|20251213'
+-- QUALIFY (ROW_NUMBER() OVER (PARTITION BY UNIQUE_KEY ORDER BY QUANTITY DESC)) = 1
+;
+
+-- 2
+SELECT *
+FROM tim_wilson.silver.bsat_combined_inventory_stock_levels
+WHERE UNIQUE_KEY = 'EII|YORK|LMNT-000507|20251213'
+;
+
+-- 905933, 902591
+SELECT COUNT(*)
+FROM tim_wilson.silver.bsat_combined_inventory_stock_levels
+;
+
+-- 0
+SELECT UNIQUE_KEY, COUNT(*) AS record_count
+FROM tim_wilson.silver.bsat_combined_inventory_stock_levels
+GROUP BY UNIQUE_KEY
+HAVING record_count > 1
+;
+
+-- 56
+-- 0
+SELECT UNIQUE_KEY
+FROM tim_wilson.silver.bstg_combined_inventory_stock_levels
+EXCEPT
+SELECT UNIQUE_KEY
+FROM tim_wilson.silver.bsat_combined_inventory_stock_levels
+
+ORDER BY UNIQUE_KEY
+;
+
+-- 0
+-- 0
+SELECT UNIQUE_KEY
+FROM tim_wilson.silver.bsat_combined_inventory_stock_levels
+EXCEPT
+SELECT UNIQUE_KEY
+FROM tim_wilson.silver.bstg_combined_inventory_stock_levels
+;
+
+-- 905933, 902591
+SELECT COUNT(*)
+FROM tim_wilson.gold_coreview.mart_inventory_stock_levels
+;
+
+SELECT UNIQUE_KEY
+FROM tim_wilson.silver.sat_inventory_stock_levels_latest
+WHERE UNIQUE_KEY ILIKE 'YORK-LMNT-000507-20251213'
+;
+
+SELECT UNIQUE_KEY
+FROM tim_wilson.silver.sat_inventory_stock_levels_latest
+WHERE UNIQUE_KEY ILIKE 'YORK|LMNT-000507|20251213'
+ORDER BY 1 DESC
+;
+
+SELECT *
+FROM tim_wilson.silver.br_inventory_stock_levels_kinetic_step_0
+WHERE UNIQUE_KEY ILIKE 'YORK-LMNT-000507-20251213'
+;
+
+SELECT *
+FROM tim_wilson.silver.br_combined_quickbooks_stock_status_step_1
+LIMIT 100
+;
+
+ WITH inventory_with_gaps AS (
+    SELECT 
+        UNIQUE_KEY
+        , DATE
+        , INVENTORY_ITEM_ID
+        , INVENTORY_ITEM_DESCRIPTION
+        , COREVIEW_PRODUCT_CATEGORY
+        , ENTITY
+        , BU
+        , SITE
+        , TOTAL_VALUE
+        , UNIT_COST
+        , UOM
+        , QUANTITY
+        , UNIT_WEIGHT
+        , WEIGHT_LBS
+        , IS_ACQUIRED_DATE
+        , IS_ACQUIRED_NOW
+        , META_LOAD_DATETIME
+        , RECORD_SOURCE
+        , HASHDIFF
+    FROM `tim_wilson`.`silver`.`bsat_combined_inventory_stock_levels`
+    WHERE INVENTORY_ITEM_DESCRIPTION = '01 Inventory Parts (Inventory Part)'
+--    WHERE INVENTORY_ITEM_DESCRIPTION = '01 Inventory Parts (Inventory Part)'  AND DATE <= '2025-02-11'
+--    WHERE INVENTORY_ITEM_DESCRIPTION IN (SELECT DISTINCT INVENTORY_ITEM_DESCRIPTION FROM tim_wilson.silver.bsat_combined_inventory_stock_levels LIMIT 2)
+--    WHERE INVENTORY_ITEM_ID = 'SAMP-005305' AND DATE <= '2025-09-25'
+--    QUALIFY ROW_NUMBER () OVER (PARTITION BY DATE, INVENTORY_ITEM_ID, INVENTORY_ITEM_DESCRIPTION, ENTITY, SITE ORDER BY QUANTITY DESC) = 1
+    ORDER BY DATE
+)
+-- SELECT COUNT(*) FROM inventory_with_gaps  -- 902591
+-- SELECT * FROM inventory_with_gaps ORDER BY DATE, UNIQUE_KEY
+,
+
+distinct_inventory_items AS (
+  SELECT DISTINCT
+    INVENTORY_ITEM_ID
+    , INVENTORY_ITEM_DESCRIPTION 
+    , ENTITY
+    , SITE
+  FROM inventory_with_gaps
+),
+
+cross_join_data AS (
+  -- DISTINCT ?
+  -- DATE
+  SELECT cal.date_day AS dim_date, INVENTORY_ITEM_ID AS dim_inventory_item_id, INVENTORY_ITEM_DESCRIPTION AS dim_inventory_item_description, ENTITY AS dim_entity, SITE AS dim_site
+  FROM tim_wilson.silver.dim_calendar_usa AS cal
+
+--  CROSS JOIN (SELECT DATE, INVENTORY_ITEM_ID, INVENTORY_ITEM_DESCRIPTION, ENTITY, SITE FROM inventory_with_gaps) AS inv
+--  CROSS JOIN inventory_with_gaps AS inv
+  CROSS JOIN distinct_inventory_items AS inv
+)
+-- SELECT * FROM cross_join_data WHERE dim_date >= '2025-02-11' ORDER BY dim_date, date
+,
+
+left_join_data AS (
+  SELECT *
+  FROM cross_join_data AS cjd
+
+  LEFT OUTER JOIN inventory_with_gaps AS inv
+  ON  1=1
+  AND cjd.dim_date = inv.DATE
+  AND cjd.dim_inventory_item_id = inv.INVENTORY_ITEM_ID
+  AND cjd.dim_inventory_item_description = inv.INVENTORY_ITEM_DESCRIPTION
+  AND cjd.dim_entity = inv.ENTITY
+  AND cjd.dim_site = inv.SITE
+)
+--SELECT * FROM left_join_data WHERE dim_date >= '2025-02-11' ORDER BY dim_date, date
+,
+
+mart AS (
+SELECT
+    dim_date
+    , date
+    , dim_inventory_item_id
+    , dim_inventory_item_description
+    , dim_entity
+    , dim_site
+    , CASE WHEN DATE IS NULL THEN LAG(UNIQUE_KEY) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE UNIQUE_KEY
+      END AS UNIQUE_KEY
+    , CASE WHEN DATE IS NULL THEN LAG(DATE) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE DATE
+      END AS DATE
+    , CASE WHEN DATE IS NULL THEN LAG(INVENTORY_ITEM_ID) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE INVENTORY_ITEM_ID
+      END AS INVENTORY_ITEM_ID
+    , CASE WHEN DATE IS NULL THEN LAG(INVENTORY_ITEM_DESCRIPTION) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE INVENTORY_ITEM_DESCRIPTION
+      END AS INVENTORY_ITEM_DESCRIPTION
+    , CASE WHEN DATE IS NULL THEN LAG(COREVIEW_PRODUCT_CATEGORY) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE COREVIEW_PRODUCT_CATEGORY
+      END AS COREVIEW_PRODUCT_CATEGORY
+    , CASE WHEN DATE IS NULL THEN LAG(ENTITY) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE ENTITY
+      END AS ENTITY
+    , CASE WHEN DATE IS NULL THEN LAG(BU) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE BU
+      END AS BU
+    , CASE WHEN DATE IS NULL THEN LAG(SITE) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE SITE
+      END AS SITE
+    , CASE WHEN DATE IS NULL THEN LAG(TOTAL_VALUE) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE TOTAL_VALUE
+      END AS TOTAL_VALUE
+    , CASE WHEN DATE IS NULL THEN LAG(UNIT_COST) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE UNIT_COST
+      END AS UNIT_COST
+    , CASE WHEN DATE IS NULL THEN LAG(UOM) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE UOM
+      END AS UOM
+    , CASE WHEN DATE IS NULL THEN LAG(QUANTITY) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE QUANTITY
+      END AS QUANTITY
+    , CASE WHEN DATE IS NULL THEN LAG(UNIT_WEIGHT) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE UNIT_WEIGHT
+      END AS UNIT_WEIGHT
+    , CASE WHEN DATE IS NULL THEN LAG(WEIGHT_LBS) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE WEIGHT_LBS
+      END AS WEIGHT_LBS
+    , CASE WHEN DATE IS NULL THEN LAG(IS_ACQUIRED_DATE) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE IS_ACQUIRED_DATE
+      END AS IS_ACQUIRED_DATE
+    , CASE WHEN DATE IS NULL THEN LAG(IS_ACQUIRED_NOW) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE IS_ACQUIRED_NOW
+      END AS IS_ACQUIRED_NOW
+    , CASE WHEN META_LOAD_DATETIME IS NULL THEN LAG(META_LOAD_DATETIME) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE META_LOAD_DATETIME
+      END AS META_LOAD_DATETIME
+    , CASE WHEN DATE IS NULL THEN LAG(RECORD_SOURCE) IGNORE NULLS OVER (PARTITION BY dim_inventory_item_id, dim_inventory_item_description, dim_entity, dim_site ORDER BY dim_date)
+      ELSE RECORD_SOURCE
+      END AS RECORD_SOURCE
+FROM left_join_data
+
+WHERE dim_inventory_item_description = '01 Inventory Parts (Inventory Part)' AND dim_date >= '2025-02-11'
+-- WHERE dim_date >= '2024-10-08'
+-- WHERE dim_date >= '2025-09-23'
+-- WHERE dim_date >= '2025-02-11'
+
+ORDER BY dim_date, entity, site, inventory_item_id, inventory_item_description
+)
+
+SELECT *
+FROM mart
+;
+
+SELECT a, b, LAG(b) OVER (PARTITION BY a ORDER BY b)
+    FROM VALUES ('A1', 2), ('A1', 1), ('A2', 3), ('A1', 1) tab(a, b)
+;
+
+SELECT a, b, LAG(b) IGNORE NULLS OVER (PARTITION BY b ORDER BY a)
+    FROM VALUES (1, 'A'), (2, NULL), (3, NULL), (4, 'B') tab(a, b)
+    ORDER BY a
+;
+
+SELECT a, b, ROW_NUMBER() OVER (PARTITION BY b ORDER BY a) AS rn
+    FROM VALUES (1, 'A'), (2, 'a'), (3, 'A'), (4, 'B') tab(a, b)
+    ORDER BY b, rn
+;
+
+WITH lowercase_data AS (
+  SELECT a
+  FROM VALUES ('a'), ('b'), ('c') AS ltestcol(a)
+),
+
+uppercase_data AS (
+  SELECT b
+  FROM VALUES ('A'), ('B'), ('C') AS utestcol(b)
+)
+
+SELECT a
+FROM lowercase_data
+
+UNION
+
+SELECT b
+FROM uppercase_data
+
+ORDER BY 1
+;

@@ -1,0 +1,34 @@
+-- 5699
+-- 5333
+SELECT COUNT(*)
+FROM (
+SELECT *
+FROM `tim_wilson`.`silver`.`sat_production_process_coparts`
+-- QUALIFY RANK() OVER (
+--     PARTITION BY PRODUCTION_PROCESS_RESOURCE_GRP_LHK
+--     ORDER BY EXTRACT_DATE DESC
+-- ) = 1
+) AS x
+;
+
+-- 5699
+-- 1945
+-- 5104
+SELECT COUNT(*)
+FROM (
+SELECT DISTINCT PRODUCTION_PROCESS_RESOURCE_GRP_LHK, HASHDIFF
+FROM `tim_wilson`.`silver`.`sat_production_process_coparts`
+)
+;
+
+-- 5699
+SELECT COUNT(*)
+FROM (
+SELECT *
+FROM `tim_wilson`.`silver`.`sat_production_process_coparts`
+QUALIFY RANK() OVER (
+    PARTITION BY PRODUCTION_PROCESS_RESOURCE_GRP_LHK, HASHDIFF
+    ORDER BY EXTRACT_DATE DESC
+) = 1
+) AS x
+;

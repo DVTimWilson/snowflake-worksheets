@@ -1,0 +1,15 @@
+SELECT TO_TIMESTAMP(MAX(EXTRACT_DATE)) AS WATERLEVEL_TS
+FROM `tim_wilson`.`bronze`.`stg_inventory_stockstat`
+;
+
+SELECT * 
+FROM tim_wilson.meta.waterlevels
+WHERE TABLE_NAME = '`tim_wilson`.`bronze`.`stg_inventory_stockstat`'
+ORDER BY STARTED_AT_TS DESC
+;
+
+SELECT TO_TIMESTAMP(MAX(LOAD_DATETIME)) AS WATERLEVEL_TS
+FROM `tim_wilson`.`silver`.`bstg_budget_seed_table`
+;
+
+

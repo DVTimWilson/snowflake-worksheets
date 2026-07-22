@@ -1,0 +1,267 @@
+-- WITH x AS ( SELECT DISTINCT INVENTORY_ITEM_ID,ENTITY
+-- DISTINCT is redundant because it matches the PARTITION BY in the QUALIFY cause
+WITH x AS ( SELECT INVENTORY_ITEM_ID,ENTITY
+FROM develop.gold_coreview.mart_inventory_stock_levels as a
+-- LEFT JOIN landing.raw_baq_explore.consolidated_part_master as b
+-- ON a.INVENTORY_ITEM_ID = b.PartNum
+-- AND A.ENTITY = b.Company
+WHERE a.QUANTITY = 0
+-- AND INVENTORY_ITEM_ID = '12 Casings:C Grade Casing:Misc. Casing C Grade (Misc. Casing C Grade)'
+QUALIFY ROW_NUMBER() OVER (PARTITION BY a.ENTITY, a.INVENTORY_ITEM_ID ORDER BY a.DATE DESC) = 1
+)
+
+SELECT COUNT(*)
+FROM x
+-- WHERE QUANTITY > 0
+;
+
+
+-- First requirement
+-- 9227 quantity > 0
+-- 420  quantity = 0
+WITH x AS ( SELECT INVENTORY_ITEM_ID,ENTITY
+FROM develop.gold_coreview.mart_inventory_stock_levels as a
+-- LEFT JOIN landing.raw_baq_explore.consolidated_part_master as b
+-- ON a.INVENTORY_ITEM_ID = b.PartNum
+-- AND A.ENTITY = b.Company
+-- WHERE a.QUANTITY = 0
+-- AND INVENTORY_ITEM_ID = '12 Casings:C Grade Casing:Misc. Casing C Grade (Misc. Casing C Grade)'
+QUALIFY ROW_NUMBER() OVER (PARTITION BY a.ENTITY, a.INVENTORY_ITEM_ID ORDER BY a.DATE DESC) = 1 AND a.QUANTITY = 0
+)
+
+SELECT COUNT(DISTINCT *)
+FROM x
+;
+
+
+-- Second requirement
+WITH x AS (
+    SELECT INVENTORY_ITEM_ID
+        , ENTITY
+        , QUANTITY
+        , DATE
+        , ROW_NUMBER() OVER (PARTITION BY a.ENTITY, a.INVENTORY_ITEM_ID ORDER BY a.DATE DESC) AS rn
+    FROM develop.gold_coreview.mart_inventory_stock_levels as a
+    -- WHERE INVENTORY_ITEM_ID = '12 Casings:C Grade Casing:Misc. Casing C Grade (Misc. Casing C Grade)'
+    -- WHERE INVENTORY_ITEM_ID = 'ARC102'
+    -- WHERE INVENTORY_ITEM_ID = '10 EPDM Slab:TRD-335004 Cocoa Brown PX TAIC (TRD-335004 Cocoa Brown  - EPDM Slab PX TAIC)'
+)
+,
+
+x_filtered AS (
+    SELECT x.INVENTORY_ITEM_ID, x.ENTITY
+    FROM x
+    INNER JOIN x AS y
+    ON x.INVENTORY_ITEM_ID = y.INVENTORY_ITEM_ID
+    AND x.ENTITY = y.ENTITY
+    AND y.rn > 1
+    AND y.QUANTITY > 0
+    WHERE (x.rn = 1 AND x.QUANTITY = 0)
+)
+
+-- 183
+SELECT DISTINCT INVENTORY_ITEM_ID, ENTITY -- COUNT(DISTINCT INVENTORY_ITEM_ID, ENTITY)
+FROM x_filtered
+;
+
+
+--
+-- 14/05/2026
+--
+
+-- First requirement
+-- Unique list of parts that currently have stock
+-- 8960
+-- WITH x AS ( SELECT DISTINCT INVENTORY_ITEM_ID,ENTITY
+-- DISTINCT is redundant because it matches the PARTITION BY in the QUALIFY cause
+WITH x AS ( SELECT INVENTORY_ITEM_ID,ENTITY,QUANTITY
+FROM develop.gold_coreview.mart_inventory_stock_levels as a
+-- LEFT JOIN landing.raw_baq_explore.consolidated_part_master as b
+-- ON a.INVENTORY_ITEM_ID = b.PartNum
+-- AND A.ENTITY = b.Company
+-- AND INVENTORY_ITEM_ID = '12 Casings:C Grade Casing:Misc. Casing C Grade (Misc. Casing C Grade)'
+QUALIFY ROW_NUMBER() OVER (PARTITION BY a.ENTITY, a.INVENTORY_ITEM_ID ORDER BY a.DATE DESC) = 1
+)
+
+SELECT COUNT(*)
+FROM (
+SELECT INVENTORY_ITEM_ID,ENTITY
+FROM x
+WHERE QUANTITY > 0
+) AS y
+;
+
+
+-- First requirement check
+-- 
+WITH x AS (
+    SELECT INVENTORY_ITEM_ID
+        , ENTITY
+        , QUANTITY
+        , DATE
+        , ROW_NUMBER() OVER (PARTITION BY a.ENTITY, a.INVENTORY_ITEM_ID ORDER BY a.DATE DESC) AS rn
+    FROM develop.gold_coreview.mart_inventory_stock_levels as a
+    -- WHERE INVENTORY_ITEM_ID = '12 Casings:C Grade Casing:Misc. Casing C Grade (Misc. Casing C Grade)'
+    -- WHERE INVENTORY_ITEM_ID = 'ARC102'
+    -- WHERE INVENTORY_ITEM_ID = '10 EPDM Slab:TRD-335004 Cocoa Brown PX TAIC (TRD-335004 Cocoa Brown  - EPDM Slab PX TAIC)'
+)
+
+-- 1823971
+-- 10743
+SELECT COUNT(*)
+FROM (
+SELECT DISTINCT ENTITY,INVENTORY_ITEM_ID --,QUANTITY,DATE
+FROM x
+WHERE rn = 1 AND QUANTITY > 0
+-- WHERE QUANTITY > 0
+) AS y
+;
+
+-- SET use_cached_result = false;
+
+WITH x AS (
+    SELECT INVENTORY_ITEM_ID
+        , ENTITY
+        , QUANTITY
+        , DATE
+        , ROW_NUMBER() OVER (PARTITION BY a.ENTITY, a.INVENTORY_ITEM_ID ORDER BY a.DATE DESC) AS rn
+    FROM develop.gold_coreview.mart_inventory_stock_levels as a
+    -- WHERE INVENTORY_ITEM_ID = '12 Casings:C Grade Casing:Misc. Casing C Grade (Misc. Casing C Grade)'
+    -- WHERE INVENTORY_ITEM_ID = 'ARC102'
+    -- WHERE INVENTORY_ITEM_ID = '10 EPDM Slab:TRD-335004 Cocoa Brown PX TAIC (TRD-335004 Cocoa Brown  - EPDM Slab PX TAIC)'
+    -- WHERE ENTITY = 'EII' AND INVENTORY_ITEM_ID = 'OPR-0000431'
+)
+
+-- 8956  DISTINCT ENTITY,INVENTORY_ITEM_ID
+-- 8956  ENTITY,INVENTORY_ITEM_ID
+-- 8962  ENTITY,INVENTORY_ITEM_ID,QUANTITY
+-- 8960  ENTITY,INVENTORY_ITEM_ID,DATE
+-- 8954  *
+SELECT COUNT(*)
+FROM (
+SELECT ENTITY,INVENTORY_ITEM_ID
+FROM x
+WHERE rn = 1 AND QUANTITY > 0
+) AS y
+;
+
+
+-- First requirement check
+--
+WITH x AS (
+  SELECT
+    INVENTORY_ITEM_ID,
+    ENTITY,
+    QUANTITY,
+    DATE,
+    ROW_NUMBER() OVER (PARTITION BY a.ENTITY, a.INVENTORY_ITEM_ID ORDER BY a.DATE DESC, a.QUANTITY DESC) AS rn
+  FROM
+    develop.gold_coreview.mart_inventory_stock_levels as a
+),
+filtered AS (
+  SELECT
+    *
+  FROM
+    x
+  WHERE
+    rn = 1
+    AND QUANTITY > 0
+)
+SELECT
+  COUNT(*) AS count_star
+  ,
+  COUNT(DISTINCT ENTITY) AS count_distinct_entity,
+  COUNT(DISTINCT INVENTORY_ITEM_ID) AS count_distinct_item,
+  COUNT(DISTINCT ENTITY, INVENTORY_ITEM_ID) AS count_distinct_entity_item,
+  COUNT(DISTINCT ENTITY, INVENTORY_ITEM_ID, QUANTITY) AS count_distinct_entity_item_qty,
+  COUNT(DISTINCT ENTITY, INVENTORY_ITEM_ID, DATE) AS count_distinct_entity_item_date,
+  COUNT(DISTINCT ENTITY, INVENTORY_ITEM_ID, QUANTITY, DATE) AS count_distinct_entity_item_qty_date,
+  COUNT( ENTITY) AS count_entity,
+  COUNT(INVENTORY_ITEM_ID) AS count_item,
+  COUNT( ENTITY, INVENTORY_ITEM_ID) AS count_entity_item,
+  COUNT( ENTITY, INVENTORY_ITEM_ID, QUANTITY) AS count_entity_item_qty,
+  COUNT( ENTITY, INVENTORY_ITEM_ID, DATE) AS count_entity_item_date,
+  COUNT( ENTITY, INVENTORY_ITEM_ID, QUANTITY, DATE) AS count_entity_item_qty_date
+FROM
+  filtered
+;
+
+
+
+
+
+
+
+
+
+
+
+-- Second requirement
+-- Cannot use QUALIFY in Databricks for this query
+-- Unique list of parts that currently do not have stock but have had stock in the past
+WITH x AS (
+    SELECT INVENTORY_ITEM_ID
+        , ENTITY
+        , QUANTITY
+        , DATE
+        , ROW_NUMBER() OVER (PARTITION BY a.ENTITY, a.INVENTORY_ITEM_ID ORDER BY a.DATE DESC) AS rn
+    FROM develop.gold_coreview.mart_inventory_stock_levels as a
+    -- WHERE INVENTORY_ITEM_ID = '12 Casings:C Grade Casing:Misc. Casing C Grade (Misc. Casing C Grade)'
+    -- WHERE INVENTORY_ITEM_ID = 'ARC102'
+    -- WHERE INVENTORY_ITEM_ID = '10 EPDM Slab:TRD-335004 Cocoa Brown PX TAIC (TRD-335004 Cocoa Brown  - EPDM Slab PX TAIC)'
+)
+,
+
+x_filtered AS (
+    SELECT x.INVENTORY_ITEM_ID, x.ENTITY
+    FROM x
+    INNER JOIN x AS y
+    ON x.INVENTORY_ITEM_ID = y.INVENTORY_ITEM_ID
+    AND x.ENTITY = y.ENTITY
+    AND y.rn > 1
+    AND y.QUANTITY > 0
+    WHERE (x.rn = 1 AND x.QUANTITY = 0)
+)
+
+-- 206
+SELECT DISTINCT INVENTORY_ITEM_ID, ENTITY -- COUNT(DISTINCT INVENTORY_ITEM_ID, ENTITY)
+FROM x_filtered
+ORDER BY INVENTORY_ITEM_ID, ENTITY
+;
+
+
+-- Partitions with duplicate rows on the most recent DATE where QUANTITY values
+-- are mixed (some > 0, some <= 0). These cause non-deterministic ROW_NUMBER()
+-- results when ORDER BY DATE DESC alone is used.
+WITH ranked AS (
+  SELECT
+    ENTITY,
+    INVENTORY_ITEM_ID,
+    DATE,
+    QUANTITY,
+    DENSE_RANK() OVER (PARTITION BY ENTITY, INVENTORY_ITEM_ID ORDER BY DATE DESC) AS dr
+  FROM develop.gold_coreview.mart_inventory_stock_levels
+),
+top_date_ties AS (
+  SELECT
+    ENTITY,
+    INVENTORY_ITEM_ID,
+    DATE AS latest_date,
+    COUNT(*) AS duplicate_rows,
+    SUM(CASE WHEN QUANTITY > 0 THEN 1 ELSE 0 END) AS rows_qty_positive,
+    SUM(CASE WHEN QUANTITY <= 0 OR QUANTITY IS NULL THEN 1 ELSE 0 END) AS rows_qty_zero_or_neg,
+    MIN(QUANTITY) AS min_quantity,
+    MAX(QUANTITY) AS max_quantity
+  FROM ranked
+  WHERE dr = 1
+  GROUP BY ENTITY, INVENTORY_ITEM_ID, DATE
+  HAVING COUNT(*) > 1
+    AND SUM(CASE WHEN QUANTITY > 0 THEN 1 ELSE 0 END) > 0
+    AND SUM(CASE WHEN QUANTITY <= 0 OR QUANTITY IS NULL THEN 1 ELSE 0 END) > 0
+)
+SELECT *
+FROM top_date_ties
+ORDER BY duplicate_rows DESC, ENTITY, INVENTORY_ITEM_ID
+;
+
+

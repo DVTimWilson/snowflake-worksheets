@@ -1,0 +1,87 @@
+CREATE TABLE landing.backup.allocatedhoursandearnings_20250722
+AS SELECT * FROM landing.static_backup.allocatedhoursandearnings_20250722
+;
+
+-- DROP TABLE landing.static_backup.allocatedhoursandearnings_20250722
+;
+
+CREATE TABLE landing.backup.coparts_20250722
+AS SELECT * FROM landing.static_backup.coparts_20250722
+;
+
+-- DROP TABLE landing.static_backup.coparts_20250722
+;
+
+CREATE TABLE landing.backup.coparts_new_20250901
+AS SELECT * FROM landing.static_backup.coparts_new_20250901
+;
+
+-- DROP TABLE landing.static_backup.coparts_new_20250901
+;
+
+CREATE TABLE landing.backup.coparts_old_20250901
+AS SELECT * FROM landing.static_backup.coparts_old_20250901
+;
+
+-- DROP TABLE landing.static_backup.coparts_old_20250901
+;
+
+CREATE TABLE landing.backup.resgrpeff_20250722
+AS SELECT * FROM landing.static_backup.resgrpeff_20250722
+;
+
+-- DROP TABLE landing.static_backup.resgrpeff_20250722
+;
+
+CREATE TABLE landing.backup.resgrpeff_new_20250901
+AS SELECT * FROM landing.static_backup.resgrpeff_new_20250901
+;
+
+-- DROP TABLE landing.static_backup.resgrpeff_new_20250901
+;
+
+CREATE TABLE landing.backup.resgrpeff_old_20250901
+AS SELECT * FROM landing.static_backup.resgrpeff_old_20250901
+;
+
+-- DROP TABLE landing.static_backup.resgrpeff_old_20250901
+;
+
+CREATE TABLE landing.backup.sales_sherrigmquery_allcompanies_20250722
+AS SELECT * FROM landing.static_backup.sales_sherrigmquery_allcompanies_20250722
+;
+
+-- DROP TABLE landing.static_backup.sales_sherrigmquery_allcompanies_20250722
+;
+
+CREATE TABLE landing.backup.trialbalance_lastmonth_20250722
+AS SELECT * FROM landing.static_backup.trialbalance_lastmonth_20250722
+;
+
+-- DROP TABLE landing.static_backup.trialbalance_lastmonth_20250722
+;
+
+CREATE TABLE landing.backup.trialbalance_thismonth_20250722
+AS SELECT * FROM landing.static_backup.trialbalance_thismonth_20250722
+;
+
+-- DROP TABLE landing.static_backup.trialbalance_thismonth_20250722
+;
+
+CREATE TABLE landing.backup.resgrpeff_20251105
+AS SELECT * FROM landing.kinetic.resgrpeff_20251105
+;
+
+-- DROP TABLE landing.kinetic.resgrpeff_20251105
+;
+
+CREATE TABLE landing.backup.allocated_department_mapping_20251030_backup
+AS SELECT * FROM landing.reftables.allocated_department_mapping_20251030_backup
+;
+
+-- DROP TABLE landing.reftables.allocated_department_mapping_20251030_backup
+;
+
+DROP SCHEMA landing.static_backup
+;
+;

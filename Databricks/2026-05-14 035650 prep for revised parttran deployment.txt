@@ -1,0 +1,118 @@
+-- Backups, etc.
+
+-- 417991
+SELECT COUNT(*)
+FROM landing.kinetic.parttran_temp
+;
+
+CREATE OR REPLACE TABLE landing.backup.parttran_20260206_20260514 AS
+SELECT *
+FROM landing.kinetic.parttran_temp
+;
+
+-- 417991
+SELECT COUNT(*)
+FROM landing.kinetic.parttran_temp
+;
+
+-- 417991
+SELECT COUNT(*)
+FROM landing.backup.parttran_20260206_20260514
+;
+
+CREATE OR REPLACE TABLE landing.backup.parttran_20260514 AS
+SELECT *
+FROM landing.kinetic.parttran
+;
+
+-- 2197104
+SELECT COUNT(*)
+FROM landing.kinetic.parttran
+;
+
+-- 2197104
+SELECT COUNT(*)
+FROM landing.backup.parttran_20260514
+;
+
+-- Prepare Extract_Date
+
+-- Extract_Date  '2026-05-14T11:01:29.309+00:00'
+SELECT *
+FROM psa_prod.kinetic.psa_inventory_transactions
+ORDER BY Extract_Date DESC
+LIMIT 100
+;
+
+-- new parttran data with Extract_Date column '2026-05-14T07:16:51.982+00:00'
+-- waterlevel timestamp '2026-05-14T11:01:29.309+00:00'
+-- started at timestamp '2026-05-14T11:19:22.306+00:00'
+SELECT *
+FROM production.meta.waterlevels
+WHERE TABLE_NAME LIKE '%stg_inventory_transactions%'
+ORDER BY WATERLEVEL_TS DESC
+;
+
+-- 2026-05-14T07:16:51.982+00:00
+SELECT DISTINCT Extract_Date
+FROM landing.kinetic.parttran
+;
+
+UPDATE landing.kinetic.parttran
+SET Extract_Date = TO_TIMESTAMP('2026-05-14T14:00:00.000+00:00')
+;
+
+--
+-- 15/05/2026
+-- 08:34
+--
+
+-- 2026-05-14T14:00:00.000+00:00  417991
+-- 2026-05-15T07:10:26.000+00:00  616704
+SELECT Extract_Date, COUNT(*), COUNT(DISTINCT SysDate), MIN(SysDate), MAX(SysDate)
+FROM landing.kinetic.parttran
+GROUP BY Extract_Date
+ORDER BY Extract_Date DESC
+;
+
+SELECT SysDate, COUNT(*), COUNT(DISTINCT SysDate), MIN(SysDate), MAX(SysDate)
+FROM landing.kinetic.parttran
+GROUP BY SysDate
+ORDER BY SysDate DESC
+;
+
+SELECT SysDate, COUNT(*), COUNT(DISTINCT SysDate), MIN(SysDate), MAX(SysDate)
+FROM landing.backup.parttran_20260514
+GROUP BY SysDate
+ORDER BY SysDate DESC
+;
+
+SELECT SysDate, COUNT(DISTINCT PartNum)
+FROM landing.kinetic.parttran
+GROUP BY SysDate
+ORDER BY SysDate DESC
+;
+
+SELECT Extract_Date, COUNT(*)
+FROM psa.kinetic.psa_inventory_transactions
+GROUP BY Extract_Date
+ORDER BY Extract_Date DESC
+;
+
+SELECT SysDate, COUNT(*)
+FROM psa.kinetic.psa_inventory_transactions
+GROUP BY SysDate
+ORDER BY SysDate DESC
+;
+
+--
+-- 15/05/2026
+-- 13:32
+--
+
+SELECT ReportRunDate, COUNT(*)
+FROM landing.kinetic.trialbalance_lastmonth
+GROUP BY ReportRunDate
+ORDER BY ReportRunDate DESC
+;
+

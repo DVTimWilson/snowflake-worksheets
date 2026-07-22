@@ -1,0 +1,78 @@
+/*
+  Backup PSA tables
+*/
+
+CREATE TABLE psa.backup.psa_allocatedhoursandearnings_20251007
+AS SELECT * FROM psa.dayforce.psa_allocatedhoursandearnings
+;
+
+CREATE TABLE psa.backup.psa_coparts_20251007
+AS SELECT * FROM psa.kinetic.psa_coparts
+;
+
+CREATE TABLE psa.backup.psa_porcptdatefilter_20251007
+AS SELECT * FROM psa.kinetic.psa_porcptdatefilter
+;
+
+CREATE TABLE psa.backup.psa_resgrpeff_20251007
+AS SELECT * FROM psa.kinetic.psa_resgrpeff
+;
+
+CREATE TABLE psa.backup.psa_sales_sherrigmquery_allcompanies_20251007
+AS SELECT * FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+;
+
+CREATE TABLE psa.backup.psa_sales_sherrigmquery_allcompanies_20251007
+AS SELECT * FROM psa.kinetic.psa_trial_balance_business_unit_ref
+;
+
+CREATE TABLE psa.backup.psa_quickbooksstaging_20251007
+AS SELECT * FROM psa.quickbooks.psa_quickbooksstaging
+;
+
+CREATE TABLE psa.backup.psa_quickbooksstaging_dgh_20251007
+AS SELECT * FROM psa.quickbooks.psa_quickbooksstaging_dgh
+;
+
+CREATE TABLE psa.backup.psa_quickbooksstaging_edge_20251007
+AS SELECT * FROM psa.quickbooks.psa_quickbooksstaging_edge
+;
+
+CREATE TABLE psa.backup.psa_quickbooksstaging_hti_20251007
+AS SELECT * FROM psa.quickbooks.psa_quickbooksstaging_hti
+;
+
+
+/*
+  Drop PSA tables
+*/
+
+DROP TABLE psa.dayforce.psa_allocatedhoursandearnings
+;
+
+DROP TABLE psa.kinetic.psa_coparts
+;
+
+DROP TABLE psa.kinetic.psa_porcptdatefilter
+;
+
+DROP TABLE psa.kinetic.psa_resgrpeff
+;
+
+DROP TABLE psa.kinetic.psa_sales_sherrigmquery_allcompanies
+;
+
+DROP TABLE psa.kinetic.psa_trial_balance_business_unit_ref
+;
+
+DROP TABLE psa.quickbooks.psa_quickbooksstaging
+;
+
+DROP TABLE psa.quickbooks.psa_quickbooksstaging_dgh
+;
+
+DROP TABLE psa.quickbooks.psa_quickbooksstaging_edge
+;
+
+DROP TABLE psa.quickbooks.psa_quickbooksstaging_hti
+;

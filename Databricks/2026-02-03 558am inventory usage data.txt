@@ -1,0 +1,334 @@
+--
+-- 03/02/2026
+--
+
+DECLARE OR REPLACE VARIABLE v_extract_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP();
+
+CREATE OR REPLACE TABLE landing.kinetic.inventoryusage_temp
+AS SELECT *, v_extract_date AS Extract_Date FROM landing.raw_baq_explore.inventoryusage_test
+;
+
+ALTER TABLE landing.kinetic.inventoryusage_temp
+SET OWNER TO `workato_admin`
+;
+
+-- 1 record
+SELECT DISTINCT EXTRACT_DATE
+FROM landing.kinetic.inventoryusage_temp
+;
+
+-- 1,935,243
+SELECT COUNT(*)
+FROM landing.kinetic.inventoryusage_temp
+;
+
+--
+-- 04/02/2026
+--
+
+-- 21732
+SELECT COUNT(DISTINCT PARTTRAN_PARTNUM)
+FROM landing.kinetic.inventoryusage_temp
+;
+
+-- 21732
+SELECT COUNT(DISTINCT UPPER(PARTTRAN_PARTNUM))
+FROM landing.kinetic.inventoryusage_temp
+;
+
+-- 27309
+SELECT COUNT(DISTINCT PartTran_PartDescription)
+FROM landing.kinetic.inventoryusage_temp
+;
+
+-- 27167
+SELECT COUNT(DISTINCT UPPER(PartTran_PartDescription))
+FROM landing.kinetic.inventoryusage_temp
+;
+
+SELECT a.*
+FROM landing.kinetic.inventoryusage_temp AS a
+LEFT ANTI JOIN landing.kinetic.partmaster AS b
+ON a.PartTran_PartNum = b.Part_PartNum
+;
+
+-- 27309
+SELECT COUNT(DISTINCT PartTran_PartDescription)
+FROM landing.kinetic.inventoryusage_temp
+;
+
+-- 4
+SELECT DISTINCT PartTran_Company
+FROM landing.kinetic.inventoryusage_temp
+;
+
+-- 140
+SELECT COUNT(DISTINCT Part_Number01)
+FROM develop.silver.sat_inventory_item_resgrpeff
+;
+
+-- 103
+SELECT COUNT(DISTINCT Part_Number03)
+FROM develop.silver.sat_inventory_item_resgrpeff
+;
+
+-- 9160
+SELECT COUNT(DISTINCT PARTBIN_PARTNUM)
+FROM develop.silver.sat_inventory_stock_levels
+;
+
+-- 9519
+SELECT COUNT(DISTINCT INVENTORY_ITEM_ID)
+FROM develop.gold_coreview.mart_inventory_stock_levels
+;
+
+-- 7578
+SELECT COUNT(DISTINCT INVENTORY_ITEM_ID)
+FROM develop.gold_coreview.mart_inventory_stock_levels_backfill
+;
+
+-- 434
+SELECT COUNT(DISTINCT ITEM)
+FROM (
+SELECT *
+FROM landing.quickbooks.inventory_transactions_360
+UNION ALL
+SELECT *
+FROM landing.quickbooks.inventory_transactions_crc
+UNION ALL
+SELECT *
+FROM landing.quickbooks.inventory_transactions_dos
+UNION ALL
+SELECT *
+FROM landing.quickbooks.inventory_transactions_eti
+UNION ALL
+SELECT *
+FROM landing.quickbooks.inventory_transactions_etr
+UNION ALL
+SELECT *
+FROM landing.quickbooks.inventory_transactions_prc
+UNION ALL
+SELECT *
+FROM landing.quickbooks.inventory_transactions_pts
+UNION ALL
+SELECT *
+FROM landing.quickbooks.inventory_transactions_tss
+) AS x
+;
+
+              'PARTTRAN_COMPANY'
+            , 'PARTTRAN_TRANNUM'
+            , 'PARTTRAN_JOBNUM'
+            , 'PARTTRAN_PARTNUM'
+
+;
+
+-- 0
+SELECT COUNT(DISTINCT PARTTRAN_COMPANY)
+FROM landing.kinetic.inventoryusage_temp
+EXCEPT
+SELECT COUNT(DISTINCT UPPER(PARTTRAN_COMPANY))
+FROM landing.kinetic.inventoryusage_temp
+;
+
+-- 0
+SELECT COUNT(DISTINCT UPPER(PARTTRAN_COMPANY))
+FROM landing.kinetic.inventoryusage_temp
+EXCEPT
+SELECT COUNT(DISTINCT PARTTRAN_COMPANY)
+FROM landing.kinetic.inventoryusage_temp
+;
+
+-- 0
+SELECT COUNT(DISTINCT PARTTRAN_TRANNUM)
+FROM landing.kinetic.inventoryusage_temp
+EXCEPT
+SELECT COUNT(DISTINCT UPPER(PARTTRAN_TRANNUM))
+FROM landing.kinetic.inventoryusage_temp
+;
+
+-- 0
+SELECT COUNT(DISTINCT UPPER(PARTTRAN_TRANNUM))
+FROM landing.kinetic.inventoryusage_temp
+EXCEPT
+SELECT COUNT(DISTINCT PARTTRAN_TRANNUM)
+FROM landing.kinetic.inventoryusage_temp
+;
+
+-- 121157 vs 94777
+SELECT COUNT(DISTINCT PARTTRAN_JOBNUM)
+FROM landing.kinetic.inventoryusage_temp
+EXCEPT
+SELECT COUNT(DISTINCT UPPER(PARTTRAN_JOBNUM))
+FROM landing.kinetic.inventoryusage_temp
+;
+
+-- 94777 vs 121157
+SELECT COUNT(DISTINCT UPPER(PARTTRAN_JOBNUM))
+FROM landing.kinetic.inventoryusage_temp
+EXCEPT
+SELECT COUNT(DISTINCT PARTTRAN_JOBNUM)
+FROM landing.kinetic.inventoryusage_temp
+;
+
+-- 21732 vs 21723
+SELECT COUNT(DISTINCT PARTTRAN_PARTNUM)
+FROM landing.kinetic.inventoryusage_temp
+EXCEPT
+SELECT COUNT(DISTINCT UPPER(PARTTRAN_PARTNUM))
+FROM landing.kinetic.inventoryusage_temp
+;
+
+-- 21723 vs 21732
+SELECT COUNT(DISTINCT UPPER(PARTTRAN_PARTNUM))
+FROM landing.kinetic.inventoryusage_temp
+EXCEPT
+SELECT COUNT(DISTINCT PARTTRAN_PARTNUM)
+FROM landing.kinetic.inventoryusage_temp
+;
+
+--
+-- 05/02/2026
+--
+
+-- 1930389
+-- 1930389
+SELECT COUNT(*)
+FROM tim_wilson.silver.lnk_inventory_usage
+;
+
+-- 1
+SELECT COUNT(DISTINCT PLANT_HK)
+FROM tim_wilson.silver.lnk_inventory_usage
+;
+
+-- 1930389
+-- 7780
+SELECT COUNT(DISTINCT WAREHOUSE_LOCATION_HK)
+FROM tim_wilson.silver.lnk_inventory_usage
+;
+
+-- 21723
+SELECT COUNT(DISTINCT INVENTORY_ITEM_HK)
+FROM tim_wilson.silver.lnk_inventory_usage
+;
+
+-- 4
+SELECT COUNT(DISTINCT COMPANY_HK)
+FROM tim_wilson.silver.lnk_inventory_usage
+;
+
+-- 89
+SELECT COUNT(DISTINCT PartTran_WareHouseCode)
+FROM landing.kinetic.inventoryusage_temp
+;
+
+-- 1930389 no -1 plant in hub_plant
+SELECT COUNT(INVENTORY_USAGE_LHK)
+FROM tim_wilson.silver.lnk_inventory_usage AS a
+LEFT ANTI JOIN tim_wilson.silver.hub_plant AS b
+ON a.PLANT_HK = b.PLANT_HK
+;
+
+-- 1930389 no -1 lotnum in hub_warehouse_location
+SELECT COUNT(INVENTORY_USAGE_LHK)
+FROM tim_wilson.silver.lnk_inventory_usage AS a
+LEFT ANTI JOIN tim_wilson.silver.hub_warehouse_location AS b
+ON a.WAREHOUSE_LOCATION_HK = b.WAREHOUSE_LOCATION_HK
+;
+
+-- 338633
+SELECT COUNT(INVENTORY_USAGE_LHK)
+FROM tim_wilson.silver.lnk_inventory_usage AS a
+LEFT ANTI JOIN tim_wilson.silver.hub_inventory_item AS b
+ON a.INVENTORY_ITEM_HK = b.INVENTORY_ITEM_HK
+;
+
+-- 338633
+-- 46167
+SELECT COUNT(INVENTORY_USAGE_LHK)
+FROM tim_wilson.silver.lnk_inventory_usage AS a
+LEFT ANTI JOIN tim_wilson.silver.hub_company AS b
+ON a.COMPANY_HK = b.COMPANY_HK
+;
+
+-- 4
+SELECT DISTINCT COMPANY_ID
+FROM tim_wilson.silver.hub_company
+;
+
+--
+-- 06/02/2026
+--
+
+DECLARE OR REPLACE VARIABLE v_catalog STRING DEFAULT 'tim_wilson';
+DECLARE OR REPLACE VARIABLE v_schema  STRING DEFAULT 'psa_kinetic';
+DECLARE OR REPLACE VARIABLE v_table   STRING DEFAULT 'psa_inventory_usage';
+
+SELECT *
+, CASE WHEN data_type = 'STRING' THEN
+ '      - name: ' || column_name || CHAR(13) || CHAR(10) || '        data_tests:' || CHAR(13) || CHAR(10) || '          - dbt_expectations.expect_column_values_to_be_of_type:' || CHAR(13) || CHAR(10) || '              arguments:' || CHAR(13) || CHAR(10) || '                column_type: "{{ dbt.type_string() }}"' || CHAR(13) || CHAR(10)
+       WHEN data_type = 'DOUBLE' THEN
+ '      - name: ' || column_name || CHAR(13) || CHAR(10) || '        data_tests:' || CHAR(13) || CHAR(10) || '          - dbt_expectations.expect_column_values_to_be_of_type:' || CHAR(13) || CHAR(10) || '              arguments:' || CHAR(13) || CHAR(10) || '                column_type: "{{ dbt.type_float() }}"' || CHAR(13) || CHAR(10)
+       WHEN data_type = 'LONG' THEN
+ '      - name: ' || column_name || CHAR(13) || CHAR(10) || '        data_tests:' || CHAR(13) || CHAR(10) || '          - dbt_expectations.expect_column_values_to_be_of_type:' || CHAR(13) || CHAR(10) || '              arguments:' || CHAR(13) || CHAR(10) || '                column_type: "{{ dbt.type_bigint() }}"' || CHAR(13) || CHAR(10)
+       WHEN data_type = 'TIMESTAMP' THEN
+ '      - name: ' || column_name || CHAR(13) || CHAR(10) || '        data_tests:' || CHAR(13) || CHAR(10) || '          - dbt_expectations.expect_column_values_to_be_of_type:' || CHAR(13) || CHAR(10) || '              arguments:' || CHAR(13) || CHAR(10) || '                column_type: "{{ dbt.type_timestamp() }}"' || CHAR(13) || CHAR(10)
+END AS yml
+FROM system.information_schema.columns
+  WHERE table_catalog = v_catalog
+    AND table_schema  = v_schema
+    AND table_name    = v_table
+AND data_type = 'DOUBLE'
+ORDER BY ordinal_position
+;
+
+
+      - name: PARTBIN_COMPANY
+        description: "{{ doc('stockstat_partbin_company_description') }}"
+        data_tests:
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: "{{ dbt.type_string() }}"
+
+
+;
+
+SELECT 
+    PARTTRAN_COMPANY
+    , CAST(PARTTRAN_TRANNUM AS bigint) AS PARTTRAN_TRANNUM
+    , PARTTRAN_PARTNUM
+    , PARTTRAN_WAREHOUSECODE
+    , PARTTRAN_BINNUM
+    , PARTTRAN_TRANCLASS
+    , PARTTRAN_TRANTYPE
+    , PARTTRAN_INVENTORYTRANS
+    , PARTTRAN_TRANDATE
+    , CAST(PARTTRAN_TRANQTY AS bigint) AS PARTTRAN_TRANQTY
+    , PARTTRAN_UM
+    , PARTTRAN_JOBNUM
+    , CAST(PARTTRAN_PACKLINE AS bigint) AS PARTTRAN_PACKLINE
+    , CAST(PARTTRAN_PONUM AS bigint) AS PARTTRAN_PONUM
+    , PARTTRAN_PACKNUM
+    , PARTTRAN_POLINE
+    , CAST(PARTTRAN_PORELNUM AS bigint) AS PARTTRAN_PORELNUM
+    , CAST(PARTTRAN_ORDERNUM AS bigint) AS PARTTRAN_ORDERNUM
+    , CAST(PARTTRAN_ORDERLINE AS bigint) AS PARTTRAN_ORDERLINE
+    , CAST(PARTTRAN_ORDERRELNUM AS bigint) AS PARTTRAN_ORDERRELNUM
+    , PARTTRAN_BINNUM2
+    , PARTTRAN_PARTDESCRIPTION
+    , PARTTRAN_REVISIONNUM
+    , CAST(PARTTRAN_VENDORNUM AS bigint) AS PARTTRAN_VENDORNUM
+    , CAST(PARTTRAN_INVOICENUM AS bigint) AS PARTTRAN_INVOICENUM
+    , CAST(PARTTRAN_INVOICELINE AS bigint) AS PARTTRAN_INVOICELINE
+    , CAST(PARTTRAN_FISCALYEAR AS bigint) AS PARTTRAN_FISCALYEAR
+    , CAST(PARTTRAN_FISCALPERIOD AS bigint) AS PARTTRAN_FISCALPERIOD
+    , WAREHSE_DESCRIPTION
+    , PART_CLASSID
+FROM landing.kinetic.inventoryusage_temp
+;
+
+DROP TABLE tim_wilson.psa_kinetic.psa_inventory_usage
+;
+
+

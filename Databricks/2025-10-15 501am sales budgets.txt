@@ -1,0 +1,179 @@
+WITH actuals AS (
+  SELECT YEAR(invoice_date) AS year
+  , entity
+  , bu
+  , site
+  , coreview_product_category
+  , SUM(sales_dollar) AS year_entity_bu_site_coreview_product_category_annual_sales
+  , SUM(SUM(sales_dollar)) OVER (PARTITION BY YEAR(invoice_date), entity, bu) AS year_entity_bu_annual_sales
+  , SUM(sales_dollar) / NULLIF(SUM(SUM(sales_dollar)) OVER (PARTITION BY YEAR(invoice_date), entity, bu), 0) AS year_entity_bu_proportion
+  , SUM(SUM(sales_dollar) / NULLIF(SUM(SUM(sales_dollar)) OVER (PARTITION BY YEAR(invoice_date), entity, bu), 0)) OVER(PARTITION BY YEAR(invoice_date), entity, bu) AS year_entity_bu_proportion_total
+  FROM tim_wilson.silver.br_combined_outbound_invoice_line
+  WHERE invoice_date IS NOT NULL
+  -- AND YEAR(invoice_date) = 2024
+  -- AND entity IN ('PRC', 'SAI', 'STI')
+  -- AND entity IN ('ATURF', 'CARDINAL')
+  -- AND entity IN ('360')
+  -- AND entity IN ('CRC')
+  GROUP BY YEAR(invoice_date), entity, bu, site, coreview_product_category
+  ORDER BY year, entity, bu, site, coreview_product_category 
+)
+
+-- SELECT *
+-- FROM actuals
+-- ;
+,
+
+budgets AS (
+  SELECT
+    year
+    , month
+    , CASE WHEN UPPER(company_code) = 'CARDINAL' THEN 'CRC'
+        ELSE company_code
+      END AS entity
+    , CASE WHEN UPPER(business_unit_name) = 'CONSTRUCTION' THEN 'OSG'
+        ELSE business_unit_name
+      END AS bu
+    , total_goal
+--  FROM tim_wilson.bronze.raw_sales_budgets
+  FROM tim_wilson.silver.bsat_budget_seed_table
+  WHERE UPPER(goal_name) IN ('WITHOUTFREIGHT', 'REVENUE')
+)
+
+SELECT 
+  b.year AS budget_data_year
+  , b.month
+  , b.entity
+  , b.bu
+  , b.total_goal  -- do not include
+  , a.year AS actual_data_year    -- do not include
+  , a.site
+  , a.coreview_product_category
+  , a.coreview_product_category || ' Budget' AS product_id
+  , b.total_goal * a.year_entity_bu_proportion AS goal_allocation
+  , a.year_entity_bu_site_coreview_product_category_annual_sales  -- do not include
+  , a.year_entity_bu_annual_sales  -- do not include
+  , a.year_entity_bu_proportion  -- do not include
+  , b.total_goal * a.year_entity_bu_proportion AS entity_bu_site_product_category_goal  -- do not include
+  , SUM(b.total_goal * a.year_entity_bu_proportion) OVER (PARTITION BY a.year, b.month, b.entity, b.bu) AS entity_bu_site_product_category_goal_check_total  -- do not include
+FROM budgets AS b
+
+LEFT OUTER JOIN actuals AS a
+ON a.year = b.year - 1
+AND a.entity = b.entity
+AND a.bu = b.bu
+
+-- WHERE b.entity IN ('PRC')
+-- WHERE a.site IS NULL
+
+ORDER BY b.year, b.month, b.entity, b.bu, a.site, a.coreview_product_category
+;
+
+-- SELECT DISTINCT entity, bu, site
+-- FROM tim_wilson.silver.br_combined_outbound_invoice_line
+-- WHERE entity NOT IN ('DGH', 'EDGE', 'HTI')
+-- ORDER BY entity, bu, site
+-- ;
+
+-- SELECT DISTINCT company_code, business_unit_name
+-- FROM tim_wilson.bronze.raw_sales_budgets
+-- ORDER BY company_code, business_unit_name
+-- ;
+
+SELECT *
+FROM tim_wilson.silver.br_sales_budget_allocation
+;
+
+SELECT *
+FROM tim_wilson.gold_coreview.mart_sales_budget_allocation
+;
+
+CREATE OR REPLACE TABLE develop.gold_coreview.mart_sales_budget_allocation
+AS SELECT * FROM tim_wilson.gold_coreview.mart_sales_budget_allocation
+;
+
+SELECT *
+FROM develop.gold_coreview.mart_sales_budget_allocation
+ORDER BY year, month, entity, bu, site, coreview_product_category
+;
+
+WITH actuals AS (
+-- Calculate proportions: product category annual sales vs entity + bu total annual sales
+  SELECT YEAR(invoice_date) AS year
+  , entity
+  , bu
+  , site
+  , coreview_product_category
+  , SUM(sales_dollar) AS year_entity_bu_site_coreview_product_category_annual_sales
+  , SUM(SUM(sales_dollar)) OVER (PARTITION BY YEAR(invoice_date), entity, bu) AS year_entity_bu_annual_sales
+  , SUM(sales_dollar) / NULLIF(SUM(SUM(sales_dollar)) OVER (PARTITION BY YEAR(invoice_date), entity, bu), 0) AS year_entity_bu_proportion
+  , SUM(SUM(sales_dollar) / NULLIF(SUM(SUM(sales_dollar)) OVER (PARTITION BY YEAR(invoice_date), entity, bu), 0)) OVER(PARTITION BY YEAR(invoice_date), entity, bu) AS year_entity_bu_proportion_total
+  FROM `tim_wilson`.`silver`.`br_combined_outbound_invoice_line`
+  WHERE invoice_date IS NOT NULL
+  GROUP BY YEAR(invoice_date), entity, bu, site, coreview_product_category
+),
+
+budgets AS (
+  SELECT
+    year
+    , month
+    , CASE WHEN UPPER(company_code) = 'CARDINAL' THEN 'CRC'
+        ELSE company_code
+      END AS entity
+    , CASE WHEN UPPER(business_unit_name) = 'CONSTRUCTION' THEN 'OSG'
+        ELSE business_unit_name
+      END AS bu
+    , total_goal
+  FROM `tim_wilson`.`silver`.`bsat_budget_seed_table`
+  WHERE UPPER(goal_name) IN ('WITHOUTFREIGHT', 'REVENUE')
+),
+
+final AS (
+SELECT 
+-- Apply actuals proportions to budget data to expand its grain to entity + bu + site + product category
+  b.year
+  , b.month
+  , b.entity
+  , b.bu
+  , a.site
+  , a.coreview_product_category
+  , a.coreview_product_category || ' Budget' AS product_id
+  , b.total_goal
+  , b.total_goal * a.year_entity_bu_proportion AS goal_allocation
+FROM budgets AS b
+
+LEFT OUTER JOIN actuals AS a
+ON a.year = b.year - 1
+AND a.entity = b.entity
+AND a.bu = b.bu
+)
+
+-- 1512
+-- 1512 DISTINCT
+-- SELECT COUNT(*)
+-- FROM (
+SELECT *
+FROM final
+ORDER BY
+  year
+  , month
+  , entity
+  , bu
+  , site
+  , coreview_product_category
+  , product_id
+  , total_goal
+  , goal_allocation
+-- GROUP BY 
+--   year
+--   , month
+--   , entity
+--   , bu
+--   , total_goal
+--   , site
+--   , coreview_product_category
+--   , product_id
+--   , goal_allocation
+-- HAVING record_count > 1
+-- )
+;

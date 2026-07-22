@@ -1,0 +1,156 @@
+-- ==========================================================
+-- Databricks SQL – Automatic Column Profiler (1 row / column)
+-- Includes:
+--   - has_extract_date (table-level flag, repeated per row)
+--   - NULL stats
+--   - "empty" stats for STRING columns (TRIM(col) = '')
+--   - combined missing (NULL + empty-for-STRING)
+--   - non-empty counts
+--   - distinct counts (overall + non-empty for STRING)
+--   - example value (prefers non-empty for STRING)
+--   - min/max + length stats (string-cast)
+--
+-- Edit v_catalog / v_schema / v_table and run.
+-- ==========================================================
+
+DECLARE OR REPLACE VARIABLE v_catalog STRING DEFAULT 'landing';
+DECLARE OR REPLACE VARIABLE v_schema  STRING DEFAULT 'dayforce';
+DECLARE OR REPLACE VARIABLE v_table   STRING DEFAULT 'allocatedhoursandearnings';
+
+DECLARE OR REPLACE VARIABLE v_fqn STRING;
+DECLARE OR REPLACE VARIABLE v_total_rows BIGINT;
+DECLARE OR REPLACE VARIABLE v_has_extract_date BOOLEAN;
+DECLARE OR REPLACE VARIABLE v_sql STRING;
+
+SET VAR v_fqn = CONCAT(v_catalog, '.', v_schema, '.', v_table);
+
+-- Table-level flag: does EXTRACT_DATE exist? (case-insensitive, metadata-only)
+SET VAR v_has_extract_date = (
+  SELECT COALESCE(
+    MAX(CASE WHEN UPPER(column_name) = 'EXTRACT_DATE' THEN true ELSE false END),
+    false
+  )
+  FROM system.information_schema.columns
+  WHERE table_catalog = v_catalog
+    AND table_schema  = v_schema
+    AND table_name    = v_table
+);
+
+-- Total rows once
+EXECUTE IMMEDIATE CONCAT("SELECT COUNT(1) FROM IDENTIFIER('", v_fqn, "')")
+INTO v_total_rows;
+
+-- Build the profiling SQL (one SELECT per column; UNION ALL)
+SET VAR v_sql = (
+  SELECT CONCAT_WS(' UNION ALL ', ARRAY_AGG(stmt))
+  FROM (
+    SELECT
+      CONCAT(
+        "SELECT ",
+          "'", v_fqn, "' AS table_name, ",
+          CAST(v_has_extract_date AS STRING), " AS has_extract_date, ",
+          CAST(v_total_rows AS STRING), " AS total_rows, ",
+          "'", column_name, "' AS column_name, ",
+          "'", column_pos, "' AS column_pos, ",
+          "'", data_type, "' AS data_type, ",
+
+          -- NULL stats
+          "SUM(CASE WHEN ", col_ref, " IS NULL THEN 1 ELSE 0 END) AS nulls, ",
+          "CAST(SUM(CASE WHEN ", col_ref, " IS NULL THEN 1 ELSE 0 END) / ",
+            CAST(v_total_rows AS STRING), " * 100 AS DECIMAL(18,2)) AS null_pct, ",
+          "COUNT(", col_ref, ") AS non_nulls, ",
+          "CAST(COUNT(", col_ref, ") / ",
+            CAST(v_total_rows AS STRING), " * 100 AS DECIMAL(18,2)) AS non_null_pct, ",
+
+          -- Empty / blank-string stats (STRING only), treating whitespace-only as empty via TRIM()
+          "CASE WHEN '", data_type, "' = 'STRING' THEN ",
+            "COALESCE(SUM(CASE WHEN ", col_ref, " IS NOT NULL AND TRIM(", col_ref, ") = '' THEN 1 ELSE 0 END), 0) ",
+          "ELSE 0 END AS empty_strings, ",
+
+          "CAST(CASE WHEN '", data_type, "' = 'STRING' THEN ",
+            "COALESCE(SUM(CASE WHEN ", col_ref, " IS NOT NULL AND TRIM(", col_ref, ") = '' THEN 1 ELSE 0 END), 0) / ",
+              CAST(v_total_rows AS STRING), " ",
+          "ELSE 0 END * 100 AS DECIMAL(18,2)) AS empty_string_pct, ",
+
+          -- Combined "missing" (NULL + empty/blank for STRING; NULL only for non-STRING)
+          "CASE WHEN '", data_type, "' = 'STRING' THEN ",
+            "(",
+              "SUM(CASE WHEN ", col_ref, " IS NULL THEN 1 ELSE 0 END) + ",
+              "COALESCE(SUM(CASE WHEN ", col_ref, " IS NOT NULL AND TRIM(", col_ref, ") = '' THEN 1 ELSE 0 END), 0)",
+            ") ",
+          "ELSE ",
+            "SUM(CASE WHEN ", col_ref, " IS NULL THEN 1 ELSE 0 END) ",
+          "END AS missing_values, ",
+
+          "CAST(CASE WHEN '", data_type, "' = 'STRING' THEN ",
+            "(",
+              "SUM(CASE WHEN ", col_ref, " IS NULL THEN 1 ELSE 0 END) + ",
+              "COALESCE(SUM(CASE WHEN ", col_ref, " IS NOT NULL AND TRIM(", col_ref, ") = '' THEN 1 ELSE 0 END), 0)",
+            ") / ",
+            CAST(v_total_rows AS STRING), " ",
+          "ELSE ",
+            "SUM(CASE WHEN ", col_ref, " IS NULL THEN 1 ELSE 0 END) / ",
+            CAST(v_total_rows AS STRING), " ",
+          "END * 100 AS DECIMAL(18,2)) AS missing_pct, ",
+
+          -- Non-empty values (STRING: not null and not blank after TRIM; others: not null)
+          "CASE WHEN '", data_type, "' = 'STRING' THEN ",
+            "SUM(CASE WHEN ", col_ref, " IS NOT NULL AND TRIM(", col_ref, ") <> '' THEN 1 ELSE 0 END) ",
+          "ELSE ",
+            "COUNT(", col_ref, ") ",
+          "END AS non_empty_values, ",
+
+          "CAST(CASE WHEN '", data_type, "' = 'STRING' THEN ",
+            "SUM(CASE WHEN ", col_ref, " IS NOT NULL AND TRIM(", col_ref, ") <> '' THEN 1 ELSE 0 END) / ",
+            CAST(v_total_rows AS STRING), " ",
+          "ELSE ",
+            "COUNT(", col_ref, ") / ",
+            CAST(v_total_rows AS STRING), " ",
+          "END * 100 AS DECIMAL(18,2)) AS non_empty_value_pct, ",
+
+          -- Example value: prefer non-empty (after TRIM) for STRING
+          "ANY_VALUE(CASE WHEN ",
+              "('", data_type, "' = 'STRING' AND ", col_ref, " IS NOT NULL AND TRIM(", col_ref, ") <> '') ",
+              "OR ('", data_type, "' <> 'STRING' AND ", col_ref, " IS NOT NULL) ",
+            "THEN CAST(", col_ref, " AS STRING) END) AS example_value, ",
+
+          -- Cardinality (overall + non-empty for STRING)
+          "APPROX_COUNT_DISTINCT(", col_ref, ") AS approx_distinct, ",
+          "CASE WHEN '", data_type, "' = 'STRING' THEN ",
+            "APPROX_COUNT_DISTINCT(CASE WHEN ", col_ref, " IS NOT NULL AND TRIM(", col_ref, ") <> '' THEN ", col_ref, " END) ",
+          "ELSE ",
+            "APPROX_COUNT_DISTINCT(", col_ref, ") ",
+          "END AS approx_distinct_non_empty, ",
+
+          -- min/max + length stats (string-cast; note: includes blanks as values)
+          "MIN(CAST(", col_ref, " AS STRING)) AS min_value, ",
+          "MAX(CAST(", col_ref, " AS STRING)) AS max_value, ",
+          "CAST(AVG(LENGTH(CAST(", col_ref, " AS STRING))) AS DECIMAL(18,2)) AS avg_length, ",
+          "MIN(LENGTH(CAST(", col_ref, " AS STRING))) AS min_length, ",
+          "MAX(LENGTH(CAST(", col_ref, " AS STRING))) AS max_length ",
+
+        "FROM IDENTIFIER('", v_fqn, "')"
+      ) AS stmt
+    FROM (
+      SELECT
+        column_name,
+        data_type,
+        CONCAT('`', REPLACE(column_name, '`', '``'), '`') AS col_ref,
+        ordinal_position AS column_pos
+      FROM system.information_schema.columns
+      WHERE table_catalog = v_catalog
+        AND table_schema  = v_schema
+        AND table_name    = v_table
+      ORDER BY ordinal_position
+    )
+  )
+);
+
+-- Optional: preview the generated SQL if you need to debug
+-- SELECT substring(v_sql, 1, 2048) AS sql_prefix;
+
+EXECUTE IMMEDIATE v_sql;
+
+-- SELECT *
+-- FROM IDENTIFIER('landing.kinetic.orderhed')
+-- ;

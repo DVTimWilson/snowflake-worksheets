@@ -1,0 +1,15 @@
+SELECT DISTINCT EXTRACT_DATE
+FROM psa_prod.dayforce.psa_allocatedhoursandearnings
+ORDER BY EXTRACT_DATE DESC
+;
+
+CREATE SCHEMA psa_prod.backup
+;
+
+CREATE TABLE psa_prod.backup.psa_inventory_stockstat_20251217
+AS SELECT * FROM psa_prod.kinetic.psa_inventory_stockstat
+;
+
+-- DROP TABLE psa_prod.kinetic.psa_inventory_stockstat
+-- ;
+

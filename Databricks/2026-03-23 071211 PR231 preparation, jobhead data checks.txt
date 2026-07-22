@@ -1,0 +1,212 @@
+--DROP TABLE tim_wilson.psa_refs.psa_kinetic_part_master_ref 
+--;
+
+SELECT *
+FROM tim_wilson.psa_refs.psa_kinetic_part_master_ref 
+;
+
+SELECT *
+FROM tim_wilson.gold_coreview.mart_outbound_transactions_v2
+ORDER BY INVOICE_DATE, PRODUCT_ID
+LIMIT 100
+;
+
+SELECT *
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+WHERE RECORD_SOURCE LIKE 'KINETIC%'
+ORDER BY INVOICE_DATE, PRODUCT_ID
+LIMIT 100
+;
+
+SELECT *
+FROM develop.gold_coreview.mart_outbound_transactions
+WHERE RECORD_SOURCE LIKE 'KINETIC%'
+ORDER BY INVOICE_DATE, PRODUCT_ID
+LIMIT 100
+;
+
+SELECT *
+FROM tim_wilson.gold_coreview.mart_sales_budget_allocation
+LIMIT 100
+;
+
+SELECT *
+FROM tim_wilson.gold_coreview.mart_inbound_transactions
+ORDER BY INVOICE_DATE, INVENTORY_ITEM
+LIMIT 100
+;
+
+SELECT *
+FROM develop.gold_coreview.mart_inbound_transactions
+ORDER BY INVOICE_DATE, INVENTORY_ITEM
+LIMIT 100
+;
+
+SELECT *
+FROM tim_wilson.gold_coreview.mart_inventory_stock_levels_v2
+WHERE RECORD_SOURCE LIKE 'KINETIC%'
+AND INVENTORY_ITEM_ID = 'SBA-339835'
+ORDER BY DATE, INVENTORY_ITEM_ID
+LIMIT 100
+;
+
+SELECT *
+FROM develop.gold_coreview.mart_inventory_stock_levels
+WHERE RECORD_SOURCE LIKE 'KINETIC%'
+AND INVENTORY_ITEM_ID = 'SBA-339835'
+ORDER BY DATE, INVENTORY_ITEM_ID
+LIMIT 100
+;
+
+SELECT *
+FROM tim_wilson.psa_kinetic.psa_inventory_stockstat
+WHERE PartBin_PartNum = 'SBA-339835'
+ORDER BY Extract_Date DESC
+LIMIT 100
+;
+
+--
+-- 25/03/2026
+--
+
+SELECT *
+FROM landing.kinetic.stockstat
+WHERE PartBin_PartNum = 'SBA-339835'
+ORDER BY Extract_Date DESC, PartBin_Company ASC
+LIMIT 100
+;
+
+SELECT *
+FROM psa.kinetic.psa_inventory_stockstat
+WHERE PartBin_PartNum = 'SBA-339835'
+ORDER BY Extract_Date DESC, PartBin_Company ASC
+LIMIT 100
+;
+
+SELECT Extract_Date, PartBin_Company, PartBin_WarehouseCode, PartWhse_WarehouseCode, PartWhse_OnHandQty, Part_IUM, Calculated_TotalCost, PartBin_OnHandQty, Calculated_ExtTotal, PartBin_OnhandQty, PartBin_DimCode
+FROM landing.kinetic.stockstat
+WHERE PartBin_PartNum = 'SBA-339835'
+ORDER BY Extract_Date DESC, PartBin_Company ASC
+LIMIT 100
+;
+
+-- Check psa
+SELECT Extract_Date, PartBin_Company, PartBin_WarehouseCode, PartWhse_WarehouseCode, PartWhse_OnHandQty, Part_IUM, Calculated_TotalCost, PartBin_OnHandQty, Calculated_ExtTotal, PartBin_OnhandQty, PartBin_DimCode
+FROM psa.kinetic.psa_inventory_stockstat
+WHERE PartBin_PartNum = 'SBA-339835'
+ORDER BY Extract_Date DESC, PartBin_Company ASC
+LIMIT 100
+;
+
+-- Check psa
+-- SELECT Extract_Date, PartBin_Company, PartBin_WarehouseCode, PartWhse_WarehouseCode, PartWhse_OnHandQty, Part_IUM, Calculated_TotalCost, PartBin_OnHandQty, Calculated_ExtTotal, PartBin_OnhandQty, PartBin_DimCode
+SELECT *
+FROM tim_wilson.silver.br_combined_inventory_stock_levels_step_0_v2
+WHERE INVENTORY_ITEM_ID = 'SBA-339835'
+ORDER BY DATE DESC, ENTITY ASC, SITE ASC
+LIMIT 100
+;
+
+SELECT *
+FROM tim_wilson.gold_coreview.mart_inventory_stock_levels_v2
+WHERE INVENTORY_ITEM_ID = 'SBA-339835'
+ORDER BY DATE DESC, ENTITY ASC, SITE ASC
+LIMIT 100
+;
+
+
+
+-- 128074
+SELECT COUNT(*)
+FROM develop.gold_sow4.mart_jobhead
+;
+
+-- 128074
+SELECT COUNT(*)
+FROM uat.gold_sow4.mart_jobhead
+;
+
+-- 266097
+SELECT COUNT(*)
+FROM landing.kinetic.jobhead
+;
+
+-- 266097
+SELECT extract_date, COUNT(*)
+FROM landing.kinetic.jobhead
+GROUP BY Extract_Date
+;
+
+-- 176677
+SELECT COUNT(*)
+FROM (
+SELECT DISTINCT * EXCEPT(Extract_Date)
+FROM landing.kinetic.jobhead
+) AS x
+;
+
+-- 141516
+SELECT COUNT(*)
+FROM psa.kinetic.psa_jobhead
+;
+
+-- 128075
+SELECT COUNT(*)
+FROM (
+SELECT *
+FROM psa.kinetic.psa_jobhead
+QUALIFY ROW_NUMBER() OVER (PARTITION BY JobNum ORDER BY Extract_Date DESC) = 1
+) AS x
+;
+
+SELECT *
+FROM tim_wilson.gold_coreview.mart_inventory_stock_levels
+WHERE INVENTORY_ITEM_ID = 'SBA-339835'
+ORDER BY DATE DESC, ENTITY ASC, SITE ASC
+LIMIT 100
+;
+
+SELECT *
+FROM tim_wilson.gold_coreview.mart_inventory_stock_levels_backfill
+WHERE INVENTORY_ITEM_ID = 'SBA-339835'
+ORDER BY DATE DESC, ENTITY ASC, SITE ASC
+LIMIT 100
+;
+
+SELECT *
+FROM tim_wilson.gold_coreview.mart_inventory_stock_levels
+WHERE INVENTORY_ITEM_ID = 'SBA-339835'
+ORDER BY DATE DESC, ENTITY ASC, SITE ASC
+LIMIT 100
+;
+
+SELECT *
+FROM tim_wilson.silver.br_inventory_stock_levels_kinetic_step_1
+WHERE INVENTORY_ITEM_ID = 'SBA-339835'
+ORDER BY DATE DESC, ENTITY ASC, SITE ASC
+LIMIT 100
+;
+
+SELECT *
+FROM tim_wilson.silver.ref_sat_kinetic_part_master_latest
+WHERE PART_PARTNUM = 'SBA-339835'
+;
+
+SELECT *
+FROM tim_wilson.silver.ref_sat_kinetic_part_master
+WHERE PART_PARTNUM = 'SBA-339835'
+;
+
+SELECT *
+FROM develop.gold_coreview.mart_inventory_stock_levels
+WHERE INVENTORY_ITEM_ID = 'SBA-339835'
+ORDER BY DATE DESC, ENTITY ASC, SITE ASC
+LIMIT 100
+;
+
+SELECT *
+FROM uat.gold_coreview.mart_inventory_stock_levels
+WHERE INVENTORY_ITEM_ID = 'SBA-339835'
+ORDER BY DATE DESC, ENTITY ASC, SITE ASC
+LIMIT 100
+;

@@ -1,0 +1,87 @@
+-- Kinetic data
+
+SELECT a.DEPARTMENT_HK
+       , c.DEPARTMENT_NAME
+       , month(b.PERFROMDATE) AS MONTH
+       , year(b.PERFROMDATE) AS YEAR
+       , sum(b.DEBIT1 - b.CREDIT1) AS COST
+
+FROM `tim_wilson`.`silver`.`lnk_trial_balance` AS a
+
+INNER JOIN `tim_wilson`.`silver`.`br_latest_trial_balance` AS b
+ON a.TRIAL_BALANCE_LHK = b.TRIAL_BALANCE_LHK
+
+INNER JOIN `tim_wilson`.`silver`.`ref_hub_natural` AS d
+ON d.NATURAL_HK = a.NATURAL_HK
+
+LEFT OUTER JOIN `tim_wilson`.`silver`.`hub_department` AS c
+ON c.department_hk = a.department_hk
+
+inner join (
+  select distinct substring(Dept, 1,3) AS dept_id, b.code_b as natural_id, e.department_name, d.NATURAL_ID as natural_name
+from `landing`.`reftables`.`gl_accounts` as a
+INNER JOIN `landing`.`reftables`.`natural_id_mapping` as b
+on substring(GL_ACCOUNT,1,4) = b.code_a
+inner join `tim_wilson`.`silver`.`ref_hub_natural` as d
+on d.CODE = b.code_b
+inner join (select distinct code, department_hk from `tim_wilson`.`silver`.`sat_department_trial_balance`) as c
+on substring(Dept, 1,3) = c.code
+inner join `tim_wilson`.`silver`.`hub_department` as e
+on e.department_hk = c.department_hk
+
+) as e
+on e.department_name = c.department_name
+and c.RECORD_SOURCE = 'MANUFACTURING.TRIAL_BALANCE'
+and d.natural_id = e.natural_name
+
+WHERE UPPER(c.department_name) LIKE 'MAINTENANCE%'
+
+GROUP BY a.DEPARTMENT_HK, c.DEPARTMENT_NAME, month(b.PERFROMDATE), year(b.PERFROMDATE)
+;
+
+-- Dayforce data
+
+SELECT a.DEPARTMENT_HK
+       , f.DEPARTMENT_NAME
+       , month(a.DATE) AS MONTH
+       , year(a.DATE) AS YEAR
+       , sum(a.PAY_AMOUNT) AS COST
+
+from `tim_wilson`.`silver`.`nh_lnk_operator_timesheet_entry` as a
+
+left outer join (select distinct * from `tim_wilson`.`silver`.`lnk_department_in_plant`) as c
+on a.DEPARTMENT_HK = c.DAYFORCE_DEPARTMENT_HK
+
+left outer join `tim_wilson`.`silver`.`hub_plant` as d
+on c.PLANT_HK = d.PLANT_HK
+
+left outer join `tim_wilson`.`silver`.`lnk_department_same_as` as e
+on e.DAYFORCE_DEPARTMENT_HK = a.DEPARTMENT_HK
+
+left outer join `tim_wilson`.`silver`.`hub_department` as f
+on e.DAYFORCE_DEPARTMENT_HK = f.DEPARTMENT_HK
+and f.RECORD_SOURCE = 'MANUFACTURING.DAYFORCE'
+-- Use next two lines once we have a complete new department mapping
+-- on e.RESGRPEFF_DEPARTMENT_HK = f.DEPARTMENT_HK
+-- and f.RECORD_SOURCE = 'MANUFACTURING.RESGRPEFF'
+
+where 1 = 1
+AND
+(
+UPPER(a.PAY_CATEGORY_NAME) = 'REGULAR'
+or UPPER(a.PAY_CATEGORY_NAME) LIKE '%OT%'
+or UPPER(a.PAY_CATEGORY_NAME) LIKE '%DT%'
+)
+AND UPPER(f.department_name) LIKE '%MAINTENANCE%'
+
+GROUP BY a.DEPARTMENT_HK, f.DEPARTMENT_NAME, month(a.DATE), year(a.DATE)
+;
+
+SELECT DISTINCT DEPARTMENT_NAME
+FROM tim_wilson.silver.hub_department
+WHERE RECORD_SOURCE = 'MANUFACTURING.DAYFORCE'
+;
+
+SELECT *
+FROM tim_wilson.silver.lnk_department_same_as
+;

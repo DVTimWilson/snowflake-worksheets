@@ -1,0 +1,146 @@
+-- check strategy
+
+-- Working
+SELECT 
+  md5(coalesce(cast(CODE as string ), '') || '|' || coalesce(cast(extract_date as string ), '')) AS dbt_scd_id
+  , md5(coalesce(cast(CODE as string ), '') || '|' || coalesce(cast(extract_date as string ), '')) = dbt_scd_id AS identical
+  , *
+FROM tim_wilson.psa_refs.psa_trial_balance_business_unit_ref
+;
+
+-- Working
+SELECT 
+  md5(coalesce(cast(CODE as string ), '') || '|' || coalesce(cast(extract_date as string ), '')) AS dbt_scd_id
+  , md5(coalesce(cast(CODE as string ), '') || '|' || coalesce(cast(extract_date as string ), '')) = dbt_scd_id AS identical
+  , *
+FROM tim_wilson.psa_refs.psa_trial_balance_company_ref
+;
+
+-- timestamp strategy
+
+-- Working (recently)
+SELECT 
+  md5(coalesce(cast(PART_PARTNUM as string ), '')
+         || '|' || coalesce(cast(extract_date as string ), '')
+        ) AS dbt_scd_id
+  , md5(coalesce(cast(PART_PARTNUM as string ), '')
+         || '|' || coalesce(cast(extract_date as string ), '')
+        ) = dbt_scd_id AS identical
+  , *
+FROM tim_wilson.psa_refs.psa_kinetic_part_master_ref
+ORDER BY EXTRACT_DATE DESC
+;
+
+-- Working (recently)
+SELECT 
+  md5(coalesce(cast(PARTNUM as string ), '')
+         || '|' || coalesce(cast(extract_date as string ), '')
+        ) AS dbt_scd_id
+  , md5(coalesce(cast(PARTNUM as string ), '')
+         || '|' || coalesce(cast(extract_date as string ), '')
+        ) = dbt_scd_id AS identical
+  , *
+FROM tim_wilson.psa_refs.psa_master_product_categories_kinetic_ref
+ORDER BY EXTRACT_DATE DESC
+;
+
+-- Working
+SELECT
+  md5(coalesce(cast(Date as string ), '')
+         || '|' || coalesce(cast(Item as string ), '')
+         || '|' || coalesce(cast(Company as string ), '')
+         || '|' || coalesce(cast(extract_date as string ), '')
+        ) AS dbt_scd_id
+  , md5(coalesce(cast(Date as string ), '')
+         || '|' || coalesce(cast(Item as string ), '')
+         || '|' || coalesce(cast(Company as string ), '')
+         || '|' || coalesce(cast(extract_date as string ), '')
+        ) = dbt_scd_id AS identical
+  , *
+FROM tim_wilson.psa_quickbooks.psa_quickbooks_stock_status_360        
+ORDER BY EXTRACT_DATE DESC
+;
+
+--
+-- 12/01/2026
+--
+
+-- check strategy
+
+-- Working
+SELECT *
+FROM (
+  SELECT 
+    md5(coalesce(cast(CODE as string ), '') || '|' || coalesce(cast(extract_date as string ), '')) AS dbt_scd_id
+    , md5(coalesce(cast(CODE as string ), '') || '|' || coalesce(cast(extract_date as string ), '')) = dbt_scd_id AS identical
+    , *
+  FROM psa.refs.psa_trial_balance_business_unit_ref
+) AS x
+WHERE not identical
+;
+
+-- Working
+SELECT *
+FROM (
+  SELECT 
+    md5(coalesce(cast(CODE as string ), '') || '|' || coalesce(cast(extract_date as string ), '')) AS dbt_scd_id
+    , md5(coalesce(cast(CODE as string ), '') || '|' || coalesce(cast(extract_date as string ), '')) = dbt_scd_id AS identical
+    , *
+  FROM psa.refs.psa_trial_balance_company_ref
+) AS x
+WHERE not identical
+;
+
+-- timestamp strategy
+
+-- Working
+SELECT *
+FROM (
+  SELECT 
+    md5(coalesce(cast(PART_PARTNUM as string ), '')
+          || '|' || coalesce(cast(extract_date as string ), '')
+          ) AS dbt_scd_id
+    , md5(coalesce(cast(PART_PARTNUM as string ), '')
+          || '|' || coalesce(cast(extract_date as string ), '')
+          ) = dbt_scd_id AS identical
+    , *
+  FROM psa.refs.psa_kinetic_part_master_ref
+) AS x
+WHERE not identical
+;
+
+-- Working
+SELECT *
+FROM (
+  SELECT 
+    md5(coalesce(cast(PART_NUM as string ), '')
+          || '|' || coalesce(cast(extract_date as string ), '')
+          ) AS dbt_scd_id
+    , md5(coalesce(cast(PART_NUM as string ), '')
+          || '|' || coalesce(cast(extract_date as string ), '')
+          ) = dbt_scd_id AS identical
+    , *
+  FROM psa.refs.psa_master_product_categories_kinetic_ref
+) AS x
+WHERE not identical
+;
+
+-- Working
+SELECT *
+FROM (
+  SELECT
+    md5(coalesce(cast(Date as string ), '')
+          || '|' || coalesce(cast(Item as string ), '')
+          || '|' || coalesce(cast(Company as string ), '')
+          || '|' || coalesce(cast(extract_date as string ), '')
+          ) AS dbt_scd_id
+    , md5(coalesce(cast(Date as string ), '')
+          || '|' || coalesce(cast(Item as string ), '')
+          || '|' || coalesce(cast(Company as string ), '')
+          || '|' || coalesce(cast(extract_date as string ), '')
+          ) = dbt_scd_id AS identical
+    , *
+  FROM psa.quickbooks.psa_quickbooks_stock_status_360        
+) AS x
+WHERE not identical
+;

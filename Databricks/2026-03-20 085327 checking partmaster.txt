@@ -1,0 +1,73 @@
+SELECT *
+FROM psa.refs.psa_kinetic_part_master_ref
+EXCEPT
+SELECT *
+FROM psa_prod.refs.psa_kinetic_part_master_ref
+;
+
+-- 7084466
+SELECT COUNT(*)
+FROM (
+SELECT *
+FROM psa.refs.psa_kinetic_part_master_ref
+EXCEPT
+SELECT *
+FROM psa_prod.refs.psa_kinetic_part_master_ref
+) AS x
+;
+
+-- 7084466
+SELECT COUNT(*)
+FROM psa.refs.psa_kinetic_part_master_ref
+;
+
+-- 5419018
+SELECT COUNT(*)
+FROM psa_prod.refs.psa_kinetic_part_master_ref
+;
+
+-- 121
+SELECT *
+FROM psa.refs.psa_kinetic_part_master_ref
+WHERE PART_PARTNUM = 'SBA-339835'
+;
+
+-- 92
+SELECT *
+FROM psa_prod.refs.psa_kinetic_part_master_ref
+WHERE PART_PARTNUM = 'SBA-339835'
+;
+
+-- 59409
+SELECT COUNT(*)
+FROM landing.reftables.manual_kinetic_part_master
+;
+
+-- 9088594
+SELECT COUNT(*)
+FROM landing.kinetic.partmaster
+;
+
+SELECT Extract_Date, COUNT(*)
+FROM landing.kinetic.partmaster
+GROUP BY Extract_Date
+ORDER BY Extract_Date
+;
+
+SELECT Part_Company, Part_PartNum, Part_IUM, Part_NetWeight, *
+FROM landing.kinetic.partmaster
+WHERE Extract_Date = '2026-03-20T08:10:01.000+00:00'
+AND Part_PartNum = 'SBA-339835'
+ORDER BY Part_Company
+;
+
+-- 5345
+SELECT *
+FROM landing.reftables.master_product_category_kinetic
+;
+
+-- 741
+SELECT *
+FROM landing.reftables.master_product_category_non_kinetic
+;
+

@@ -1,0 +1,570 @@
+-- sum(TOTAL_HOURS)	sum(NET_HOURS)	month(DATE)
+-- 75836.84599865228	75836.84599865228	1
+-- 68181.96799647808	68181.96799647808	2
+-- 547100.7989999832	547100.7989999832	3
+-- 2235604.6300000018	2235604.6300000018	4
+-- 2270220.060000003	2270220.060000003	5
+-- 993654.8699999972	993654.8699999972	6
+-- 65169.24999999998	65169.24999999998	7
+SELECT
+  SUM(TOTAL_HOURS)
+  ,SUM(NET_HOURS)
+  ,MONTH(DATE)
+FROM landing.dayforce.allocatedhoursandearnings
+WHERE DATE BETWEEN '2025-01-01' AND '2025-07-31'
+AND NET_HOURS != 0
+AND DATE IS NOT NULL
+GROUP BY MONTH(DATE)
+ORDER BY MONTH(DATE)
+;
+
+-- 1787762
+SELECT COUNT(*)
+FROM landing.dayforce.allocatedhoursandearnings
+WHERE DATE BETWEEN '2025-01-01' AND '2025-07-31'
+;
+
+-- sum(TOTAL_HOURS)	sum(NET_HOURS)	month(DATE)
+-- 75836.84599865228	75836.84599865228	1
+-- 68181.96799647808	68181.96799647808	2
+-- 57211.86899998308	57211.86899998308	3
+-- 81725.78000000003	81725.78000000003	4
+-- 101113.14	101113.14	5
+-- 74964.98000000003	74964.98000000003	6
+-- 65169.24999999999	65169.24999999999	7
+SELECT
+  SUM(TOTAL_HOURS)
+  ,SUM(NET_HOURS)
+  ,MONTH(DATE)
+FROM tim_wilson.bronze.src_allocatedhoursandearnings
+WHERE DATE BETWEEN '2025-01-01' AND '2025-07-31'
+AND NET_HOURS != 0
+AND DATE IS NOT NULL
+GROUP BY MONTH(DATE)
+ORDER BY MONTH(DATE)
+;
+
+-- sum(TOTAL_HOURS)	sum(NET_HOURS)	month(DATE)
+-- 75836.84599865228	75836.84599865228	1
+-- 68181.96799647808	68181.96799647808	2
+-- 57211.86899998308	57211.86899998308	3
+-- 81725.77999999997	81725.77999999997	4
+-- 101113.13999999998	101113.13999999998	5
+-- 74964.97999999995	74964.97999999995	6
+-- 65169.24999999997	65169.24999999997	7
+SELECT
+  SUM(TOTAL_HOURS)
+  ,SUM(NET_HOURS)
+  ,MONTH(DATE)
+FROM tim_wilson.bronze.raw_operator_dayforce
+WHERE DATE BETWEEN '2025-01-01' AND '2025-07-31'
+AND NET_HOURS != 0
+AND DATE IS NOT NULL
+GROUP BY MONTH(DATE)
+ORDER BY MONTH(DATE)
+;
+
+-- count(1)	sum(TOTAL_HOURS)	sum(NET_HOURS)	month(DATE)
+-- 11298	69588.46299865097	69588.46299865097	1
+-- 9387	54809.217996403575	54809.217996403575	2
+-- 8708	52435.61899998295	52435.61899998295	3
+-- 11825	67757.37999999993	67757.37999999993	4
+-- 15037	86037.08000000034	86037.08000000034	5
+-- 10937	66833.92000000003	66833.92000000003	6
+-- 9376	59252.43999999989	59252.43999999989	7
+SELECT
+  COUNT(*)
+  ,SUM(TOTAL_HOURS)
+  ,SUM(NET_HOURS)
+  ,MONTH(DATE)
+FROM tim_wilson.silver.sat_operator_dayforce
+WHERE DATE BETWEEN '2025-01-01' AND '2025-07-31'
+AND NET_HOURS != 0
+AND DATE IS NOT NULL
+GROUP BY MONTH(DATE)
+ORDER BY MONTH(DATE)
+;
+
+-- 240136
+SELECT COUNT(*)
+FROM tim_wilson.silver.sat_operator_dayforce
+;
+
+-- 618793
+SELECT COUNT(*)
+FROM develop.silver.sat_operator_dayforce
+;
+
+-- 406112
+SELECT COUNT(*)
+FROM uat.silver.sat_operator_dayforce
+;
+
+SELECT *
+FROM tim_wilson.silver.sat_operator_dayforce
+ORDER BY OPERATOR_HK, ALLOCATED_DEPARTMENT, HOME_DEPARTMENT, DATE, LOAD_DATETIME
+;
+
+SELECT
+  COUNT(*)
+  ,SUM(TOTAL_HOURS)
+  ,SUM(NET_HOURS)
+  ,MONTH(DATE)
+FROM (SELECT * FROM (SELECT *, ROW_NUMBER() OVER(PARTITION BY OPERATOR_HK, ALLOCATED_DEPARTMENT, HOME_DEPARTMENT, DATE ORDER BY LOAD_DATETIME DESC) AS rn FROM tim_wilson.silver.sat_operator_dayforce) WHERE rn = 1)
+WHERE DATE BETWEEN '2025-01-01' AND '2025-07-31'
+GROUP BY MONTH(DATE)
+ORDER BY MONTH(DATE)
+;
+
+SELECT CAST('FFFFFFFF' AS BINARY), MD5('FFFFFFFF')
+;
+
+WITH selectrn AS (
+	SELECT *, ROW_NUMBER() OVER(PARTITION BY OPERATOR_HK, ALLOCATED_DEPARTMENT, HOME_DEPARTMENT, DATE ORDER BY LOAD_DATETIME DESC) AS rn FROM tim_wilson.silver.sat_operator_dayforce
+),
+
+selectlatest AS (
+	SELECT * FROM selectrn WHERE rn = 1
+)
+
+SELECT
+  COUNT(*)
+  ,SUM(TOTAL_HOURS)
+  ,SUM(NET_HOURS)
+  ,MONTH(DATE)
+FROM selectlatest
+WHERE DATE BETWEEN '2025-01-01' AND '2025-07-31'
+GROUP BY MONTH(DATE)
+ORDER BY MONTH(DATE)
+;
+
+SELECT
+  SUM(TOTAL_HOURS)
+  ,SUM(NET_HOURS)
+  ,MONTH(DATE)
+FROM tim_wilson.bronze.stg_operator_dayforce
+WHERE DATE BETWEEN '2025-01-01' AND '2025-07-31'
+GROUP BY MONTH(DATE)
+ORDER BY MONTH(DATE)
+;
+
+SELECT 
+	SUM(NET_HOURS)
+FROM uat.silver.br_labor_step_0
+WHERE DATE BETWEEN '2025-01-01' AND '2025-07-31'
+GROUP BY MONTH(DATE)
+ORDER BY MONTH(DATE)
+;
+
+SELECT 
+	SUM(TOTAL_LABOUR_HOURS)
+FROM uat.silver.br_labor_step_1
+WHERE DATE BETWEEN '2025-01-01' AND '2025-07-31'
+GROUP BY MONTH(DATE)
+ORDER BY MONTH(DATE)
+;
+
+SELECT 
+	SUM(TOTAL_LABOUR_HOURS)
+FROM uat.gold_mfg.mart_labor
+WHERE DATE BETWEEN '2025-01-01' AND '2025-07-31'
+GROUP BY MONTH(DATE)
+ORDER BY MONTH(DATE)
+;
+
+-- 335972
+SELECT COUNT(*)
+FROM landing.kinetic.resgrpeff
+;
+
+SELECT *
+FROM landing.kinetic.resgrpeff
+-- WHERE EXTRACT_DATE IS NOT NULL
+LIMIT 100
+;
+
+SELECT *
+FROM landing.dayforce.allocatedhoursandearnings
+-- WHERE EXTRACT_DATE IS NOT NULL
+LIMIT 100
+;
+
+SELECT MAX(EXTRACT_DATE)
+FROM landing.dayforce.allocatedhoursandearnings
+;
+
+-- 2025-07-22T08:00:29.226+00:00
+SELECT MAX(EXTRACT_DATE)
+FROM landing.kinetic.resgrpeff
+;
+
+-- 2025-06-27T14:50:05.891+00:00
+SELECT MIN(EXTRACT_DATE)
+FROM landing.kinetic.resgrpeff
+;
+
+SELECT
+a.date
+, d.plant
+, a.net_hours
+, a.pay_category_name
+, f.department_name AS DEPARTMENT
+
+from `tim_wilson`.`silver`.`sat_operator_dayforce` as a
+
+left outer join `tim_wilson`.`silver`.`hub_department` as b
+on a.ALLOCATED_DEPARTMENT = b.DEPARTMENT_NAME
+and b.RECORD_SOURCE = 'MANUFACTURING.DAYFORCE'
+
+left outer join (select distinct * from `tim_wilson`.`silver`.`lnk_department_in_plant`) as c
+on b.DEPARTMENT_HK = c.DAYFORCE_DEPARTMENT_HK
+
+left outer join `tim_wilson`.`silver`.`hub_plant` as d
+on c.PLANT_HK = d.PLANT_HK
+
+left outer join `tim_wilson`.`silver`.`lnk_department_same_as` as e
+on e.DAYFORCE_DEPARTMENT_HK = b.DEPARTMENT_HK
+
+left outer join `tim_wilson`.`silver`.`hub_department` as f
+on e.RESGRPEFF_DEPARTMENT_HK = f.DEPARTMENT_HK
+and f.RECORD_SOURCE = 'MANUFACTURING.RESGRPEFF'
+
+where (a.PAY_CATEGORY_NAME = 'REGULAR'
+or UPPER(a.PAY_CATEGORY_NAME) LIKE '%OT%'
+or UPPER(a.PAY_CATEGORY_NAME) LIKE '%DT%')
+;
+
+WITH details AS (
+SELECT
+a.date
+-- , d.plant
+, a.net_hours
+, a.pay_category_name
+-- , f.department_name AS DEPARTMENT
+
+from `tim_wilson`.`silver`.`sat_operator_dayforce` as a
+
+left outer join `tim_wilson`.`silver`.`hub_department` as b
+on a.ALLOCATED_DEPARTMENT = b.DEPARTMENT_NAME
+and b.RECORD_SOURCE = 'MANUFACTURING.DAYFORCE'
+
+left outer join (select distinct * from `tim_wilson`.`silver`.`lnk_department_in_plant`) as c
+on b.DEPARTMENT_HK = c.DAYFORCE_DEPARTMENT_HK
+
+left outer join `tim_wilson`.`silver`.`hub_plant` as d
+on c.PLANT_HK = d.PLANT_HK
+
+left outer join `tim_wilson`.`silver`.`lnk_department_same_as` as e
+on e.DAYFORCE_DEPARTMENT_HK = b.DEPARTMENT_HK
+
+left outer join `tim_wilson`.`silver`.`hub_department` as f
+on e.RESGRPEFF_DEPARTMENT_HK = f.DEPARTMENT_HK
+and f.RECORD_SOURCE = 'MANUFACTURING.RESGRPEFF'
+
+where (a.PAY_CATEGORY_NAME = 'REGULAR'
+or UPPER(a.PAY_CATEGORY_NAME) LIKE '%OT%'
+or UPPER(a.PAY_CATEGORY_NAME) LIKE '%DT%')
+)
+
+SELECT 
+	SUM(NET_HOURS)
+FROM details
+WHERE DATE BETWEEN '2025-01-01' AND '2025-07-31'
+GROUP BY MONTH(DATE)
+ORDER BY MONTH(DATE)
+;
+
+-- 85927
+SELECT COUNT(*)
+FROM `tim_wilson`.`silver`.`sat_operator_dayforce` as a
+WHERE DATE BETWEEN '2025-01-01' AND '2025-07-31'
+;
+
+SELECT COUNT(*)
+FROM `tim_wilson`.`silver`.`sat_operator_dayforce` as a
+WHERE DATE BETWEEN '2025-01-01' AND '2025-07-31'
+GROUP BY MONTH(DATE)
+ORDER BY MONTH(DATE)
+;
+
+SELECT OPERATOR_TIMESHEET_ENTRY_LHK, OPERATOR_HK, DEPARTMENT_HK, COUNT(*) AS timesheet_count
+FROM tim_wilson.silver.nh_lnk_operator_timesheet_entry
+GROUP BY OPERATOR_TIMESHEET_ENTRY_LHK, OPERATOR_HK, DEPARTMENT_HK
+ORDER BY OPERATOR_TIMESHEET_ENTRY_LHK, OPERATOR_HK, DEPARTMENT_HK
+;
+
+
+-- weekofyear(DATE)	department	sum(TOTAL_LABOUR_HOURS)
+-- 8	Cardinal - Maintenance	6.00
+-- 8	Cardinal - Processing	107.75
+-- 8	Ecore - Butterfly Commons - Supply Chain	2.75
+-- 8	Ecore - Corona - Satellite Warehousing	6.37
+-- 8	Ecore - Delphos - Banbury	38.50
+-- 8	Ecore - Delphos - Maintenance	8.00
+-- 8	Ecore - Delphos - Quality	7.00
+-- 8	Ecore - Delphos - Shipping	0.75
+-- 8	Ecore - Lancaster - Colormill	159.25
+-- 8	Ecore - Lancaster - Customer Experience	8.25
+-- 8	Ecore - Lancaster - Large Line	209.25
+-- 8	Ecore - Lancaster - Maintenance	167.00
+-- 8	Ecore - Lancaster - Molded Products	4.25
+-- 8	Ecore - Lancaster - Operations	1.50
+-- 8	Ecore - Lancaster - Quality	0.25
+-- 8	Ecore - Lancaster - Sample Room	0.50
+-- 8	Ecore - Lancaster - Shipping	4.25
+-- 8	Ecore - Lancaster - Small Line	9.00
+-- 8	Ecore - Lancaster - Supply Chain	0.75
+-- 8	Ecore - Ozark - Buffings	3.25
+-- 8	Ecore - Ozark - Large Line	33.75
+-- 8	Ecore - Ozark - Maintenance	45.50
+-- 8	Ecore - Ozark - Quality	1.75
+-- 8	Ecore - Ozark - RT	37.00
+-- 8	Ecore - Ozark - Shipping	6.75
+-- 8	Ecore - York - Lamination	89.25
+-- 8	Ecore - York - Large Line	38.25
+-- 8	Ecore - York - Maintenance	38.50
+-- 8	Ecore - York - Quality	0.25
+-- 8	Ecore - York - RT	38.00
+-- 8	Ecore - York - Transportation	6.50
+-- 8	Ecore 360 - Caddo Mills - Transportation	0.25
+-- 8	Ecore 360 - Greenville - Maintenance	12.50
+-- 8	Ecore 360 - Mexia - Maintenance	15.75
+-- 8	Ecore 360 - Mexia - RT	14.25
+-- 8	Ecore 360 - Ozark - Culling	21.25
+-- 8	Ecore 360 - Ozark - Transportation	14.75
+-- 8	Premier - Farmingdale - Operations	10.25
+-- 8	Premier - Farmingdale - Processing	0.50
+-- 8	Truck Stop Supply - Operations	5.25
+-- 8	Truck Stop Supply - RT	6.00
+-- 8	Truck Stop Supply - Shipping	32.50
+-- 8	Truck Stop Supply - Transportation	36.50
+WITH step_0 AS (
+SELECT
+a.date
+, a.net_hours
+, a.allocated_department AS department
+-- , d.plant
+
+from tim_wilson.silver.nh_lnk_operator_timesheet_entry AS a
+
+-- left outer join (select distinct * from tim_wilson.silver.lnk_department_in_plant) as c
+-- on a.DEPARTMENT_HK = c.DAYFORCE_DEPARTMENT_HK
+
+-- left outer join tim_wilson.silver.hub_plant as d
+-- on c.PLANT_HK = d.PLANT_HK
+
+where ( UPPER(a.PAY_CATEGORY_NAME) = 'REGULAR'
+or UPPER(a.PAY_CATEGORY_NAME) LIKE '%OT%'
+or UPPER(a.PAY_CATEGORY_NAME) LIKE '%DT%')
+),
+
+step_1 AS (
+SELECT
+    date
+    , department
+--    , plant
+    , CAST(SUM(net_hours) AS DECIMAL(10,2)) AS TOTAL_LABOUR_HOURS
+FROM step_0
+GROUP BY DATE, department --, plant
+)
+
+SELECT
+	weekofyear(DATE)
+  , department
+  ,SUM(TOTAL_LABOUR_HOURS)
+FROM step_1
+WHERE DATE BETWEEN '2025-01-01' AND '2025-07-31'
+AND weekofyear(DATE) = 8
+GROUP BY weekofyear(DATE), department
+ORDER BY weekofyear(DATE), department
+;
+
+WITH step_0 AS (
+SELECT
+a.date
+, a.net_hours
+, a.allocated_department AS department
+, d.plant
+
+from tim_wilson.silver.nh_lnk_operator_timesheet_entry AS a
+
+left outer join (select distinct * from tim_wilson.silver.lnk_department_in_plant) as c
+on a.DEPARTMENT_HK = c.DAYFORCE_DEPARTMENT_HK
+
+left outer join tim_wilson.silver.hub_plant as d
+on c.PLANT_HK = d.PLANT_HK
+
+where (a.PAY_CATEGORY_NAME = 'REGULAR'
+or UPPER(a.PAY_CATEGORY_NAME) LIKE '%OT%'
+or UPPER(a.PAY_CATEGORY_NAME) LIKE '%DT%')
+),
+
+step_1 AS (
+SELECT
+    date
+    , department
+    , plant
+    , CAST(SUM(net_hours) AS DECIMAL(10,2)) AS TOTAL_LABOUR_HOURS
+FROM step_0
+GROUP BY DATE, department, plant
+)
+
+SELECT
+	month(DATE)
+  ,SUM(TOTAL_LABOUR_HOURS)
+FROM step_1
+WHERE DATE BETWEEN '2025-01-01' AND '2025-07-31'
+GROUP BY month(DATE)
+ORDER BY month(DATE)
+;
+
+SELECT DISTINCT Data_ID
+FROM landing.dayforce.allocatedhoursandearnings
+WHERE DATE BETWEEN '2025-01-01' AND '2025-07-31'
+;
+
+
+WITH step_0 AS (
+SELECT
+a.date
+, a.net_hours
+, a.operator_hk
+, d.plant
+
+from tim_wilson.silver.nh_lnk_operator_timesheet_entry AS a
+
+left outer join (select distinct * from tim_wilson.silver.lnk_department_in_plant) as c
+on a.DEPARTMENT_HK = c.DAYFORCE_DEPARTMENT_HK
+
+left outer join tim_wilson.silver.hub_plant as d
+on c.PLANT_HK = d.PLANT_HK
+
+where (a.PAY_CATEGORY_NAME = 'REGULAR'
+or UPPER(a.PAY_CATEGORY_NAME) LIKE '%OT%'
+or UPPER(a.PAY_CATEGORY_NAME) LIKE '%DT%')
+),
+
+step_1 AS (
+SELECT
+    date
+    , OPERATOR_HK
+    , plant
+    , SUM(net_hours) AS TOTAL_LABOUR_HOURS
+FROM step_0
+GROUP BY DATE, operator_hk, plant
+)
+
+SELECT
+	weekofyear(DATE)
+  , operator_hk
+  ,SUM(TOTAL_LABOUR_HOURS)
+FROM step_1
+WHERE DATE BETWEEN '2025-01-01' AND '2025-07-31'
+-- AND weekofyear(DATE) = 8
+GROUP BY weekofyear(DATE), operator_hk
+ORDER BY weekofyear(DATE), operator_hk
+;
+
+WITH step_0 AS (
+SELECT
+a.date
+, a.net_hours
+, a.operator_hk
+, d.plant
+
+from tim_wilson.silver.nh_lnk_operator_timesheet_entry AS a
+
+left outer join (select distinct * from tim_wilson.silver.lnk_department_in_plant) as c
+on a.DEPARTMENT_HK = c.DAYFORCE_DEPARTMENT_HK
+
+left outer join tim_wilson.silver.hub_plant as d
+on c.PLANT_HK = d.PLANT_HK
+
+where (a.PAY_CATEGORY_NAME = 'REGULAR'
+or UPPER(a.PAY_CATEGORY_NAME) LIKE '%OT%'
+or UPPER(a.PAY_CATEGORY_NAME) LIKE '%DT%')
+),
+
+step_1 AS (
+SELECT
+    date
+    , OPERATOR_HK
+    , plant
+    , SUM(net_hours) AS TOTAL_LABOUR_HOURS
+FROM step_0
+GROUP BY DATE, operator_hk, plant
+)
+
+SELECT
+	month(DATE)
+  , operator_hk
+  ,SUM(TOTAL_LABOUR_HOURS)
+FROM step_1
+WHERE DATE BETWEEN '2025-01-01' AND '2025-07-31'
+AND month(DATE) = 2
+GROUP BY month(DATE), operator_hk
+ORDER BY month(DATE), operator_hk
+;
+
+-- 196248 2024
+-- 1351580 2025
+SELECT COUNT(*)
+FROM landing.dayforce.allocatedhoursandearnings
+-- WHERE DATE BETWEEN '2025-01-01' AND '2025-07-31'
+WHERE DATE BETWEEN '2024-01-01' AND '2024-12-31'
+;
+
+ 
+  SELECT Job_Name, COUNT(Job_Name) as JOB_COUNT
+    FROM landing.DAYFORCE.ALLOCATEDHOURSANDEARNINGS
+ WHERE DATE BETWEEN '2025-01-01' AND '2025-07-31'
+ -- WHERE DATE BETWEEN '2024-01-01' AND '2024-12-31'
+ GROUP BY Job_Name
+ ORDER BY job_count DESC
+ ;
+
+
+
+SELECT
+  weekofyear(DATE)
+  ,SUM(NET_HOURS)
+  ,Allocated_Department
+FROM landing.dayforce.allocatedhoursandearnings
+WHERE DATE BETWEEN '2025-01-01' AND '2025-07-31'
+AND NET_HOURS != 0
+AND DATE IS NOT NULL
+AND weekofyear(DATE) = 8
+AND ( (UPPER(PAY_CATEGORY_NAME) = 'REGULAR'
+or UPPER(PAY_CATEGORY_NAME) LIKE '%OT%'
+or UPPER(PAY_CATEGORY_NAME) LIKE '%DT%') )
+GROUP BY weekofyear(DATE), Allocated_Department
+ORDER BY weekofyear(DATE), Allocated_Department
+;
+
+SELECT year(date), MONTH(date), sum(total_labour_hours)
+FROM tim_wilson.gold_mfg.mart_labor
+-- WHERE DATE BETWEEN '2025-01-01' AND '2025-07-31'
+GROUP BY year(date), MONTH(DATE)
+ORDER BY year(date), MONTH(DATE)
+;
+
+SELECT MONTH(date), department, sum(total_labour_hours)
+FROM tim_wilson.gold_mfg.mart_labor
+WHERE DATE BETWEEN '2025-01-01' AND '2025-07-31'
+GROUP BY MONTH(DATE), department
+ORDER BY MONTH(DATE), department
+;
+
+SELECT weekofyear(date), department, sum(total_labour_hours)
+FROM tim_wilson.gold_mfg.mart_labor
+WHERE weekofyear(date) = 8
+AND DATE BETWEEN '2025-01-01' AND '2025-07-31'
+GROUP BY weekofyear(DATE), department
+ORDER BY weekofyear(DATE), department
+;
+
+SELECT *
+FROM tim_wilson.gold_mfg.mart_culling_metrics
+WHERE DATE BETWEEN '2025-01-01' AND '2025-07-31'
+ORDER BY DATE
+;

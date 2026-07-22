@@ -1,0 +1,119 @@
+-- 2136925
+-- 2136925
+-- 2127879
+SELECT COUNT(*)
+FROM uat.gold_coreview.mart_inventory_stock_levels
+-- WHERE DATE <= '2026-05-18'
+-- WHERE DATE < '2026-05-18'
+;
+
+-- 2155094
+-- 2136974
+-- 2127928
+SELECT COUNT(*)
+FROM production.gold_coreview.mart_inventory_stock_levels
+-- WHERE DATE <= '2026-05-18'
+-- WHERE DATE < '2026-05-18'
+;
+
+SELECT DATE, COUNT(*)
+FROM uat.gold_coreview.mart_inventory_stock_levels
+-- WHERE DATE < '2026-05-18'
+GROUP BY DATE
+ORDER BY DATE DESC
+LIMIT 100
+;
+
+SELECT DATE, COUNT(*)
+FROM production.gold_coreview.mart_inventory_stock_levels
+-- WHERE DATE < '2026-05-18'
+GROUP BY DATE
+ORDER BY DATE DESC
+LIMIT 100
+;
+
+-- SET use_cached_result = false;
+
+-- Check mart_inventory_stock_levels
+WITH dev_counts AS (
+SELECT DATE, COUNT(*) AS dev_record_count, ROUND(SUM(QUANTITY)) AS dev_total_quantity
+FROM develop.gold_coreview.mart_inventory_stock_levels
+WHERE DATE IS NOT NULL
+-- WHERE DATE < '2026-05-18'
+GROUP BY DATE
+-- ORDER BY DATE DESC
+)
+,
+
+uat_counts AS (
+SELECT DATE, COUNT(*) AS uat_record_count, ROUND(SUM(QUANTITY)) AS uat_total_quantity
+FROM uat.gold_coreview.mart_inventory_stock_levels
+WHERE DATE IS NOT NULL
+-- WHERE DATE < '2026-05-18'
+GROUP BY DATE
+-- ORDER BY DATE DESC
+)
+,
+
+prod_counts AS (
+SELECT DATE, COUNT(*) aS prod_record_count, ROUND(SUM(QUANTITY)) AS prod_total_quantity
+FROM production.gold_coreview.mart_inventory_stock_levels
+WHERE DATE IS NOT NULL
+-- WHERE DATE < '2026-05-18'
+GROUP BY DATE
+-- ORDER BY DATE DESC
+)
+
+SELECT *
+FROM dev_counts
+
+FULL OUTER JOIN uat_counts
+USING (DATE)
+
+FULL OUTER JOIN prod_counts
+USING (DATE)
+
+ORDER BY DATE DESC
+;
+
+-- Check mart_inventory_usage
+WITH dev_counts AS (
+SELECT TRANDATE, COUNT(*) AS dev_record_count, ROUND(SUM(TRANQTY)) AS dev_total_quantity
+FROM develop.gold_coreview.mart_inventory_usage
+WHERE TRANDATE IS NOT NULL
+GROUP BY TRANDATE
+-- ORDER BY TRANDATE DESC
+)
+,
+
+uat_counts AS (
+SELECT TRANDATE, COUNT(*) AS uat_record_count, ROUND(SUM(TRANQTY)) AS uat_total_quantity
+FROM uat.gold_coreview.mart_inventory_usage
+WHERE TRANDATE IS NOT NULL
+GROUP BY TRANDATE
+-- ORDER BY TRANDATE DESC
+)
+,
+
+prod_counts AS (
+SELECT TRANDATE, COUNT(*) aS prod_record_count, ROUND(SUM(TRANQTY)) AS prod_total_quantity
+FROM production.gold_coreview.mart_inventory_usage
+WHERE TRANDATE IS NOT NULL
+GROUP BY TRANDATE
+-- ORDER BY TRANDATE DESC
+)
+
+SELECT *
+FROM dev_counts
+
+FULL OUTER JOIN uat_counts
+USING (TRANDATE)
+
+FULL OUTER JOIN prod_counts
+USING (TRANDATE)
+
+WHERE TRANDATE <= CURRENT_TIMESTAMP()
+ORDER BY TRANDATE DESC
+;
+
+

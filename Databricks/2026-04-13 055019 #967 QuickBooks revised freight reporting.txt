@@ -1,0 +1,413 @@
+WITH freight_data AS (
+SELECT all.NUM, COUNT(all.INVOICELINE) AS all, COUNT(nonfreight.INVOICELINE) AS nonfreight, COUNT(freight.INVOICELINE) AS freight, SUM(all.AMOUNT) AS total_amount, COALESCE(SUM(nonfreight.AMOUNT), 0) AS non_freight_amount, COALESCE(SUM(freight.AMOUNT), 0) AS freight_amount
+FROM uat.silver.sat_outbound_invoice_quickbooks_crc_v2_latest AS all
+
+LEFT OUTER JOIN uat.silver.sat_outbound_invoice_quickbooks_crc_v2_latest AS nonfreight
+ON all.NUM = nonfreight.NUM
+AND all.INVOICELINE = nonfreight.INVOICELINE
+AND nonfreight.ACCOUNT NOT ILIKE '%freight%'
+
+LEFT OUTER JOIN uat.silver.sat_outbound_invoice_quickbooks_crc_v2_latest AS freight
+ON all.NUM = freight.NUM
+AND all.INVOICELINE = freight.INVOICELINE
+AND freight.ACCOUNT ILIKE '%freight%'
+
+GROUP BY all.NUM
+ORDER BY all.NUM
+)
+
+SELECT 
+    CASE 
+        WHEN q.ENTITY != 'ETR' AND q.INVOICELINE = 1 THEN q.SALES_DOLLAR + f.freight_amount
+        ELSE q.SALES_DOLLAR 
+    END AS SALES_DOLLAR_WITH_FREIGHT,
+    q.*
+FROM uat.silver.br_outbound_invoice
+
+SELECT *
+FROM uat.silver.sat_outbound_invoice_quickbooks_360_latest
+;
+
+-- 89478
+SELECT COUNT(*)
+FROM uat.silver.br_outbound_invoice_quickbooks_v2
+;
+
+SELECT *
+FROM uat.silver.br_outbound_invoice_quickbooks_v2
+WHERE INVOICE_DATE >= '2020-01-01'
+AND ENTITY = 'ETR'
+AND (COALESCE(PRODUCT_ID, '') ILIKE '%freight%' OR COALESCE(PRODUCT_DESCRIPTION, '') ILIKE '%freight%')
+ORDER BY INVOICE_DATE, INVOICE_NUMBER, INVOICELINE
+;
+
+-- Per Keith during standup 13/04/2026 check the ACCOUNT column, this should be more accurate
+
+SELECT *
+FROM uat.silver.sat_outbound_invoice_quickbooks_360_v2_latest
+WHERE DATE >= '2020-01-01'
+AND ACCOUNT ILIKE '%freight%'
+;
+
+SELECT *
+FROM uat.silver.sat_outbound_invoice_quickbooks_crc_v2_latest
+WHERE DATE >= '2020-01-01'
+AND ACCOUNT ILIKE '%freight%'
+;
+
+SELECT *
+FROM uat.silver.sat_outbound_invoice_quickbooks_dos_v2_latest
+WHERE DATE >= '2020-01-01'
+AND ACCOUNT ILIKE '%freight%'
+;
+
+SELECT *
+FROM uat.silver.sat_outbound_invoice_quickbooks_eti_v2_latest
+WHERE DATE >= '2020-01-01'
+AND ACCOUNT ILIKE '%freight%'
+;
+
+SELECT *
+FROM uat.silver.sat_outbound_invoice_quickbooks_etr_v2_latest
+WHERE DATE >= '2020-01-01'
+AND ACCOUNT NOT ILIKE '%freight%'
+;
+
+SELECT *
+FROM uat.silver.sat_outbound_invoice_quickbooks_prc_v2_latest
+WHERE DATE >= '2020-01-01'
+AND ACCOUNT ILIKE '%freight%'
+;
+
+SELECT *
+FROM uat.silver.sat_outbound_invoice_quickbooks_pts_v2_latest
+WHERE DATE >= '2020-01-01'
+AND ACCOUNT ILIKE '%freight%'
+;
+
+SELECT *
+FROM uat.silver.sat_outbound_invoice_quickbooks_tss_v2_latest
+WHERE DATE >= '2020-01-01'
+AND ACCOUNT ILIKE '%freight%'
+;
+
+SELECT *
+FROM uat.silver.sat_outbound_invoice_quickbooks_dgh
+WHERE DATE >= '2020-01-01'
+AND ACCOUNT ILIKE '%freight%'
+;
+
+SELECT *
+FROM uat.silver.sat_outbound_invoice_quickbooks_edge
+WHERE DATE >= '2020-01-01'
+AND ACCOUNT ILIKE '%freight%'
+;
+
+SELECT *
+FROM uat.silver.sat_outbound_invoice_quickbooks_hti
+WHERE DATE >= '2020-01-01'
+AND ACCOUNT ILIKE '%freight%'
+;
+
+SELECT all.NUM, COUNT(nonfreight.NUM) AS nonfreight, COUNT(freight.NUM) AS freight
+FROM uat.silver.sat_outbound_invoice_quickbooks_dos_v2_latest AS all
+
+LEFT OUTER JOIN uat.silver.sat_outbound_invoice_quickbooks_dos_v2_latest AS nonfreight
+ON all.NUM = nonfreight.NUM
+AND all.INVOICELINE = nonfreight.INVOICELINE
+AND nonfreight.ACCOUNT NOT ILIKE '%freight%'
+
+LEFT OUTER JOIN uat.silver.sat_outbound_invoice_quickbooks_dos_v2_latest AS freight
+ON all.NUM = freight.NUM
+AND all.INVOICELINE = freight.INVOICELINE
+AND freight.ACCOUNT ILIKE '%freight%'
+
+GROUP BY all.NUM
+HAVING nonfreight > 1 AND freight > 1
+ORDER BY all.NUM
+;
+
+SELECT *
+FROM uat.silver.sat_outbound_invoice_quickbooks_dos_v2_latest
+-- WHERE NUM = '5020'
+-- WHERE NUM = '5423'
+WHERE NUM = '5501'
+;
+
+-- Assume ETR all freight
+-- 97757, 97821
+-- SELECT all.NUM, COUNT(nonfreight.NUM) AS nonfreight, COUNT(freight.NUM) AS freight
+SELECT all.NUM, COUNT(nonfreight.INVOICELINE) AS nonfreight, COUNT(freight.INVOICELINE) AS freight
+FROM uat.silver.sat_outbound_invoice_quickbooks_etr_v2_latest AS all
+
+LEFT OUTER JOIN uat.silver.sat_outbound_invoice_quickbooks_etr_v2_latest AS nonfreight
+ON all.NUM = nonfreight.NUM
+AND all.INVOICELINE = nonfreight.INVOICELINE
+AND nonfreight.ACCOUNT NOT ILIKE '%freight%'
+
+LEFT OUTER JOIN uat.silver.sat_outbound_invoice_quickbooks_etr_v2_latest AS freight
+ON all.NUM = freight.NUM
+AND all.INVOICELINE = freight.INVOICELINE
+AND freight.ACCOUNT ILIKE '%freight%'
+
+GROUP BY all.NUM
+-- HAVING nonfreight > 0
+ORDER BY all.NUM
+;
+
+--
+-- 17/04/2026
+--
+
+-- Assume ETR all freight
+SELECT all.NUM, COUNT(nonfreight.INVOICELINE) AS nonfreight, COUNT(freight.INVOICELINE) AS freight, SUM(freight.AMOUNT) AS freight_amount
+FROM uat.silver.sat_outbound_invoice_quickbooks_etr_v2_latest AS all
+
+LEFT OUTER JOIN uat.silver.sat_outbound_invoice_quickbooks_etr_v2_latest AS nonfreight
+ON all.NUM = nonfreight.NUM
+AND all.INVOICELINE = nonfreight.INVOICELINE
+AND nonfreight.ACCOUNT NOT ILIKE '%freight%'
+
+LEFT OUTER JOIN uat.silver.sat_outbound_invoice_quickbooks_etr_v2_latest AS freight
+ON all.NUM = freight.NUM
+AND all.INVOICELINE = freight.INVOICELINE
+AND freight.ACCOUNT ILIKE '%freight%'
+
+GROUP BY all.NUM
+-- HAVING nonfreight > 0
+ORDER BY all.NUM
+;
+
+SELECT all.NUM, COUNT(all.INVOICELINE) AS all, COUNT(nonfreight.INVOICELINE) AS nonfreight, COUNT(freight.INVOICELINE) AS freight, SUM(all.AMOUNT) AS total_amount, COALESCE(SUM(nonfreight.AMOUNT), 0) AS non_freight_amount, COALESCE(SUM(freight.AMOUNT), 0) AS freight_amount
+FROM uat.silver.sat_outbound_invoice_quickbooks_dos_v2_latest AS all
+
+LEFT OUTER JOIN uat.silver.sat_outbound_invoice_quickbooks_dos_v2_latest AS nonfreight
+ON all.NUM = nonfreight.NUM
+AND all.INVOICELINE = nonfreight.INVOICELINE
+AND nonfreight.ACCOUNT NOT ILIKE '%freight%'
+
+LEFT OUTER JOIN uat.silver.sat_outbound_invoice_quickbooks_dos_v2_latest AS freight
+ON all.NUM = freight.NUM
+AND all.INVOICELINE = freight.INVOICELINE
+AND freight.ACCOUNT ILIKE '%freight%'
+
+GROUP BY all.NUM
+-- HAVING nonfreight > 0
+ORDER BY all.NUM
+;
+
+SELECT all.NUM, COUNT(all.INVOICELINE) AS all, COUNT(nonfreight.INVOICELINE) AS nonfreight, COUNT(freight.INVOICELINE) AS freight, SUM(all.AMOUNT) AS total_amount, COALESCE(SUM(nonfreight.AMOUNT), 0) AS non_freight_amount, COALESCE(SUM(freight.AMOUNT), 0) AS freight_amount
+FROM uat.silver.sat_outbound_invoice_quickbooks_crc_v2_latest AS all
+
+LEFT OUTER JOIN uat.silver.sat_outbound_invoice_quickbooks_crc_v2_latest AS nonfreight
+ON all.NUM = nonfreight.NUM
+AND all.INVOICELINE = nonfreight.INVOICELINE
+AND nonfreight.ACCOUNT NOT ILIKE '%freight%'
+
+LEFT OUTER JOIN uat.silver.sat_outbound_invoice_quickbooks_crc_v2_latest AS freight
+ON all.NUM = freight.NUM
+AND all.INVOICELINE = freight.INVOICELINE
+AND freight.ACCOUNT ILIKE '%freight%'
+
+GROUP BY all.NUM
+-- HAVING nonfreight > 0
+ORDER BY all.NUM
+;
+
+-- Check Kinetic data works as described in #967
+
+SELECT *
+FROM uat.silver.sat_outbound_invoice_kinetic_latest
+ORDER BY INVOICENUM, INVOICELINE
+;
+
+SELECT DISTINCT INVOICENUM
+FROM uat.silver.sat_outbound_invoice_kinetic_latest
+WHERE DOCTOTALMISCCHRG != 0
+ORDER BY INVOICENUM
+;
+
+-- DOCEXTPRICE --> SALES_DOLLAR
+-- freight is in DOCTOTALMISCCHRG
+-- SALESPRICE --> SALES_DOLLAR_WITH_FREIGHT
+SELECT l.*
+FROM uat.silver.sat_outbound_invoice_kinetic_latest AS l
+
+INNER JOIN (SELECT DISTINCT INVOICENUM
+FROM uat.silver.sat_outbound_invoice_kinetic_latest
+WHERE DOCTOTALMISCCHRG != 0) AS i
+ON l.INVOICENUM = i.INVOICENUM
+
+ORDER BY l.INVOICENUM, l.INVOICELINE
+;
+
+-- Back to QuickBooks
+-- when NOT ETR AND invoiceline = 1 then AMOUNT aka SALES_DOLLAR + freight amount --> SALES_DOLLAR_WITH_FREIGHT
+-- else AMOUNT aka SALES_DOLLAR --> SALES_DOLLAR_WITH_FREIGHT
+
+WITH freight_data AS (
+SELECT all.INVOICE_NUMBER, COUNT(all.INVOICELINE) AS all, COUNT(nonfreight.INVOICELINE) AS nonfreight, COUNT(freight.INVOICELINE) AS freight, SUM(all.SALES_DOLLAR) AS total_amount, COALESCE(SUM(nonfreight.SALES_DOLLAR), 0) AS non_freight_amount, COALESCE(SUM(freight.SALES_DOLLAR), 0) AS freight_amount
+FROM tim_wilson.silver.br_outbound_invoice_quickbooks_v2 AS all
+
+LEFT OUTER JOIN tim_wilson.silver.br_outbound_invoice_quickbooks_v2 AS nonfreight
+ON all.INVOICE_NUMBER = nonfreight.INVOICE_NUMBER
+AND all.INVOICELINE = nonfreight.INVOICELINE
+AND nonfreight.ACCOUNT NOT ILIKE '%freight%'
+
+LEFT OUTER JOIN tim_wilson.silver.br_outbound_invoice_quickbooks_v2 AS freight
+ON all.INVOICE_NUMBER = freight.INVOICE_NUMBER
+AND all.INVOICELINE = freight.INVOICELINE
+AND freight.ACCOUNT ILIKE '%freight%'
+
+GROUP BY all.INVOICE_NUMBER
+-- HAVING nonfreight > 0
+-- ORDER BY all.INVOICE_NUMBER
+)
+
+SELECT
+CASE WHEN q.ENTITY != 'ETR' AND q.INVOICELINE = 1 THEN q.SALES_DOLLAR + COALESCE(f.freight_amount, 0)
+ELSE SALES_DOLLAR 
+END AS SALES_DOLLAR_WITH_FREIGHT
+, q.SALES_DOLLAR
+, f.freight_amount
+, q.*
+FROM tim_wilson.silver.br_outbound_invoice_quickbooks_v2 AS q
+
+LEFT OUTER JOIN freight_data AS f
+ON q.INVOICE_NUMBER = f.INVOICE_NUMBER
+
+WHERE (q.ENTITY = 'ETR' OR q.ACCOUNT NOT ILIKE '%freight%')
+AND f.freight_amount > 0
+
+ORDER BY INVOICE_NUMBER, INVOICELINE
+;
+
+--
+-- 20/04/2026
+--
+
+-- QuickBooks new approach
+
+-- Check invoice number uniqueness across entities
+SELECT q.INVOICE_NUMBER, COUNT(DISTINCT q.ENTITY)
+FROM tim_wilson.silver.br_outbound_invoice_quickbooks_v2 AS q
+GROUP BY q.INVOICE_NUMBER
+HAVING COUNT(DISTINCT q.ENTITY) > 1
+;
+
+SELECT *
+FROM tim_wilson.silver.br_outbound_invoice_quickbooks_v2
+WHERE INVOICE_NUMBER = '30002'
+ORDER BY ENTITY, INVOICELINE
+;
+
+SELECT q.INVOICE_NUMBER, q.ENTITY
+, COUNT(*) AS non_freight_count
+, SUM(q.SALES_DOLLAR) AS SALES_DOLLAR
+FROM tim_wilson.silver.br_outbound_invoice_quickbooks_v2 AS q
+WHERE q.ACCOUNT NOT ILIKE '%freight%'
+AND q.INVOICE_NUMBER = '30002'
+GROUP BY q.INVOICE_NUMBER, q.ENTITY
+ORDER BY q.INVOICE_NUMBER, q.ENTITY
+;
+
+SELECT q.INVOICE_NUMBER
+, COUNT(*) AS freight_count
+, SUM(q.SALES_DOLLAR) AS SALES_DOLLAR
+FROM tim_wilson.silver.br_outbound_invoice_quickbooks_v2 AS q
+WHERE q.ACCOUNT ILIKE '%freight%'
+AND q.INVOICE_NUMBER = '30002'
+GROUP BY q.INVOICE_NUMBER
+ORDER BY q.INVOICE_NUMBER
+;
+
+WITH non_freight_data AS (
+SELECT q.INVOICE_NUMBER, q.ENTITY
+, COUNT(*) AS non_freight_count
+-- , SUM(q.SALES_DOLLAR) AS total_non_freight_sales_dollar
+FROM tim_wilson.silver.br_outbound_invoice_quickbooks_v2 AS q
+WHERE q.ACCOUNT NOT ILIKE '%freight%'
+GROUP BY q.INVOICE_NUMBER, q.ENTITY
+),
+
+freight_data AS (
+SELECT q.INVOICE_NUMBER, q.ENTITY
+, COUNT(*) AS freight_count
+, SUM(q.SALES_DOLLAR) AS total_freight_sales_dollar
+FROM tim_wilson.silver.br_outbound_invoice_quickbooks_v2 AS q
+WHERE q.ACCOUNT ILIKE '%freight%'
+GROUP BY q.INVOICE_NUMBER, q.ENTITY
+),
+
+joined_data AS (
+SELECT q.*
+, COALESCE(n.non_freight_count, 0) AS non_freight_count
+-- , n.total_non_freight_sales_dollar
+, COALESCE(f.freight_count, 0) AS freight_count
+, CASE WHEN q.ENTITY = 'ETR' OR q.INVOICELINE > 1 THEN 0
+  ELSE COALESCE(f.total_freight_sales_dollar, 0)
+  END AS total_freight_sales_dollar
+FROM tim_wilson.silver.br_outbound_invoice_quickbooks_v2 AS q
+
+LEFT OUTER JOIN non_freight_data AS n
+ON q.INVOICE_NUMBER = n.INVOICE_NUMBER
+AND q.ENTITY = n.ENTITY
+
+LEFT OUTER JOIN freight_data AS f
+ON q.INVOICE_NUMBER = f.INVOICE_NUMBER
+AND q.ENTITY = f.ENTITY
+)
+
+SELECT *
+, CASE WHEN ENTITY = 'ETR' THEN SALES_DOLLAR
+  WHEN non_freight_count > 0 AND freight_count > 0 AND INVOICELINE = 1 THEN SALES_DOLLAR + total_freight_sales_dollar
+  ELSE SALES_DOLLAR
+  END AS sales_with_freight
+FROM joined_data
+
+WHERE 1 = 1
+-- AND INVOICE_NUMBER = '30002'
+-- AND ENTITY != 'ETR'
+-- AND freight_count > 0
+AND (ENTITY = 'ETR'
+OR ACCOUNT NOT ILIKE '%freight%')
+-- AND ENTITY = 'ETR'
+-- AND INVOICE_NUMBER = '5128' AND ENTITY = 'DOS'
+
+ORDER BY INVOICE_NUMBER, ENTITY, INVOICELINE
+;
+
+SELECT *
+FROM tim_wilson.silver.br_outbound_invoice_quickbooks_v2 AS q
+WHERE INVOICE_NUMBER = '5128' AND ENTITY = 'DOS'
+;
+
+SELECT *
+FROM tim_wilson.silver.br_outbound_invoice_quickbooks_v2 AS q
+WHERE INVOICE_NUMBER = '30002'
+;
+
+-- Check Kinetic data works as described in #967
+
+SELECT *
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+-- WHERE SALES_DOLLAR != SALES_DOLLAR_WITH_FREIGHT
+WHERE INVOICE_NUMBER = '17876'
+ORDER BY INVOICE_NUMBER, UNIQUE_KEY
+;
+
+-- DOCEXTPRICE --> SALES_DOLLAR
+-- freight is in DOCTOTALMISCCHRG
+-- SALESPRICE --> SALES_DOLLAR_WITH_FREIGHT
+SELECT l.*
+FROM tim_wilson.gold_coreview.mart_outbound_transactions AS l
+
+INNER JOIN (SELECT DISTINCT INVOICENUM
+FROM uat.silver.sat_outbound_invoice_kinetic_latest
+WHERE DOCTOTALMISCCHRG != 0) AS i
+ON CAST(l.INVOICE_NUMBER AS STRING) = CAST(i.INVOICENUM AS STRING)
+
+ORDER BY l.INVOICE_NUMBER, l.UNIQUE_KEY
+;
+
+

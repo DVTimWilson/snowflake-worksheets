@@ -1,0 +1,67 @@
+-- -- Set the metastore root storage location
+-- ALTER METASTORE SET ROOT LOCATION 'abfss://unity-catalog-storage@dbstoragehqjgibie3qise.dfs.core.windows.net/4248501107399994';
+
+-- Create the catalog with the managed location
+CREATE CATALOG IF NOT EXISTS tim_wilson
+MANAGED LOCATION 'abfss://unity-catalog-storage@dbstoragehqjgibie3qise.dfs.core.windows.net/4248501107399994';
+
+GRANT APPLY TAG, BROWSE, CREATE SCHEMA, USE CATALOG ON CATALOG tim_wilson to `tim.wilson@data-vault.com`
+;
+
+GRANT CREATE FUNCTION, CREATE TABLE, CREATE MATERIALIZED VIEW, CREATE MODEL, CREATE VOLUME, EXTERNAL USE SCHEMA, READ VOLUME, REFRESH, WRITE VOLUME, EXECUTE, MANAGE, MODIFY, SELECT, USE SCHEMA ON CATALOG tim_wilson TO `tim.wilson@data-vault.com`
+;
+
+CREATE SCHEMA IF NOT EXISTS tim_wilson.tim_wilson
+;
+
+SHOW GRANTS ON CATALOG tim_wilson
+;
+
+SHOW GRANTS ON SCHEMA tim_wilson.tim_wilson
+;
+
+SHOW GRANTS `tim.wilson@data-vault.com` ON CATALOG tim_wilson
+;
+
+SHOW GRANTS `tim.wilson@data-vault.com` ON SCHEMA tim_wilson.tim_wilson
+;
+
+SHOW GRANTS `tim.wilson@data-vault.com` ON CATALOG ecore_4248501107399994
+;
+
+SHOW GRANTS `tim.wilson@data-vault.com` ON SCHEMA ecore_4248501107399994.default
+;
+
+CREATE TABLE tim_wilson.tim_wilson.test_table (
+  test_column VARCHAR(10)
+)
+;
+
+INSERT INTO tim_wilson.tim_wilson.test_table
+SELECT 'test_data' AS test_column
+;
+
+SELECT *
+FROM tim_wilson.tim_wilson.test_table
+;
+
+
+CREATE CATALOG IF NOT EXISTS alex_higgs
+MANAGED LOCATION 'abfss://unity-catalog-storage@dbstoragehqjgibie3qise.dfs.core.windows.net/4248501107399994'
+;
+
+GRANT APPLY TAG, BROWSE, CREATE SCHEMA, USE CATALOG ON CATALOG alex_higgs TO `alex.higgs@data-vault.com`
+;
+
+GRANT CREATE FUNCTION, CREATE TABLE, CREATE MATERIALIZED VIEW, CREATE MODEL, CREATE VOLUME, EXTERNAL USE SCHEMA, READ VOLUME, REFRESH, WRITE VOLUME, EXECUTE, MANAGE, MODIFY, SELECT, USE SCHEMA ON CATALOG alex_higgs TO `alex.higgs@data-vault.com`
+;
+
+CREATE SCHEMA IF NOT EXISTS alex_higgs.alex_higgs
+;
+
+SHOW GRANTS ON CATALOG alex_higgs
+;
+
+SHOW GRANTS ON SCHEMA alex_higgs.alex_higgs
+;
+

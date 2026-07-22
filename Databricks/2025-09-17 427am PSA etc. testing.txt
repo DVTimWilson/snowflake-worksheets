@@ -1,0 +1,967 @@
+--
+-- Creation scripts
+--
+
+SELECT DISTINCT PartTran_TranDate 
+FROM landing.kinetic.coparts
+WHERE TO_DATE(Extract_Date) = TO_DATE('2025-09-11')
+;
+
+
+-- Create CoParts Test tables
+
+-- CREATE OR REPLACE TABLE landing.load_test.coparts_test_window_initial_load
+-- AS SELECT * FROM landing.kinetic.coparts
+-- WHERE TO_DATE(Extract_Date) = TO_DATE('2025-09-11');
+
+-- CREATE OR REPLACE TABLE landing.load_test.coparts_test_window_incremental_load_01
+-- AS SELECT * FROM landing.kinetic.coparts
+-- WHERE TO_DATE(Extract_Date) = TO_DATE('2025-09-12')
+-- ;
+
+-- CREATE OR REPLACE TABLE landing.load_test.coparts_test_window_incremental_load_02
+-- AS SELECT * FROM landing.kinetic.coparts
+-- WHERE TO_DATE(Extract_Date) = TO_DATE('2025-09-13')
+-- ;
+
+
+SELECT DISTINCT EXTRACT_DATE 
+FROM landing.kinetic.resgrpeff;
+
+-- Create RESGRPEFF Test tables
+
+-- CREATE OR REPLACE TABLE landing.load_test.resgrpeff_test_window_initial_load
+-- AS SELECT * FROM landing.kinetic.resgrpeff
+-- WHERE TO_DATE(Extract_Date) = TO_DATE('2025-09-11');
+
+-- CREATE OR REPLACE TABLE landing.load_test.resgrpeff_test_window_incremental_load_01
+-- AS SELECT * FROM landing.kinetic.resgrpeff
+-- WHERE TO_DATE(Extract_Date) = TO_DATE('2025-09-12')
+-- ;
+
+-- CREATE OR REPLACE TABLE landing.load_test.resgrpeff_test_window_incremental_load_02
+-- AS SELECT * FROM landing.kinetic.resgrpeff
+-- WHERE TO_DATE(Extract_Date) = TO_DATE('2025-09-13')
+-- ;
+
+--
+-- Test preparations
+--
+
+-- dbt Commands
+-- dbt snapshot -s psa_resgrpeff psa_coparts (Run after each load (commands below))
+-- dbt run -s @mart_culling_metrics -f (Run this after initial load and snapshot)
+-- dbt run -s @mart_culling_metrics (Run this after each incremental load and snapshot)
+
+-- historic load
+-- dbt build --full-refresh --vars 'enable_latest_source_data: false'
+-- That's only if you have more than one snapshot before you load
+-- If you just do initial load -> snapshot -> Marts it won't be necessary
+-- initial load -> incremental load -> snapshot -> marts would need it disabled because you'd miss the initial load data otherwise
+
+-- PSA check_cols strategy needed to catch late arriving data
+ 
+
+--- Insert Initial Load ---
+
+-- Reset waterlevels, satellite
+TRUNCATE TABLE tim_wilson.meta.waterlevels;
+TRUNCATE TABLE tim_wilson.silver.sat_production_process_coparts;
+
+-- Reset PSA
+
+DROP TABLE IF EXISTS tim_wilson.psa_kinetic.psa_coparts;
+DROP TABLE IF EXISTS tim_wilson.psa_kinetic.psa_resgrpeff;
+-- Reset tables to initial load
+
+CREATE OR REPLACE TABLE landing.load_test.coparts_test_window AS
+SELECT * FROM landing.load_test.coparts_test_window_initial_load;
+
+CREATE OR REPLACE TABLE landing.load_test.resgrpeff_test_window AS
+SELECT * FROM landing.load_test.resgrpeff_test_window_initial_load;
+
+-- dbt snapshot -s psa_resgrpeff psa_coparts (Run after each load)
+-- dbt run -s @mart_culling_metrics -f (Run this after initial load and snapshot)
+
+--- Insert First Increment ---
+
+INSERT INTO landing.load_test.coparts_test_window
+TABLE landing.load_test.coparts_test_window_incremental_load_01;
+
+INSERT INTO landing.load_test.resgrpeff_test_window
+TABLE landing.load_test.resgrpeff_test_window_incremental_load_01;
+
+-- dbt snapshot -s psa_resgrpeff psa_coparts (Run after each load)
+-- dbt run -s @mart_culling_metrics (Run this after each incremental load and snapshot)
+
+--- Insert Second Increment ---
+
+INSERT INTO landing.load_test.coparts_test_window
+TABLE landing.load_test.coparts_test_window_incremental_load_02;
+
+INSERT INTO landing.load_test.resgrpeff_test_window
+TABLE landing.load_test.resgrpeff_test_window_incremental_load_02;
+
+-- dbt snapshot -s psa_resgrpeff psa_coparts (Run after each load)
+-- dbt run -s @mart_culling_metrics (Run this after each incremental load and snapshot)
+
+
+-- Check Marts
+
+WITH mart AS (
+  SELECT * 
+    
+-- FROM tim_wilson.gold_mfg.mart_culling_coparts
+-- FROM tim_wilson.gold_mfg.mart_culling_resgrpeff
+-- FROM tim_wilson.gold_mfg.mart_culling_metrics
+FROM tim_wilson.gold_mfg.mart_production_coparts
+-- FROM develop.gold_mfg.mart_culling_metrics
+--  FROM uat.gold_mfg.mart_culling_metrics
+),
+monthly AS (
+  SELECT 
+    Year(date) AS Year,
+    Month(date) AS Month,
+    -- SUM(JOMAR_TIRES) AS TOTAL_MONTH_QTY  -- For the metrics mart
+    -- SUM(TOTAL_TIRES) AS TOTAL_MONTH_QTY  -- For the metrics mart
+    -- SUM(TOTAL_QUANTITY) AS TOTAL_MONTH_QTY -- For non-metrics marts
+    SUM(TOTAL_WEIGHT) AS TOTAL_MONTH_QTY -- For non-metrics marts
+    ,COUNT(*) AS record_count
+  FROM mart
+  GROUP BY 
+    Year(date),
+    Month(date)
+  ORDER BY Year, Month
+)
+
+SELECT * FROM monthly
+;
+
+-- Initial load
+-- Year	Month	TOTAL_MONTH_QTY	record_count
+-- 2025	5	24376.0000000	18
+-- 2025	6	30030.0000000	20
+-- 2025	7	27666.0000000	21
+-- 2025	8	31293.0000000	21
+-- 2025	9	9403.0000000	7
+
+-- First increment
+-- Year	Month	TOTAL_MONTH_QTY	record_count
+-- 2025	5	48752.0000000	18
+-- 2025	6	60060.0000000	20
+-- 2025	7	55332.0000000	21
+-- 2025	8	62586.0000000	21
+-- 2025	9	18806.0000000	7
+
+-- Second increment
+-- Year	Month	TOTAL_MONTH_QTY	record_count
+-- 2025	5	73128.0000000	18
+-- 2025	6	90090.0000000	20
+-- 2025	7	82998.0000000	21
+-- 2025	8	93879.0000000	21
+-- 2025	9	28209.0000000	7
+
+SELECT SUM(JOMAR_TIRES)
+FROM tim_wilson.gold_mfg.mart_culling_metrics
+WHERE date BETWEEN '2025-08-01' AND '2025-08-31'
+ORDER BY DATE
+;
+
+
+--
+-- Counts
+--
+
+SELECT COUNT(*) FROM landing.load_test.coparts_test_window; -- 77218 + 2412
+SELECT COUNT(*) FROM landing.load_test.coparts_test_window_initial_load; -- 77218
+SELECT COUNT(*) FROM landing.load_test.coparts_test_window_incremental_load_01; -- 2412 records
+SELECT COUNT(*) FROM landing.load_test.coparts_test_window_incremental_load_02; -- 2393 records
+
+SELECT COUNT(*) FROM landing.load_test.resgrpeff_test_window; 
+SELECT COUNT(*) FROM landing.load_test.resgrpeff_test_window_initial_load; -- 365948
+SELECT COUNT(*) FROM landing.load_test.resgrpeff_test_window_incremental_load_01; -- 10617 records
+SELECT COUNT(*) FROM landing.load_test.resgrpeff_test_window_incremental_load_02; -- 10452 records
+
+SELECT COUNT(*) FROM tim_wilson.psa_kinetic.psa_coparts; 
+-- Initial load 75592 (77218 - 1626 dupes), Inc 1 load 78003 (+2412 - 1 dupes), Inc 1 load 80396 (+2393)
+
+
+-- Initial load
+-- 5411
+SELECT COUNT(*) FROM tim_wilson.bronze.stg_coparts;
+SELECT * FROM tim_wilson.bronze.stg_coparts;
+-- 2025-09-11T15:24:00.000+00:00
+SELECT DISTINCT EXTRACT_DATE FROM tim_wilson.bronze.stg_coparts;
+-- 5358
+SELECT COUNT(*) FROM tim_wilson.silver.sat_production_process_coparts;
+-- 2025-09-11T15:24:00.000+00:00
+SELECT DISTINCT EXTRACT_DATE FROM tim_wilson.silver.sat_production_process_coparts;
+
+-- First increment
+-- 11
+SELECT COUNT(*) FROM tim_wilson.bronze.stg_coparts;
+SELECT * FROM tim_wilson.bronze.stg_coparts;
+-- 2025-09-12T08:00:07.000+00:00
+SELECT DISTINCT EXTRACT_DATE FROM tim_wilson.bronze.stg_coparts;
+-- 5369
+SELECT COUNT(*) FROM tim_wilson.silver.sat_production_process_coparts;
+-- 2025-09-11T15:24:00.000+00:00, 2025-09-12T08:00:07.000+00:00
+SELECT DISTINCT EXTRACT_DATE FROM tim_wilson.silver.sat_production_process_coparts;
+-- 11
+SELECT * FROM tim_wilson.silver.sat_production_process_coparts WHERE EXTRACT_DATE = '2025-09-12T08:00:07.000+00:00';
+
+
+SELECT *
+FROM tim_wilson.gold_mfg.mart_culling_metrics
+ORDER BY date
+;
+
+SELECT COUNT(*)
+FROM tim_wilson.silver.sat_production_process_coparts_latest
+;
+
+SELECT COUNT(*)
+FROM tim_wilson.silver.sat_production_process_latest
+;
+
+SELECT EXTRACT_DATE, COUNT(*)
+FROM tim_wilson.silver.sat_production_process_coparts_latest
+GROUP BY EXTRACT_DATE
+;
+
+SELECT COUNT(*)
+FROM (
+SELECT *
+FROM `tim_wilson`.`silver`.`sat_production_process_coparts`
+QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY PRODUCTION_PROCESS_RESOURCE_GRP_LHK
+    ORDER BY EXTRACT_DATE DESC
+) = 1
+) AS x
+;
+
+-- Refactor latest satellites as views, and not incremental models
+
+-- Initial load
+-- Year	Month	TOTAL_MONTH_QTY	record_count
+-- 2025	5	24376.0000000	18
+-- 2025	6	30030.0000000	20
+-- 2025	7	27666.0000000	21
+-- 2025	8	31293.0000000	21
+-- 2025	9	9403.0000000	7
+
+-- First increment
+-- Year	Month	TOTAL_MONTH_QTY	record_count
+-- 2025	5	24376.0000000	18
+-- 2025	6	30030.0000000	20
+-- 2025	7	27666.0000000	21
+-- 2025	8	31293.0000000	21
+-- 2025	9	9403.0000000	7
+
+-- Second increment
+-- Year	Month	TOTAL_MONTH_QTY	record_count
+-- 2025	5	24376.0000000	18
+-- 2025	6	30030.0000000	20
+-- 2025	7	27666.0000000	21
+-- 2025	8	31293.0000000	21
+-- 2025	9	9403.0000000	7
+
+
+
+SELECT LaborDtl_ClockInDate, CALCULATED_LABORQTYLF, * FROM landing.load_test.resgrpeff_test_window_incremental_load_01 WHERE LaborDtl_ResourceGrpID LIKE '%CULL%' ORDER BY LaborDtl_ClockInDate; -- 23
+SELECT LaborDtl_ClockInDate, * FROM landing.load_test.resgrpeff_test_window_incremental_load_01 WHERE JobAsmbl_PartNum IN ('RMR-001197', 'RMR-001198', 'RMR-001200') ORDER BY LaborDtl_ClockInDate; -- 23
+SELECT LaborDtl_ClockInDate, * FROM landing.load_test.resgrpeff_test_window_incremental_load_02 WHERE LaborDtl_ResourceGrpID LIKE '%CULL%'; -- 22
+SELECT LaborDtl_ClockInDate, * FROM landing.load_test.resgrpeff_test_window_incremental_load_02 WHERE JobAsmbl_PartNum IN ('RMR-001197', 'RMR-001198', 'RMR-001200') ORDER BY LaborDtl_ClockInDate; -- 22
+
+SELECT * FROM tim_wilson.silver.br_culling_production_pounds_coparts_step_2 WHERE part_number IN ('RMR-001197', 'RMR-001198', 'RMR-001200');
+
+SELECT * FROM tim_wilson.silver.br_production_pounds_coparts_step_0;  -- 310336
+SELECT * FROM tim_wilson.silver.br_production_pounds_coparts_step_1;  -- 874
+SELECT * FROM tim_wilson.silver.br_production_pounds_coparts_step_2;  -- 874
+
+
+--     , CASE WHEN part_number = 'RMR-001197' THEN 'Recovered Tires'
+--            WHEN part_number = 'RMR-001198' THEN 'Scrapped'
+--            WHEN part_number = 'RMR-001200' THEN 'JoMar'
+--            ELSE NULL
+--       END AS PartNum_Description
+-- ;
+
+SELECT CALCULATED_LABORQTYLF, * FROM landing.load_test.coparts_test_window_incremental_load_01
+WHERE 
+1=1
+AND PartTran_PartNum = 'RMR-001200'
+AND CALCULATED_LABORQTYLF = 893
+;
+
+SELECT CALCULATED_LABORQTYLF, * FROM landing.load_test.coparts_test_window_incremental_load_02
+WHERE 
+1=1
+AND PartTran_PartNum = 'RMR-001200'
+AND CALCULATED_LABORQTYLF = 893
+;
+
+UPDATE landing.load_test.coparts_test_window_incremental_load_02
+SET CALCULATED_LABORQTYLF = 100000
+WHERE 
+1=1
+AND CALCULATED_LABORQTYLF = 893
+;
+
+UPDATE landing.load_test.coparts_test_window_incremental_load_02
+SET CALCULATED_LABORQTYLF = 100000, CALCULATED_ISCOPART = 1
+WHERE 
+1=1
+AND CALCULATED_LABORQTYLF = 100000
+;
+
+-- Year	Month	TOTAL_MONTH_QTY	record_count
+-- 2025	5	25479.0000000	18
+-- 2025	6	31245.0000000	20
+-- 2025	7	28408.0000000	21
+-- 2025	8	32045.0000000	21
+-- 2025	9	9403.0000000	7
+
+-- Year	Month	TOTAL_MONTH_QTY	record_count
+-- 2025	5	25479.0000000	18
+-- 2025	6	31245.0000000	20
+-- 2025	7	28408.0000000	21
+-- 2025	8	32045.0000000	21
+-- 2025	9	9403.0000000	7
+
+-- Year	Month	TOTAL_MONTH_QTY	record_count
+-- 2025	5	25479.0000000	18
+-- 2025	6	31245.0000000	20
+-- 2025	7	28408.0000000	21
+-- 2025	8	32045.0000000	21
+-- 2025	9	9403.0000000	7
+
+SELECT *
+FROM tim_wilson.psa_kinetic.psa_coparts
+WHERE CALCULATED_LABORQTYLF = 893 OR CALCULATED_LABORQTYLF = 100000
+;
+
+SELECT LABORDTL_JOBNUM, *
+FROM tim_wilson.psa_kinetic.psa_resgrpeff
+WHERE UPPER(LABORDTL_JOBNUM) = UPPER('OCF00000194')
+-- WHERE LABORDTL_JOBNUM != ''
+;
+
+SELECT *
+FROM tim_wilson.bronze.raw_coparts
+WHERE CALCULATED_LABORQTYLF = 100000
+;
+
+SELECT *
+FROM tim_wilson.bronze.stg_coparts
+WHERE CALCULATED_LABORQTYLF = 100000
+;
+
+SELECT *
+FROM tim_wilson.meta.waterlevels
+WHERE table_name = '`tim_wilson`.`bronze`.`stg_coparts`'
+ORDER BY STARTED_AT_TS
+;
+
+SELECT DISTINCT EXTRACT_DATE
+FROM tim_wilson.silver.sat_production_process_coparts
+-- WHERE EXTRACT_DATE = '2025-09-12'
+;
+
+SELECT *
+FROM tim_wilson.silver.sat_production_process_coparts
+WHERE CALCULATED_LABORQTYLF = 100000
+;
+
+SELECT *
+FROM tim_wilson.silver.sat_production_process_coparts_latest
+WHERE CALCULATED_LABORQTYLF = 100000
+;
+
+  WITH source_data AS (
+    SELECT
+      COMPANYCODE,
+      PART_NUMBER,
+      PARTTRAN_WAREHOUSECODE,
+      PARTTRAN_BINNUM,
+      PARTTRAN_TRANNUM,
+      PARTTRAN_TRANTYPE,
+      PARTTRAN_TRANDATE,
+      PARTTRAN_TRANQTY,
+      PARTTRAN_UM,
+      JOB_NUMBER,
+      JOBOPER_OPCODE,
+      RESOURCEGRPID,
+      CALCULATED_ENDDATE,
+      CALCULATED_ISCOPART,
+      CALCULATED_IUM,
+      CALCULATED_LABORQTYLF,
+      CALCULATED_WEIGHTLBS3,
+      CALCULATED_CUBICFTJOBV2,
+      CALCULATED_THICKNESSMMTOFT,
+      CALCULATED_WIDTHCONVINTOFT,
+      CALCULATED_LINEARFEETCONV,
+      PART_PARTDESCRIPTION,
+      PART_NETWEIGHT,
+      EXTRACT_DATE,
+      PARTTRAN_SYSTIME,
+      DATE_TIME
+    FROM
+      `tim_wilson`.`bronze`.`raw_coparts`
+    WHERE
+      TO_TIMESTAMP(EXTRACT_DATE) > TO_TIMESTAMP('2025-09-12T08:00:07.000+00:00')
+  ),
+  derived_columns AS (
+    SELECT
+      COMPANYCODE,
+      PART_NUMBER,
+      PARTTRAN_WAREHOUSECODE,
+      PARTTRAN_BINNUM,
+      PARTTRAN_TRANNUM,
+      PARTTRAN_TRANTYPE,
+      PARTTRAN_TRANDATE,
+      PARTTRAN_TRANQTY,
+      PARTTRAN_UM,
+      JOB_NUMBER,
+      JOBOPER_OPCODE,
+      RESOURCEGRPID,
+      CALCULATED_ENDDATE,
+      CALCULATED_ISCOPART,
+      CALCULATED_IUM,
+      CALCULATED_LABORQTYLF,
+      CALCULATED_WEIGHTLBS3,
+      CALCULATED_CUBICFTJOBV2,
+      CALCULATED_THICKNESSMMTOFT,
+      CALCULATED_WIDTHCONVINTOFT,
+      CALCULATED_LINEARFEETCONV,
+      PART_PARTDESCRIPTION,
+      PART_NETWEIGHT,
+      EXTRACT_DATE,
+      PARTTRAN_SYSTIME,
+      DATE_TIME,
+      TO_TIMESTAMP('2025-09-17 13:35:46.504941') AS LOAD_DATETIME,
+      TO_TIMESTAMP('1900-01-01 00:00:00.000000') AS START_DATE,
+      TO_TIMESTAMP('9999-12-31 23:59:59.999999') AS END_DATE,
+      TO_TIMESTAMP('1900-01-01 00:00:00.000000') AS EFFECTIVE_FROM,
+      'MANUFACTURING.RESGRPEFF' AS RECORD_SOURCE,
+      'MANUFACTURING.RESGRPEFF' AS COLLISION_KEY
+    FROM
+      source_data
+  ),
+  hashed_columns AS (
+    SELECT
+      COMPANYCODE,
+      PART_NUMBER,
+      PARTTRAN_WAREHOUSECODE,
+      PARTTRAN_BINNUM,
+      PARTTRAN_TRANNUM,
+      PARTTRAN_TRANTYPE,
+      PARTTRAN_TRANDATE,
+      PARTTRAN_TRANQTY,
+      PARTTRAN_UM,
+      JOB_NUMBER,
+      JOBOPER_OPCODE,
+      RESOURCEGRPID,
+      CALCULATED_ENDDATE,
+      CALCULATED_ISCOPART,
+      CALCULATED_IUM,
+      CALCULATED_LABORQTYLF,
+      CALCULATED_WEIGHTLBS3,
+      CALCULATED_CUBICFTJOBV2,
+      CALCULATED_THICKNESSMMTOFT,
+      CALCULATED_WIDTHCONVINTOFT,
+      CALCULATED_LINEARFEETCONV,
+      PART_PARTDESCRIPTION,
+      PART_NETWEIGHT,
+      EXTRACT_DATE,
+      PARTTRAN_SYSTIME,
+      DATE_TIME,
+      LOAD_DATETIME,
+      START_DATE,
+      END_DATE,
+      EFFECTIVE_FROM,
+      RECORD_SOURCE,
+      COLLISION_KEY,
+      UNHEX(
+        MD5(
+          NULLIF(
+            CONCAT_WS(
+              '||',
+              IFNULL(NULLIF(UPPER(TRIM(CAST(COLLISION_KEY AS VARCHAR(16)))), ''), '^^'),
+              IFNULL(NULLIF(UPPER(TRIM(CAST(JOB_NUMBER AS VARCHAR(16)))), ''), '^^')
+            ),
+            '^^||^^'
+          )
+        )
+      ) AS JOB_HK,
+      UNHEX(
+        MD5(
+          NULLIF(
+            CONCAT_WS(
+              '||',
+              IFNULL(NULLIF(UPPER(TRIM(CAST(COLLISION_KEY AS VARCHAR(16)))), ''), '^^'),
+              IFNULL(NULLIF(UPPER(TRIM(CAST(RESOURCEGRPID AS VARCHAR(16)))), ''), '^^')
+            ),
+            '^^||^^'
+          )
+        )
+      ) AS RESOURCE_GROUP_HK,
+      UNHEX(
+        MD5(
+          NULLIF(
+            CONCAT_WS(
+              '||',
+              IFNULL(NULLIF(UPPER(TRIM(CAST(COLLISION_KEY AS VARCHAR(16)))), ''), '^^'),
+              IFNULL(NULLIF(UPPER(TRIM(CAST(PART_NUMBER AS VARCHAR(16)))), ''), '^^')
+            ),
+            '^^||^^'
+          )
+        )
+      ) AS INVENTORY_ITEM_HK,
+      UNHEX(
+        MD5(
+          NULLIF(
+            CONCAT_WS(
+              '||',
+              IFNULL(NULLIF(UPPER(TRIM(CAST(COLLISION_KEY AS VARCHAR(16)))), ''), '^^'),
+              IFNULL(NULLIF(UPPER(TRIM(CAST(JOB_NUMBER AS VARCHAR(16)))), ''), '^^'),
+              IFNULL(NULLIF(UPPER(TRIM(CAST(COLLISION_KEY AS VARCHAR(16)))), ''), '^^'),
+              IFNULL(NULLIF(UPPER(TRIM(CAST(RESOURCEGRPID AS VARCHAR(16)))), ''), '^^'),
+              IFNULL(NULLIF(UPPER(TRIM(CAST(COLLISION_KEY AS VARCHAR(16)))), ''), '^^'),
+              IFNULL(NULLIF(UPPER(TRIM(CAST(PART_NUMBER AS VARCHAR(16)))), ''), '^^')
+            ),
+            '^^||^^||^^||^^||^^||^^'
+          )
+        )
+      ) AS PRODUCTION_PROCESS_RESOURCE_GRP_LHK,
+      UNHEX(
+        MD5(
+          CONCAT_WS(
+            '||',
+            IFNULL(NULLIF(UPPER(TRIM(CAST(CALCULATED_CUBICFTJOBV2 AS VARCHAR(16)))), ''), '^^'),
+            IFNULL(NULLIF(UPPER(TRIM(CAST(CALCULATED_ENDDATE AS VARCHAR(16)))), ''), '^^'),
+            IFNULL(NULLIF(UPPER(TRIM(CAST(CALCULATED_ISCOPART AS VARCHAR(16)))), ''), '^^'),
+            IFNULL(NULLIF(UPPER(TRIM(CAST(CALCULATED_IUM AS VARCHAR(16)))), ''), '^^'),
+            IFNULL(NULLIF(UPPER(TRIM(CAST(CALCULATED_LABORQTYLF AS VARCHAR(16)))), ''), '^^'),
+            IFNULL(NULLIF(UPPER(TRIM(CAST(CALCULATED_LINEARFEETCONV AS VARCHAR(16)))), ''), '^^'),
+            IFNULL(NULLIF(UPPER(TRIM(CAST(CALCULATED_THICKNESSMMTOFT AS VARCHAR(16)))), ''), '^^'),
+            IFNULL(NULLIF(UPPER(TRIM(CAST(CALCULATED_WEIGHTLBS3 AS VARCHAR(16)))), ''), '^^'),
+            IFNULL(NULLIF(UPPER(TRIM(CAST(CALCULATED_WIDTHCONVINTOFT AS VARCHAR(16)))), ''), '^^'),
+            IFNULL(NULLIF(UPPER(TRIM(CAST(COMPANYCODE AS VARCHAR(16)))), ''), '^^'),
+            IFNULL(NULLIF(UPPER(TRIM(CAST(DATE_TIME AS VARCHAR(16)))), ''), '^^'),
+            IFNULL(NULLIF(UPPER(TRIM(CAST(EXTRACT_DATE AS VARCHAR(16)))), ''), '^^'),
+            IFNULL(NULLIF(UPPER(TRIM(CAST(JOBOPER_OPCODE AS VARCHAR(16)))), ''), '^^'),
+            IFNULL(NULLIF(UPPER(TRIM(CAST(PART_NETWEIGHT AS VARCHAR(16)))), ''), '^^'),
+            IFNULL(NULLIF(UPPER(TRIM(CAST(PART_PARTDESCRIPTION AS VARCHAR(16)))), ''), '^^'),
+            IFNULL(NULLIF(UPPER(TRIM(CAST(PARTTRAN_BINNUM AS VARCHAR(16)))), ''), '^^'),
+            IFNULL(NULLIF(UPPER(TRIM(CAST(PARTTRAN_SYSTIME AS VARCHAR(16)))), ''), '^^'),
+            IFNULL(NULLIF(UPPER(TRIM(CAST(PARTTRAN_TRANDATE AS VARCHAR(16)))), ''), '^^'),
+            IFNULL(NULLIF(UPPER(TRIM(CAST(PARTTRAN_TRANNUM AS VARCHAR(16)))), ''), '^^'),
+            IFNULL(NULLIF(UPPER(TRIM(CAST(PARTTRAN_TRANQTY AS VARCHAR(16)))), ''), '^^'),
+            IFNULL(NULLIF(UPPER(TRIM(CAST(PARTTRAN_TRANTYPE AS VARCHAR(16)))), ''), '^^'),
+            IFNULL(NULLIF(UPPER(TRIM(CAST(PARTTRAN_UM AS VARCHAR(16)))), ''), '^^'),
+            IFNULL(NULLIF(UPPER(TRIM(CAST(PARTTRAN_WAREHOUSECODE AS VARCHAR(16)))), ''), '^^')
+          )
+        )
+      ) AS COPARTS_HASHDIFF
+    FROM
+      derived_columns
+  ),
+  columns_to_select AS (
+    SELECT
+      COMPANYCODE,
+      PART_NUMBER,
+      PARTTRAN_WAREHOUSECODE,
+      PARTTRAN_BINNUM,
+      PARTTRAN_TRANNUM,
+      PARTTRAN_TRANTYPE,
+      PARTTRAN_TRANDATE,
+      PARTTRAN_TRANQTY,
+      PARTTRAN_UM,
+      JOB_NUMBER,
+      JOBOPER_OPCODE,
+      RESOURCEGRPID,
+      CALCULATED_ENDDATE,
+      CALCULATED_ISCOPART,
+      CALCULATED_IUM,
+      CALCULATED_LABORQTYLF,
+      CALCULATED_WEIGHTLBS3,
+      CALCULATED_CUBICFTJOBV2,
+      CALCULATED_THICKNESSMMTOFT,
+      CALCULATED_WIDTHCONVINTOFT,
+      CALCULATED_LINEARFEETCONV,
+      PART_PARTDESCRIPTION,
+      PART_NETWEIGHT,
+      EXTRACT_DATE,
+      PARTTRAN_SYSTIME,
+      DATE_TIME,
+      LOAD_DATETIME,
+      START_DATE,
+      END_DATE,
+      EFFECTIVE_FROM,
+      RECORD_SOURCE,
+      COLLISION_KEY,
+      JOB_HK,
+      RESOURCE_GROUP_HK,
+      INVENTORY_ITEM_HK,
+      PRODUCTION_PROCESS_RESOURCE_GRP_LHK,
+      COPARTS_HASHDIFF
+    FROM
+      hashed_columns
+  )
+  SELECT
+    *
+  FROM
+    columns_to_select
+  WHERE CALCULATED_LABORQTYLF = 100000
+;
+
+SELECT CALCULATED_LABORQTYLF, *
+FROM tim_wilson.silver.sat_production_process_coparts
+WHERE PARTTRAN_TRANDATE = '2025-08-29'
+;
+
+-- 18/09/2025
+-- refactored raw_coparts, etc. and raw_production_process_resource_grp, etc.
+-- testing whether satellite incremental load has been fixed
+
+-- Initial load
+-- 4790
+SELECT COUNT(*)
+FROM (
+SELECT DISTINCT *
+FROM tim_wilson.bronze.raw_coparts
+) AS x
+;
+
+-- 5411
+SELECT COUNT(*)
+FROM tim_wilson.bronze.stg_coparts
+;
+
+-- 4790
+SELECT COUNT(DISTINCT PRODUCTION_PROCESS_RESOURCE_GRP_LHK)
+FROM tim_wilson.bronze.stg_coparts
+;
+
+-- 2025-09-11T15:24:00.000+00:00
+SELECT DISTINCT EXTRACT_DATE
+FROM tim_wilson.bronze.stg_coparts
+;
+
+-- 4790
+SELECT COUNT(*)
+FROM (
+SELECT DISTINCT *
+FROM tim_wilson.bronze.stg_coparts
+) AS x
+;
+
+SELECT *
+FROM tim_wilson.bronze.stg_coparts
+;
+
+-- 4790
+SELECT COUNT(*)
+FROM tim_wilson.silver.sat_production_process_coparts
+;
+
+-- 2025-09-11T15:24:00.000+00:00
+SELECT DISTINCT EXTRACT_DATE
+FROM tim_wilson.silver.sat_production_process_coparts
+;
+
+-- 340130
+SELECT COUNT(*)
+FROM tim_wilson.silver.nh_lnk_production_process_resource_grp_grain
+;
+
+-- 340130
+SELECT COUNT(DISTINCT PRODUCTION_PROCESS_RESOURCE_GRP_LHK)
+FROM tim_wilson.silver.nh_lnk_production_process_resource_grp_grain
+;
+
+-- Year	Month	TOTAL_MONTH_QTY	record_count
+-- 2025	5	27860.0000000	18
+-- 2025	6	34415.0000000	20
+-- 2025	7	31424.0000000	21
+-- 2025	8	35381.0000000	21
+-- 2025	9	10640.0000000	7
+
+-- First increment
+-- 4801
+SELECT COUNT(*)
+FROM (
+SELECT DISTINCT *
+FROM tim_wilson.bronze.raw_coparts
+) AS x
+;
+
+-- 11
+SELECT COUNT(*)
+FROM tim_wilson.bronze.stg_coparts
+;
+
+-- 11
+SELECT COUNT(DISTINCT PRODUCTION_PROCESS_RESOURCE_GRP_LHK)
+FROM tim_wilson.bronze.stg_coparts
+;
+
+-- 2025-09-12T08:00:07.000+00:00
+SELECT DISTINCT EXTRACT_DATE
+FROM tim_wilson.bronze.stg_coparts
+;
+
+-- 11
+SELECT COUNT(*)
+FROM (
+SELECT DISTINCT *
+FROM tim_wilson.bronze.stg_coparts
+) AS x
+;
+
+SELECT *
+FROM tim_wilson.bronze.stg_coparts
+;
+
+-- 4801
+SELECT COUNT(*)
+FROM tim_wilson.silver.sat_production_process_coparts
+;
+
+-- 2025-09-11T15:24:00.000+00:00, 2025-09-12T08:00:07.000+00:00
+SELECT DISTINCT EXTRACT_DATE
+FROM tim_wilson.silver.sat_production_process_coparts
+;
+
+-- 340130
+SELECT COUNT(*)
+FROM tim_wilson.silver.nh_lnk_production_process_resource_grp_grain
+;
+
+-- 340130
+SELECT COUNT(DISTINCT PRODUCTION_PROCESS_RESOURCE_GRP_LHK)
+FROM tim_wilson.silver.nh_lnk_production_process_resource_grp_grain
+;
+
+-- Year	Month	TOTAL_MONTH_QTY	record_count
+-- 2025	5	27860.0000000	18
+-- 2025	6	34415.0000000	20
+-- 2025	7	31424.0000000	21
+-- 2025	8	35381.0000000	21
+-- 2025	9	10640.0000000	7
+
+-- Second increment
+-- 4819
+SELECT COUNT(*)
+FROM (
+SELECT DISTINCT *
+FROM tim_wilson.bronze.raw_coparts
+) AS x
+;
+
+-- 18
+SELECT COUNT(*)
+FROM tim_wilson.bronze.stg_coparts
+;
+
+-- 18
+SELECT COUNT(DISTINCT PRODUCTION_PROCESS_RESOURCE_GRP_LHK)
+FROM tim_wilson.bronze.stg_coparts
+;
+
+-- 2025-09-13T08:00:07.000+00:00
+SELECT DISTINCT EXTRACT_DATE
+FROM tim_wilson.bronze.stg_coparts
+;
+
+-- 18
+SELECT COUNT(*)
+FROM (
+SELECT DISTINCT *
+FROM tim_wilson.bronze.stg_coparts
+) AS x
+;
+
+SELECT *
+FROM tim_wilson.bronze.stg_coparts
+;
+
+-- 4819
+SELECT COUNT(*)
+FROM tim_wilson.silver.sat_production_process_coparts
+;
+
+-- 2025-09-11T15:24:00.000+00:00, 2025-09-12T08:00:07.000+00:00, 2025-09-13T08:00:07.000+00:00
+SELECT DISTINCT EXTRACT_DATE
+FROM tim_wilson.silver.sat_production_process_coparts
+;
+
+-- 340130
+SELECT COUNT(*)
+FROM tim_wilson.silver.nh_lnk_production_process_resource_grp_grain
+;
+
+-- 340130
+SELECT COUNT(DISTINCT PRODUCTION_PROCESS_RESOURCE_GRP_LHK)
+FROM tim_wilson.silver.nh_lnk_production_process_resource_grp_grain
+;
+
+-- Year	Month	TOTAL_MONTH_QTY	record_count
+-- 2025	5	27860.0000000	18
+-- 2025	6	34415.0000000	20
+-- 2025	7	31424.0000000	21
+-- 2025	8	35381.0000000	21
+-- 2025	9	10640.0000000	7
+
+SELECT CALCULATED_LABORQTYLF, * FROM landing.load_test.coparts_test_window_incremental_load_02
+WHERE 
+1=1
+AND PartTran_TranNum = '15529938'
+AND CALCULATED_LABORQTYLF = 2036
+;
+
+SELECT CALCULATED_LABORQTYLF, * FROM tim_wilson.silver.sat_production_process_coparts
+WHERE 
+1=1
+AND PartTran_TranNum = '15529938'
+AND CALCULATED_LABORQTYLF = 2036
+;
+
+SELECT *
+FROM tim_wilson.silver.sat_production_process_coparts
+WHERE 
+1=1
+-- AND PartTran_TranNum = '15529938'
+AND PRODUCTION_PROCESS_RESOURCE_GRP_LHK = UNBASE64('NRk2CMgImGFQ3qiK3tupvQ==')
+;
+
+SELECT *
+FROM tim_wilson.silver.sat_production_process_coparts_latest
+WHERE 
+1=1
+-- AND PartTran_TranNum = '15529938'
+AND PRODUCTION_PROCESS_RESOURCE_GRP_LHK = UNBASE64('NRk2CMgImGFQ3qiK3tupvQ==')
+;
+
+SELECT *
+FROM tim_wilson.silver.nh_lnk_production_process_resource_grp_grain
+WHERE 
+1=1
+-- AND PartTran_TranNum = '15529938'
+AND PRODUCTION_PROCESS_RESOURCE_GRP_LHK = UNBASE64('NRk2CMgImGFQ3qiK3tupvQ==')
+;
+
+SELECT *
+FROM tim_wilson.bronze.stg_coparts
+WHERE 
+1=1
+-- AND PartTran_TranNum = '15529938'
+AND PRODUCTION_PROCESS_RESOURCE_GRP_LHK = UNBASE64('NRk2CMgImGFQ3qiK3tupvQ==')
+;
+
+SELECT *
+FROM tim_wilson.bronze.stg_production_process_resource_grp
+WHERE 
+1=1
+-- AND PartTran_TranNum = '15529938'
+AND PRODUCTION_PROCESS_RESOURCE_GRP_LHK = UNBASE64('NRk2CMgImGFQ3qiK3tupvQ==')
+;
+
+SELECT *
+FROM tim_wilson.bronze.raw_coparts AS a
+LEFT OUTER JOIN tim_wilson.bronze.raw_production_process_resource_grp AS b
+ON a.JOB_NUMBER = b.JOB_NUMBER
+WHERE b.JOB_NUMBER IS NULL
+;
+
+SELECT *
+FROM tim_wilson.bronze.raw_coparts AS a
+RIGHT OUTER JOIN tim_wilson.bronze.raw_production_process_resource_grp AS b
+ON a.JOB_NUMBER = b.JOB_NUMBER
+WHERE a.JOB_NUMBER IS NULL
+;
+
+SELECT *
+FROM tim_wilson.silver.br_production_pounds_coparts_step_0
+WHERE 
+1=1
+AND JobOper_OpCode = 'SEDSTONE'
+AND LABORDTL_CLOCKINDATE = '2025-09-11'
+;
+
+SELECT *
+FROM tim_wilson.silver.br_production_pounds_coparts_step_1
+WHERE 
+1=1
+AND resourcegrpid = 'SEDSTONE'
+AND DATE = '2025-09-11'
+;
+
+SELECT *
+FROM tim_wilson.silver.br_production_pounds_coparts_step_2
+WHERE 
+1=1
+AND department_name = 'SERT2'
+AND DATE = '2025-09-11'
+;
+
+SELECT *
+FROM tim_wilson.gold_mfg.mart_production_coparts
+WHERE 
+1=1
+AND department_name = 'SERT2'
+AND DATE = '2025-09-11'
+;
+
+UPDATE tim_wilson.silver.sat_production_process_coparts
+SET CALCULATED_LABORQTYLF = 100000
+WHERE 
+1=1
+AND PartTran_TranNum = '15529938'
+AND CALCULATED_LABORQTYLF = 2036
+;
+
+UPDATE landing.load_test.coparts_test_window_incremental_load_02
+SET CALCULATED_LABORQTYLF = 100000
+WHERE 
+1=1
+AND PartTran_TranNum = '15529938'
+AND CALCULATED_LABORQTYLF = 2036
+;
+
+SELECT *
+FROM tim_wilson.silver.br_production_pounds_coparts_step_0
+ORDER BY LABORDTL_CLOCKINDATE DESC
+;
+
+SELECT *
+FROM tim_wilson.silver.sat_production_process_coparts
+WHERE DATE(EXTRACT_DATE) = '2025-09-13'
+;
+
+-- 282684
+SELECT COUNT(*)
+FROM tim_wilson.silver.sat_production_process
+;
+
+-- 136888
+SELECT COUNT(DISTINCT PRODUCTION_PROCESS_LHK)
+FROM tim_wilson.silver.sat_production_process
+;
+
+-- 1
+SELECT COUNT(DISTINCT EXTRACT_DATE)
+FROM tim_wilson.silver.sat_production_process
+;
+
+SELECT PRODUCTION_PROCESS_LHK, COUNT(*)
+FROM tim_wilson.silver.sat_production_process
+GROUP BY PRODUCTION_PROCESS_LHK
+HAVING COUNT(*) > 1
+;
+
+SELECT *
+FROM tim_wilson.silver.sat_production_process
+WHERE PRODUCTION_PROCESS_LHK = UNBASE64('AAJt2vdT1pSFYWxcg5za4g==')
+;

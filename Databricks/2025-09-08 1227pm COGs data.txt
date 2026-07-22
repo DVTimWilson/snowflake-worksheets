@@ -1,0 +1,764 @@
+
+
+SELECT *
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+;
+
+SELECT DocUnitCost, SellingShipQty, DocExtCost
+,DocUnitCost * SellingShipQty AS something
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE DocUnitCost != 0
+AND DocExtCost != (DocUnitCost * SellingShipQty)
+;
+
+SELECT 
+  InvoiceDate
+
+  ,DocUnitPrice
+  ,DocExtPrice
+  ,DocDiscount
+  ,DocTotalMiscChrg
+  ,SalesPrice
+  ,SalesPrice * GMpct AS CalculatedGM
+
+  ,DocUnitCost
+  ,DocExtCost
+  ,GM
+  ,GMpct
+  ,SellingShipQty
+  ,BusinessUnit
+  ,BusinessUnit_c
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE DocUnitCost != 0
+-- AND InvoiceDate BETWEEN '2025-01-01' AND '2025-06-30'
+-- AND COALESCE(NULLIF(BusinessUnit_c, ''), 'OTHER') = 'F&I'
+AND DocDiscount != 0
+;
+
+SELECT 
+  '2025-07-01' AS AS_OF_DATE
+  ,COALESCE(NULLIF(BusinessUnit_c, ''), 'OTHER') AS BusinessUnit
+  ,SUM(DocExtCost) AS TotalCost
+  ,SUM(SellingShipQty) AS TotalQuantity
+  ,SUM(DocExtCost) / SUM(SellingShipQty) AS EstimatedUnitCost
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE DocUnitCost != 0
+AND InvoiceDate BETWEEN '2025-01-01' AND '2025-06-30'
+GROUP BY COALESCE(NULLIF(BusinessUnit_c, ''), 'OTHER')
+ORDER BY COALESCE(NULLIF(BusinessUnit_c, ''), 'OTHER')
+;
+
+SELECT 
+  '2025-07-01' AS AS_OF_DATE
+  ,COALESCE(NULLIF(BusinessUnit_c, ''), 'OTHER') AS BusinessUnit
+  ,SUM(DocExtCost) AS TotalCost
+  ,SUM(SellingShipQty) AS TotalQuantity
+  ,SUM(DocExtCost) / SUM(SellingShipQty) AS EstimatedUnitCost
+FROM tim_wilson.silver.sat_outbound_invoices_kinetic
+WHERE DocUnitCost != 0
+AND InvoiceDate BETWEEN '2025-01-01' AND '2025-06-30'
+GROUP BY COALESCE(NULLIF(BusinessUnit_c, ''), 'OTHER')
+ORDER BY COALESCE(NULLIF(BusinessUnit_c, ''), 'OTHER')
+;
+
+SELECT 
+  '2025-07-01' AS AS_OF_DATE
+  ,COALESCE(NULLIF(bu, ''), 'UNCATEGORIZED') AS BusinessUnit
+  ,SUM(COGS_DOLLAR) AS TotalCost
+  ,SUM(QUANTITY) AS TotalQuantity
+  ,SUM(COGS_DOLLAR) / SUM(QUANTITY) AS EstimatedUnitCost
+FROM tim_wilson.silver.br_outbound_invoice_sherri
+WHERE UNIT_COST != 0
+AND DATE BETWEEN '2025-01-01' AND '2025-06-30'
+GROUP BY COALESCE(NULLIF(bu, ''), 'UNCATEGORIZED')
+ORDER BY BusinessUnit
+;
+
+-- 280493
+SELECT COUNT(*)
+FROM tim_wilson.silver.sat_outbound_invoices_kinetic
+;
+
+-- 6241789
+SELECT COUNT(*)
+FROM tim_wilson.silver.br_outbound_invoice_sherri
+;
+
+-- 5976966
+WITH br AS (
+  SELECT 
+     INVOICE_LINE_LHK
+     , INVOICELINE
+     , INVOICEDATE AS DATE
+     , kin.PARTNUM AS PRODUCT_ID
+    --  , COREVIEW_PRODUCT_CATEGORY
+     , PLANT AS SITE
+     , BUSINESSUNIT_C AS BU
+     , COMPANY AS ENTITY
+     , SALESPRICE AS SALES_DOLLAR
+     , DOCEXTCOST AS COGS_DOLLAR
+     , DOCUNITCOST AS UNIT_COST
+     , GM AS GROSS_MARGIN_DOLLAR
+     , GMPCT AS GROSS_MARGIN_PCT
+     , SELLINGSHIPQTY as QUANTITY
+     , SALESUM as UOM
+     , LOAD_DATETIME
+     , RECORD_SOURCE
+     , HASHDIFF
+     --, LEAD(LOAD_DATETIME, 1, '9999-12-31 23:59:59.999999') OVER (PARTITION BY INVOICE_LINE_LHK ORDER BY LOAD_DATETIME ASC)  AS NEXT_LOAD_DATETIME
+FROM `tim_wilson`.`silver`.`sat_outbound_invoices_kinetic` as kin
+LEFT OUTER JOIN (
+  SELECT DISTINCT * FROM `landing`.`reftables`.`master_product_category_kinetic`) as mpc
+    ON kin.PartNum = mpc.PartNum
+)
+
+SELECT COUNT(*)
+FROM br
+;
+
+WITH br AS (
+  SELECT 
+     INVOICE_LINE_LHK
+     , INVOICELINE
+     , INVOICEDATE AS DATE
+     , kin.PARTNUM AS PRODUCT_ID
+    --  , COREVIEW_PRODUCT_CATEGORY
+     , PLANT AS SITE
+     , BUSINESSUNIT_C AS BU
+     , COMPANY AS ENTITY
+     , SALESPRICE AS SALES_DOLLAR
+     , DOCEXTCOST AS COGS_DOLLAR
+     , DOCUNITCOST AS UNIT_COST
+     , GM AS GROSS_MARGIN_DOLLAR
+     , GMPCT AS GROSS_MARGIN_PCT
+     , SELLINGSHIPQTY as QUANTITY
+     , SALESUM as UOM
+     , LOAD_DATETIME
+     , RECORD_SOURCE
+     , HASHDIFF
+     --, LEAD(LOAD_DATETIME, 1, '9999-12-31 23:59:59.999999') OVER (PARTITION BY INVOICE_LINE_LHK ORDER BY LOAD_DATETIME ASC)  AS NEXT_LOAD_DATETIME
+FROM `tim_wilson`.`silver`.`sat_outbound_invoices_kinetic` as kin
+LEFT OUTER JOIN (
+  SELECT DISTINCT * FROM `landing`.`reftables`.`master_product_category_kinetic`) as mpc
+    ON kin.PartNum = mpc.PartNum
+)
+
+SELECT 
+  '2025-07-01' AS AS_OF_DATE
+  ,COALESCE(NULLIF(bu, ''), 'OTHER') AS BusinessUnit
+  ,SUM(COGS_DOLLAR) AS TotalCost
+  ,SUM(QUANTITY) AS TotalQuantity
+  ,SUM(COGS_DOLLAR) / SUM(QUANTITY) AS EstimatedUnitCost
+FROM br
+WHERE UNIT_COST != 0
+AND DATE BETWEEN '2025-01-01' AND '2025-06-30'
+GROUP BY COALESCE(NULLIF(bu, ''), 'OTHER')
+ORDER BY BusinessUnit
+;
+
+-- 743972
+WITH br AS (
+  SELECT 
+     INVOICE_LINE_LHK
+     , INVOICELINE
+     , INVOICEDATE AS DATE
+     , kin.PARTNUM AS PRODUCT_ID
+    --  , COREVIEW_PRODUCT_CATEGORY
+     , PLANT AS SITE
+     , BUSINESSUNIT_C AS BU
+     , COMPANY AS ENTITY
+     , SALESPRICE AS SALES_DOLLAR
+     , DOCEXTCOST AS COGS_DOLLAR
+     , DOCUNITCOST AS UNIT_COST
+     , GM AS GROSS_MARGIN_DOLLAR
+     , GMPCT AS GROSS_MARGIN_PCT
+     , SELLINGSHIPQTY as QUANTITY
+     , SALESUM as UOM
+     , LOAD_DATETIME
+     , RECORD_SOURCE
+     , HASHDIFF
+     --, LEAD(LOAD_DATETIME, 1, '9999-12-31 23:59:59.999999') OVER (PARTITION BY INVOICE_LINE_LHK ORDER BY LOAD_DATETIME ASC)  AS NEXT_LOAD_DATETIME
+FROM `tim_wilson`.`silver`.`sat_outbound_invoices_kinetic` as kin
+LEFT OUTER JOIN (
+  SELECT DISTINCT * FROM `landing`.`reftables`.`master_product_category_kinetic`) as mpc
+    ON kin.PartNum = mpc.PartNum
+    AND kin.LINEDESC = mpc.LineDesc
+)
+
+SELECT COUNT(*)
+FROM br
+;
+
+-- 280493
+WITH br AS (
+  SELECT 
+     INVOICE_LINE_LHK
+     , INVOICELINE
+     , INVOICEDATE AS DATE
+     , kin.PARTNUM AS PRODUCT_ID
+    --  , COREVIEW_PRODUCT_CATEGORY
+     , PLANT AS SITE
+     , BUSINESSUNIT_C AS BU
+     , COMPANY AS ENTITY
+     , SALESPRICE AS SALES_DOLLAR
+     , DOCEXTCOST AS COGS_DOLLAR
+     , DOCUNITCOST AS UNIT_COST
+     , GM AS GROSS_MARGIN_DOLLAR
+     , GMPCT AS GROSS_MARGIN_PCT
+     , SELLINGSHIPQTY as QUANTITY
+     , SALESUM as UOM
+     , LOAD_DATETIME
+     , RECORD_SOURCE
+     , HASHDIFF
+     --, LEAD(LOAD_DATETIME, 1, '9999-12-31 23:59:59.999999') OVER (PARTITION BY INVOICE_LINE_LHK ORDER BY LOAD_DATETIME ASC)  AS NEXT_LOAD_DATETIME
+FROM `tim_wilson`.`silver`.`sat_outbound_invoices_kinetic` as kin
+LEFT OUTER JOIN (
+  SELECT PartNum, CoreView_Product_Category
+FROM `landing`.`reftables`.`master_product_category_kinetic`
+QUALIFY row_number() OVER(PARTITION BY PARTNUM ORDER BY CoreView_Product_Category) = 1) as mpc
+    ON kin.PartNum = mpc.PartNum
+)
+
+SELECT COUNT(*)
+FROM br
+;
+
+
+SELECT PartNum, CoreView_Product_Category
+FROM `landing`.`reftables`.`master_product_category_kinetic`
+QUALIFY row_number() OVER(PARTITION BY PARTNUM ORDER BY CoreView_Product_Category) = 1
+;
+
+WITH br AS (
+  SELECT 
+     INVOICE_LINE_LHK
+     , INVOICELINE
+     , INVOICEDATE AS DATE
+     , kin.PARTNUM AS PRODUCT_ID
+    --  , COREVIEW_PRODUCT_CATEGORY
+     , PLANT AS SITE
+     , BUSINESSUNIT_C AS BU
+     , COMPANY AS ENTITY
+     , SALESPRICE AS SALES_DOLLAR
+     , DOCEXTCOST AS COGS_DOLLAR
+     , DOCUNITCOST AS UNIT_COST
+     , GM AS GROSS_MARGIN_DOLLAR
+     , GMPCT AS GROSS_MARGIN_PCT
+     , SELLINGSHIPQTY as QUANTITY
+     , SALESUM as UOM
+     , LOAD_DATETIME
+     , RECORD_SOURCE
+     , HASHDIFF
+     --, LEAD(LOAD_DATETIME, 1, '9999-12-31 23:59:59.999999') OVER (PARTITION BY INVOICE_LINE_LHK ORDER BY LOAD_DATETIME ASC)  AS NEXT_LOAD_DATETIME
+FROM `tim_wilson`.`silver`.`sat_outbound_invoices_kinetic` as kin
+LEFT OUTER JOIN (
+  SELECT PartNum, CoreView_Product_Category
+FROM `landing`.`reftables`.`master_product_category_kinetic`
+QUALIFY row_number() OVER(PARTITION BY PARTNUM ORDER BY CoreView_Product_Category) = 1) as mpc
+    ON kin.PartNum = mpc.PartNum
+)
+
+SELECT 
+  '2025-07-01' AS AS_OF_DATE
+  ,COALESCE(NULLIF(bu, ''), 'OTHER') AS BusinessUnit
+  ,SUM(COGS_DOLLAR) AS TotalCost
+  ,SUM(QUANTITY) AS TotalQuantity
+  ,SUM(COGS_DOLLAR) / SUM(QUANTITY) AS EstimatedUnitCost
+FROM br
+WHERE UNIT_COST != 0
+AND DATE BETWEEN '2025-01-01' AND '2025-06-30'
+GROUP BY COALESCE(NULLIF(bu, ''), 'OTHER')
+ORDER BY BusinessUnit
+;
+
+WITH br_outbound_invoice_sherri AS (
+  SELECT 
+     INVOICE_LINE_LHK
+     , INVOICELINE
+     , INVOICEDATE AS DATE
+     , kin.PARTNUM AS PRODUCT_ID
+     , mpc.COREVIEW_PRODUCT_CATEGORY
+     , PLANT AS SITE
+     , BUSINESSUNIT_C AS BU
+     , COMPANY AS ENTITY
+     , SALESPRICE AS SALES_DOLLAR
+     , DOCEXTCOST AS COGS_DOLLAR
+     , DOCUNITCOST AS UNIT_COST
+     , GM AS GROSS_MARGIN_DOLLAR
+     , GMPCT AS GROSS_MARGIN_PCT
+     , SELLINGSHIPQTY as QUANTITY
+     , SALESUM as UOM
+     , LOAD_DATETIME
+     , RECORD_SOURCE
+     , HASHDIFF
+     --, LEAD(LOAD_DATETIME, 1, '9999-12-31 23:59:59.999999') OVER (PARTITION BY INVOICE_LINE_LHK ORDER BY LOAD_DATETIME ASC)  AS NEXT_LOAD_DATETIME
+FROM `tim_wilson`.`silver`.`sat_outbound_invoices_kinetic` as kin
+LEFT OUTER JOIN (
+  SELECT PartNum, CoreView_Product_Category
+FROM `landing`.`reftables`.`master_product_category_kinetic`
+QUALIFY row_number() OVER(PARTITION BY PARTNUM ORDER BY CoreView_Product_Category) = 1) as mpc
+    ON kin.PartNum = mpc.PartNum
+)
+
+SELECT *
+FROM br_outbound_invoice_sherri
+;
+
+-- 09/10/2025
+-- 2023-01-02
+SELECT MIN(INVOICEDATE)
+FROM `tim_wilson`.`silver`.`sat_outbound_invoices_kinetic` as kin
+;
+
+WITH quarter_dates(quarter_date) AS (
+  SELECT (CAST('2023-07-01' AS DATE)) UNiON ALL
+  SELECT (CAST('2023-10-01' AS DATE)) UNiON ALL
+  SELECT (CAST('2024-01-01' AS DATE)) UNiON ALL
+  SELECT (CAST('2024-04-01' AS DATE)) UNiON ALL
+  SELECT (CAST('2024-07-01' AS DATE)) UNiON ALL
+  SELECT (CAST('2024-10-01' AS DATE)) UNiON ALL
+  SELECT (CAST('2025-01-01' AS DATE)) UNiON ALL
+  SELECT (CAST('2025-04-01' AS DATE)) UNiON ALL
+  SELECT (CAST('2025-07-01' AS DATE))
+)
+
+SELECT quarter_date
+,sherri.DATE
+,sherri.coreview_product_category
+FROM quarter_dates
+INNER JOIN (
+  SELECT
+    DATE
+    ,COREVIEW_PRODUCT_CATEGORY
+  FROM tim_wilson.silver.br_outbound_invoice_sherri
+  WHERE UNIT_COST != 0
+) AS sherri
+ON sherri.DATE BETWEEN CAST(DATE_ADD(MONTH, -3, CAST(quarter_date AS TIMESTAMP)) AS DATE) AND DATE_ADD(quarter_date, -1)
+
+ORDER BY sherri.date, sherri.coreview_product_category
+;
+
+SELECT 
+  '2025-07-01' AS AS_OF_DATE
+  ,COREVIEW_PRODUCT_CATEGORY
+  ,SUM(COGS_DOLLAR) AS TotalCost
+  ,SUM(QUANTITY) AS TotalQuantity
+  ,SUM(COGS_DOLLAR) / SUM(QUANTITY) AS EstimatedUnitCost
+FROM tim_wilson.silver.br_outbound_invoice_sherri
+WHERE UNIT_COST != 0
+AND DATE BETWEEN '2025-01-01' AND '2025-06-30'
+GROUP BY COREVIEW_PRODUCT_CATEGORY
+ORDER BY COREVIEW_PRODUCT_CATEGORY
+;
+
+-- 10/09/2025
+-- Create quarterly COGS percentage lookup table for product categories
+WITH sales_data AS (
+SELECT
+  DATE_PART('YEAR', date) AS year
+  ,DATE_PART('QUARTER', date) AS quarter
+  ,COREVIEW_PRODUCT_CATEGORY
+  ,SUM(SALES_DOLLAR) AS TotalSales
+  ,SUM(COGS_DOLLAR) AS TotalCost
+  ,SUM(GROSS_MARGIN_DOLLAR) AS TotalGrossMargin
+  ,SUM(QUANTITY) AS TotalQuantity
+  ,SUM(COGS_DOLLAR) / SUM(SALES_DOLLAR) AS average_cogspc
+FROM tim_wilson.silver.br_outbound_invoice_sherri
+WHERE GROSS_MARGIN_DOLLAR > 0
+AND DATE <= DATE_ADD(DAY, -1, DATE_TRUNC('QUARTER', (SELECT MAX(DATE) FROM tim_wilson.silver.br_outbound_invoice_sherri))) -- invoices up to and including the end of the maximum calendar quarter for the current data
+GROUP BY DATE_PART('YEAR', date), DATE_PART('QUARTER', date), COREVIEW_PRODUCT_CATEGORY
+)
+
+SELECT *
+FROM sales_data
+--WHERE coreview_product_category = 'Binder'
+--WHERE coreview_product_category = 'EPDM'
+--WHERE coreview_product_category = 'F&I'
+--WHERE coreview_product_category = 'UNCATEGORIZED'
+ORDER BY year, quarter, COREVIEW_PRODUCT_CATEGORY
+;
+
+-- WHERE current date > max load_datetime in lookup table
+--   AND max date of incoming data > 1st day of lookup table max quarter + 1
+--   AND no data in lookup table for max quarter + 1 (not exists date >= 1st day of lookup table max quarter + 1)
+;
+
+SELECT current_timestamp()
+,DATE_PART('YEAR', current_timestamp()) AS year
+,DATE_PART('QUARTER', current_timestamp()) AS quarter
+,CAST(DATE_ADD(MONTH, -3, CAST(current_timestamp() AS TIMESTAMP)) AS DATE) AS last_quarter_date
+,DATE_PART('YEAR', CAST(DATE_ADD(MONTH, -3, CAST(current_timestamp() AS TIMESTAMP)) AS DATE)) AS last_quarter_year
+,DATE_PART('QUARTER', CAST(DATE_ADD(MONTH, -3, CAST(current_timestamp() AS TIMESTAMP)) AS DATE)) AS last_quarter_quarter
+--,DATE_ADD(QUARTER, -1, DATE_ADD(QUARTER, 0, current_timestamp())) AS end_date_of_last_quarter
+--,DATE_ADD(QUARTER, 0, current_timestamp()) AS end_date_of_last_quarter
+-- ,DATE_ADD(DAY, -1, DATE_TRUNC(current_timestamp(), 'QUARTER'))
+,DATE_ADD(DAY, -1, DATE_TRUNC('QUARTER', current_timestamp()))
+;
+
+SELECT *
+FROM tim_wilson.silver.br_outbound_invoice_cogspc_lookup
+;
+
+SELECT *
+,DATE_PART('YEAR', CAST(DATE_ADD(MONTH, -3, CAST(qb.date AS TIMESTAMP)) AS DATE))
+,DATE_PART('QUARTER', CAST(DATE_ADD(MONTH, -3, CAST(qb.date AS TIMESTAMP)) AS DATE))
+FROM tim_wilson.silver.br_outbound_invoice_quickbooks AS qb
+;
+
+SELECT qb.*
+,cogspc.average_cogspc
+FROM tim_wilson.silver.br_outbound_invoice_quickbooks AS qb
+LEFT OUTER JOIN tim_wilson.silver.br_outbound_invoice_cogspc_lookup AS cogspc
+ON DATE_PART('YEAR', CAST(DATE_ADD(MONTH, -3, CAST(qb.date AS TIMESTAMP)) AS DATE)) = cogspc.year
+AND DATE_PART('QUARTER', CAST(DATE_ADD(MONTH, -3, CAST(qb.date AS TIMESTAMP)) AS DATE)) = cogspc.quarter
+AND qb.COREVIEW_PRODUCT_CATEGORY = cogspc.COREVIEW_PRODUCT_CATEGORY
+;
+
+-- 11/09/2025
+-- 96532
+SELECT COUNT(*)
+FROM tim_wilson.silver.br_outbound_invoice_quickbooks AS qb
+;
+
+-- 96532
+SELECT COUNT(*)
+FROM(
+SELECT * FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks`
+UNION
+SELECT * FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_dgh`
+UNION
+SELECT * FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_edge`
+UNION
+SELECT * FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_hti`
+)
+;
+
+SELECT qb.*
+FROM tim_wilson.silver.br_outbound_invoice_quickbooks AS qb
+;
+
+SELECT qb.*
+FROM tim_wilson.silver.br_outbound_invoice_sherri AS qb
+;
+
+-- Create quarterly COGS percentage lookup table for business units
+WITH sales_data AS (
+SELECT
+  DATE_PART('YEAR', date) AS year
+  ,DATE_PART('QUARTER', date) AS quarter
+  ,BU
+  ,SUM(SALES_DOLLAR) AS TotalSales
+  ,SUM(COGS_DOLLAR) AS TotalCost
+  ,SUM(GROSS_MARGIN_DOLLAR) AS TotalGrossMargin
+  ,SUM(QUANTITY) AS TotalQuantity
+  ,SUM(COGS_DOLLAR) / SUM(SALES_DOLLAR) AS average_cogspc
+FROM tim_wilson.silver.br_outbound_invoice_sherri
+WHERE GROSS_MARGIN_DOLLAR > 0
+AND DATE <= DATE_ADD(DAY, -1, DATE_TRUNC('QUARTER', (SELECT MAX(DATE) FROM tim_wilson.silver.br_outbound_invoice_sherri))) -- invoices up to and including the end of the maximum calendar quarter for the current data
+GROUP BY DATE_PART('YEAR', date), DATE_PART('QUARTER', date), BU
+)
+
+SELECT *
+FROM sales_data
+ORDER BY year, quarter, BU
+;
+
+SELECT *
+FROM tim_wilson.silver.br_outbound_invoice_cogspc_pc_lookup
+;
+
+SELECT *
+FROM tim_wilson.silver.br_outbound_invoice_cogspc_bu_lookup
+;
+
+WITH combined_qb AS(
+
+SELECT * FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks`
+UNION
+SELECT * FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_dgh`
+UNION
+SELECT * FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_edge`
+UNION
+SELECT * FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_hti`
+
+)
+
+SELECT
+     INVOICE_LINE_LHK
+     , INVOICELINE
+     , DATE AS INVOICEDATE
+     , qb.NAME AS CUSTOMER
+     , qb.ITEM as PRODUCT_ID
+     , COALESCE(mpc.COREVIEW_PRODUCT_CATEGORY, 'UNCATEGORIZED') AS COREVIEW_PRODUCT_CATEGORY
+     , qb.CLASS as SITE
+     , mec.BUSINESS_SEGMENT as BU
+     , COMPANYCODE AS ENTITY
+     , AMOUNT AS SALES_DOLLAR
+     , AMOUNT * COALESCE(cogspc.average_cogspc, cogsbu.average_cogspc) AS COGS_DOLLAR
+     , TRY_DIVIDE((AMOUNT * COALESCE(cogspc.average_cogspc, cogsbu.average_cogspc)), QTY) AS UNIT_COST
+     , AMOUNT - (AMOUNT * COALESCE(cogspc.average_cogspc, cogsbu.average_cogspc)) AS GROSS_MARGIN_DOLLAR
+     , TRY_DIVIDE((AMOUNT - (AMOUNT * COALESCE(cogspc.average_cogspc, cogsbu.average_cogspc))), AMOUNT) AS GROSS_MARGIN_PCT
+     , QTY AS QUANTITY
+     , CASE
+         WHEN cogspc.average_cogspc IS NOT NULL THEN 'PC'
+         WHEN cogsbu.average_cogspc IS NOT NULL THEN 'BU'
+         ELSE NULL
+       END AS COGSPC_SOURCE
+     , LOAD_DATETIME
+     , RECORD_SOURCE
+     , HASHDIFF
+FROM combined_qb as qb
+
+LEFT OUTER JOIN (SELECT Item, CoreView_Product_Category
+FROM `landing`.`reftables`.`master_product_category_non_kinetic`
+QUALIFY row_number() OVER(PARTITION BY ITEM ORDER BY CoreView_Product_Category) = 1) as mpc
+    ON qb.item = mpc.item
+
+LEFT OUTER JOIN `landing`.`reftables`.`master_ecore_companies` AS mec
+    ON qb.companycode= mec.company_code
+
+LEFT OUTER JOIN `tim_wilson`.`silver`.`br_outbound_invoice_cogspc_pc_lookup` AS cogspc
+ON DATE_PART('YEAR', CAST(DATE_ADD(MONTH, -3, CAST(qb.date AS TIMESTAMP)) AS DATE)) = cogspc.year
+AND DATE_PART('QUARTER', CAST(DATE_ADD(MONTH, -3, CAST(qb.date AS TIMESTAMP)) AS DATE)) = cogspc.quarter
+AND mpc.COREVIEW_PRODUCT_CATEGORY = cogspc.COREVIEW_PRODUCT_CATEGORY
+
+LEFT OUTER JOIN `tim_wilson`.`silver`.`br_outbound_invoice_cogspc_bu_lookup` AS cogsbu
+ON DATE_PART('YEAR', CAST(DATE_ADD(MONTH, -3, CAST(qb.date AS TIMESTAMP)) AS DATE)) = cogspc.year
+AND DATE_PART('QUARTER', CAST(DATE_ADD(MONTH, -3, CAST(qb.date AS TIMESTAMP)) AS DATE)) = cogspc.quarter
+AND mec.BUSINESS_SEGMENT = cogsbu.BU
+;
+
+SELECT DISTINCT COMPANY_CODE, Business_Segment
+FROM landing.reftables.master_ecore_companies
+ORDER BY 1
+;
+
+-- EII
+-- STI
+-- DRC
+-- SAI
+SELECT DISTINCT ENTITY
+FROM tim_wilson.silver.br_outbound_invoice_sherri
+;
+
+-- Cardinal
+-- PRC
+-- DGH
+-- TSS
+-- HTI
+-- EDGE
+-- 360
+SELECT DISTINCT ENTITY
+FROM tim_wilson.silver.br_outbound_invoice_quickbooks
+;
+
+SELECT *
+FROM tim_wilson.silver.sat_outbound_invoices_kinetic
+;
+
+SELECT *
+FROM tim_wilson.silver.sat_outbound_invoices_quickbooks
+;
+
+SELECT *
+FROM tim_wilson.silver.br_outbound_invoice_quickbooks
+WHERE 
+-- COREVIEW_PRODUCT_CATEGORY = 'Reman Tires'
+--COGSPC_SOURCE = 'PC'
+--COGSPC_SOURCE = 'BU'
+COGSPC_SOURCE IS NULL
+;
+
+SELECT *
+FROM tim_wilson.silver.br_outbound_invoice_cogspc_pc_lookup
+;
+
+SELECT *
+FROM tim_wilson.silver.br_outbound_invoice_cogspc_bu_lookup
+;
+
+WITH sales_data AS (
+SELECT
+  DATE_PART('YEAR', date) AS year
+  ,DATE_PART('QUARTER', date) AS quarter
+  ,COALESCE(mec.BUSINESS_SEGMENT, 'UNCATEGORIZED') AS BU
+  ,SUM(SALES_DOLLAR) AS TotalSales
+  ,SUM(COGS_DOLLAR) AS TotalCost
+  ,SUM(GROSS_MARGIN_DOLLAR) AS TotalGrossMargin
+  ,SUM(QUANTITY) AS TotalQuantity
+  ,SUM(COGS_DOLLAR) / SUM(SALES_DOLLAR) AS average_cogspc
+FROM `tim_wilson`.`silver`.`br_outbound_invoice_sherri` AS sherri
+
+LEFT OUTER JOIN `landing`.`reftables`.`master_ecore_companies` AS mec
+    ON sherri.entity= mec.company_code
+
+WHERE GROSS_MARGIN_DOLLAR > 0
+-- invoices up to and including the end of the maximum calendar quarter for the current data
+AND DATE <= DATE_ADD(DAY, -1, DATE_TRUNC('QUARTER', (SELECT MAX(DATE) FROM `tim_wilson`.`silver`.`br_outbound_invoice_sherri`)))
+GROUP BY DATE_PART('YEAR', date), DATE_PART('QUARTER', date), COALESCE(mec.BUSINESS_SEGMENT, 'UNCATEGORIZED')
+)
+
+SELECT *
+FROM sales_data
+ORDER BY year, quarter, BU
+;
+
+WITH combined_qb AS(
+
+SELECT * FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks`
+UNION
+SELECT * FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_dgh`
+UNION
+SELECT * FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_edge`
+UNION
+SELECT * FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_hti`
+
+)
+
+SELECT 
+     INVOICE_LINE_LHK
+     , INVOICELINE
+     , DATE AS INVOICEDATE
+     , qb.NAME AS CUSTOMER
+     , qb.ITEM as PRODUCT_ID
+     , COALESCE(mpc.COREVIEW_PRODUCT_CATEGORY, 'UNCATEGORIZED') AS COREVIEW_PRODUCT_CATEGORY
+     , qb.CLASS as SITE
+     , mec.BUSINESS_SEGMENT as BU
+     ,cogspc.average_cogspc AS average_cogspcPC, cogsbu.average_cogspc AS average_cogspcBU
+     ,cogsbu.BU
+     ,DATE_PART('YEAR', CAST(DATE_ADD(MONTH, -3, CAST(qb.date AS TIMESTAMP)) AS DATE))
+     ,DATE_PART('QUARTER', CAST(DATE_ADD(MONTH, -3, CAST(qb.date AS TIMESTAMP)) AS DATE))
+     ,(CASE WHEN DATE_PART('YEAR', CAST(DATE_ADD(MONTH, -3, CAST(qb.date AS TIMESTAMP)) AS DATE)) < 2023 THEN 2023 ELSE DATE_PART('YEAR', CAST(DATE_ADD(MONTH, -3, CAST(qb.date AS TIMESTAMP)) AS DATE)) END)
+     ,(CASE WHEN DATE_PART('YEAR', CAST(DATE_ADD(MONTH, -3, CAST(qb.date AS TIMESTAMP)) AS DATE)) < 2023 THEN 1 ELSE DATE_PART('QUARTER', CAST(DATE_ADD(MONTH, -3, CAST(qb.date AS TIMESTAMP)) AS DATE)) END)
+     , COMPANYCODE AS ENTITY
+     , AMOUNT AS SALES_DOLLAR
+     , AMOUNT * COALESCE(cogspc.average_cogspc, cogsbu.average_cogspc) AS COGS_DOLLAR
+     , TRY_DIVIDE((AMOUNT * COALESCE(cogspc.average_cogspc, cogsbu.average_cogspc)), QTY) AS UNIT_COST
+     , AMOUNT - (AMOUNT * COALESCE(cogspc.average_cogspc, cogsbu.average_cogspc)) AS GROSS_MARGIN_DOLLAR
+     , TRY_DIVIDE((AMOUNT - (AMOUNT * COALESCE(cogspc.average_cogspc, cogsbu.average_cogspc))), AMOUNT) AS GROSS_MARGIN_PCT
+     , QTY AS QUANTITY
+     , CASE
+         WHEN cogspc.average_cogspc IS NOT NULL THEN 'PC'
+         WHEN cogsbu.average_cogspc IS NOT NULL THEN 'BU'
+         ELSE NULL
+       END AS COGSPC_SOURCE
+     , LOAD_DATETIME
+     , RECORD_SOURCE
+     , HASHDIFF
+FROM combined_qb as qb
+
+LEFT OUTER JOIN (SELECT Item, CoreView_Product_Category
+FROM `landing`.`reftables`.`master_product_category_non_kinetic`
+QUALIFY row_number() OVER(PARTITION BY ITEM ORDER BY CoreView_Product_Category) = 1) as mpc
+    ON qb.item = mpc.item
+
+LEFT OUTER JOIN `landing`.`reftables`.`master_ecore_companies` AS mec
+    ON qb.companycode= mec.company_code
+
+LEFT OUTER JOIN `tim_wilson`.`silver`.`br_outbound_invoice_cogspc_pc_lookup` AS cogspc
+ON (CASE WHEN DATE_PART('YEAR', CAST(DATE_ADD(MONTH, -3, CAST(qb.date AS TIMESTAMP)) AS DATE)) < 2023 THEN 2023 ELSE DATE_PART('YEAR', CAST(DATE_ADD(MONTH, -3, CAST(qb.date AS TIMESTAMP)) AS DATE)) END) = cogspc.year
+AND (CASE WHEN DATE_PART('YEAR', CAST(DATE_ADD(MONTH, -3, CAST(qb.date AS TIMESTAMP)) AS DATE)) < 2023 THEN 1 ELSE DATE_PART('QUARTER', CAST(DATE_ADD(MONTH, -3, CAST(qb.date AS TIMESTAMP)) AS DATE)) END) = cogspc.quarter
+AND UPPER(mpc.COREVIEW_PRODUCT_CATEGORY) = UPPER(cogspc.COREVIEW_PRODUCT_CATEGORY)
+
+LEFT OUTER JOIN `tim_wilson`.`silver`.`br_outbound_invoice_cogspc_bu_lookup` AS cogsbu
+ON (CASE WHEN DATE_PART('YEAR', CAST(DATE_ADD(MONTH, -3, CAST(qb.date AS TIMESTAMP)) AS DATE)) < 2023 THEN 2023 ELSE DATE_PART('YEAR', CAST(DATE_ADD(MONTH, -3, CAST(qb.date AS TIMESTAMP)) AS DATE)) END) = cogsbu.year
+AND (CASE WHEN DATE_PART('YEAR', CAST(DATE_ADD(MONTH, -3, CAST(qb.date AS TIMESTAMP)) AS DATE)) < 2023 THEN 1 ELSE DATE_PART('QUARTER', CAST(DATE_ADD(MONTH, -3, CAST(qb.date AS TIMESTAMP)) AS DATE)) END) = cogsbu.quarter
+AND UPPER(mec.BUSINESS_SEGMENT) = UPPER(cogsbu.BU)
+
+--WHERE mpc.COREVIEW_PRODUCT_CATEGORY = 'Reman Tires'
+WHERE (CASE
+         WHEN cogspc.average_cogspc IS NOT NULL THEN 'PC'
+         WHEN cogsbu.average_cogspc IS NOT NULL THEN 'BU'
+         ELSE NULL
+       END IS NULL)
+;
+
+SELECT *
+FROM tim_wilson.silver.br_outbound_invoice_cogspc_bu_lookup
+;
+
+WITH combined_qb AS(
+
+SELECT * FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks`
+UNION
+SELECT * FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_dgh`
+UNION
+SELECT * FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_edge`
+UNION
+SELECT * FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_hti`
+
+)
+
+SELECT 
+     qb.INVOICE_LINE_LHK
+     , qb.INVOICELINE
+     , qb.DATE AS INVOICEDATE
+     , qb.NAME AS CUSTOMER
+     , qb.ITEM as PRODUCT_ID
+     , COALESCE(mpc.COREVIEW_PRODUCT_CATEGORY, 'UNCATEGORIZED') AS COREVIEW_PRODUCT_CATEGORY
+     , qb.CLASS as SITE
+     , mec.BUSINESS_SEGMENT as BU
+     , qb.COMPANYCODE AS ENTITY
+     , qb.AMOUNT AS SALES_DOLLAR
+     , qb.AMOUNT * COALESCE(cogspc.average_cogspc, cogsbu.average_cogspc) AS COGS_DOLLAR
+     , TRY_DIVIDE((qb.AMOUNT * COALESCE(cogspc.average_cogspc, cogsbu.average_cogspc)), QTY) AS UNIT_COST
+     , qb.AMOUNT - (qb.AMOUNT * COALESCE(cogspc.average_cogspc, cogsbu.average_cogspc)) AS GROSS_MARGIN_DOLLAR
+     , TRY_DIVIDE((qb.AMOUNT - (qb.AMOUNT * COALESCE(cogspc.average_cogspc, cogsbu.average_cogspc))), qb.AMOUNT) AS GROSS_MARGIN_PCT
+     , qb.QTY AS QUANTITY
+     , CASE
+         WHEN cogspc.average_cogspc IS NOT NULL THEN 'PC'
+         WHEN cogsbu.average_cogspc IS NOT NULL THEN 'BU'
+         ELSE NULL
+       END AS COGSPC_SOURCE
+     , qb.LOAD_DATETIME
+     , qb.RECORD_SOURCE
+     , qb.HASHDIFF
+FROM combined_qb as qb
+
+LEFT OUTER JOIN (SELECT Item, CoreView_Product_Category
+FROM `landing`.`reftables`.`master_product_category_non_kinetic`
+QUALIFY row_number() OVER(PARTITION BY ITEM ORDER BY CoreView_Product_Category) = 1) as mpc
+    ON UPPER(qb.item) = UPPER(mpc.item)
+
+LEFT OUTER JOIN `landing`.`reftables`.`master_ecore_companies` AS mec
+    ON UPPER(qb.companycode) = UPPER(mec.company_code)
+
+LEFT OUTER JOIN `tim_wilson`.`silver`.`br_outbound_invoice_cogspc_pc_lookup` AS cogspc
+ON DATE_PART('YEAR', CAST(DATE_ADD(MONTH, -3, CAST(qb.date AS TIMESTAMP)) AS DATE)) = cogspc.year
+AND DATE_PART('QUARTER', CAST(DATE_ADD(MONTH, -3, CAST(qb.date AS TIMESTAMP)) AS DATE)) = cogspc.quarter
+AND UPPER(COALESCE(mpc.COREVIEW_PRODUCT_CATEGORY, 'UNCATEGORIZED')) = UPPER(cogspc.COREVIEW_PRODUCT_CATEGORY)
+
+LEFT OUTER JOIN `tim_wilson`.`silver`.`br_outbound_invoice_cogspc_bu_lookup` AS cogsbu
+ON DATE_PART('YEAR', CAST(DATE_ADD(MONTH, -3, CAST(qb.date AS TIMESTAMP)) AS DATE)) = cogsbu.year
+AND DATE_PART('QUARTER', CAST(DATE_ADD(MONTH, -3, CAST(qb.date AS TIMESTAMP)) AS DATE)) = cogsbu.quarter
+AND UPPER(mec.BUSINESS_SEGMENT) = UPPER(cogsbu.BU)
+
+-- WHERE (CASE
+--          WHEN cogspc.average_cogspc IS NOT NULL THEN 'PC'
+--          WHEN cogsbu.average_cogspc IS NOT NULL THEN 'BU'
+--          ELSE NULL
+--        END IS NOT NULL)
+-- AND qb.DATE BETWEEN '2023-04-01' AND '2023-06-30'
+-- AND qb.AMOUNT > 0
+-- AND qb.date = '2023-05-13'
+;
+
+SELECT *
+FROM tim_wilson.silver.br_outbound_invoice_cogspc_pc_lookup
+;
+
+-- @UNCATEGORIZED@
+-- @UNCATEGORIZED@
+
+SELECT *
+FROM tim_wilson.silver.br_outbound_invoice_cogspc_bu_lookup
+;
+
+SELECT *
+FROM tim_wilson.silver.br_outbound_invoice_sherri
+;
+
+DROP TABLE tim_wilson.psa_kinetic.psa_coparts
+;
+DROP TABLE tim_wilson.psa_kinetic.psa_resgrpeff
+;

@@ -1,0 +1,86 @@
+SELECT EXTRACT_DATE, COUNT(*)
+FROM landing.kinetic.stockstat
+GROUP BY EXTRACT_DATE
+ORDER BY 1 DESC
+;
+
+-- 479
+SELECT *
+FROM landing.kinetic.stockstat
+WHERE Extract_Date = '2026-07-20 10:00:00.000+00:00'
+;
+
+-- 479
+SELECT *
+FROM landing.kinetic.stockstat
+WHERE DATE(Extract_Date) = '2026-07-20'
+;
+
+-- 155
+SELECT *
+FROM psa.kinetic.psa_inventory_stockstat
+WHERE Extract_Date = '2026-07-20 10:00:00.000+00:00'
+;
+
+-- DELETE
+-- FROM psa.kinetic.psa_inventory_stockstat
+-- WHERE Extract_Date = '2026-07-20 10:00:00.000+00:00'
+-- ;
+
+-- 155
+SELECT *
+FROM psa_prod.kinetic.psa_inventory_stockstat
+WHERE Extract_Date = '2026-07-20 10:00:00.000+00:00'
+;
+
+-- DELETE
+-- FROM psa_prod.kinetic.psa_inventory_stockstat
+-- WHERE Extract_Date = '2026-07-20 10:00:00.000+00:00'
+-- ;
+
+-- GRANT MODIFY ON TABLE psa_prod.kinetic.psa_inventory_stockstat TO `twilson@ecoreintl.com`
+-- ;
+
+-- 155
+SELECT *
+FROM uat.silver.sat_inventory_stock_levels
+WHERE Extract_Date = '2026-07-20 10:00:00.000+00:00'
+;
+
+-- DELETE
+-- FROM uat.silver.sat_inventory_stock_levels
+-- WHERE Extract_Date = '2026-07-20 10:00:00.000+00:00'
+-- ;
+
+-- 155
+SELECT *
+FROM production.silver.sat_inventory_stock_levels
+WHERE Extract_Date = '2026-07-20 10:00:00.000+00:00'
+;
+
+-- DELETE
+-- FROM production.silver.sat_inventory_stock_levels
+-- WHERE Extract_Date = '2026-07-20 10:00:00.000+00:00'
+-- ;
+
+-- 0
+SELECT *
+FROM uat.silver.sat_location_inventory_stock_levels
+WHERE Extract_Date = '2026-07-20 10:00:00.000+00:00'
+;
+
+-- 0
+SELECT *
+FROM uat.silver.sat_location_inventory_stock_levels
+WHERE DATE(Extract_Date) = '2026-07-20'
+;
+
+-- > 1000
+SELECT *
+FROM uat.silver.sat_inventory_stock_levels
+WHERE DATE(Extract_Date) = '2026-07-20'
+;
+
+-- dbt run -s sat_inventory_stock_levels+
+
+

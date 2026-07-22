@@ -1,0 +1,15 @@
+CREATE TABLE psa.backup.psa_customer_20260625 AS
+SELECT * FROM psa.kinetic.psa_customer
+;
+
+-- DROP TABLE psa.kinetic.psa_customer
+-- ;
+
+CREATE TABLE psa_prod.backup.psa_customer_20260625 AS
+SELECT * FROM psa_prod.kinetic.psa_customer
+;
+
+-- DROP TABLE psa_prod.kinetic.psa_customer
+-- ;
+
+

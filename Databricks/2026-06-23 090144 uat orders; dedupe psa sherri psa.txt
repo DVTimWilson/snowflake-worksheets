@@ -1,0 +1,373 @@
+-- 1 hub order
+-- 2
+SELECT COUNT(*)
+FROM uat.silver.hub_order
+WHERE ORDER_HK IN (
+SELECT DISTINCT c.ORDER_HK
+FROM uat.silver.hub_order as c
+INNER JOIN uat.silver.lnk_order_fulfilment as a
+ON c.ORDER_HK = a.ORDER_HK
+INNER JOIN uat.silver.hub_outbound_invoice as b
+ON a.OUTBOUND_INVOICE_HK = b.OUTBOUND_INVOICE_HK
+WHERE 1=1
+AND b.COMPANY_ID IN ('ETC', 'ECS', 'ERP')
+AND c.RECORD_SOURCE = 'KINETIC.SHERRIGM'
+)
+;
+
+-- 2 lnk order fulfillment
+-- 6290
+SELECT COUNT(*)
+FROM uat.silver.lnk_order_fulfilment
+WHERE OUTBOUND_INVOICE_HK IN (
+SELECT DISTINCT a.OUTBOUND_INVOICE_HK
+FROM uat.silver.lnk_order_fulfilment as a
+INNER JOIN uat.silver.hub_outbound_invoice as b
+ON a.OUTBOUND_INVOICE_HK = b.OUTBOUND_INVOICE_HK
+WHERE 1=1
+AND b.COMPANY_ID IN ('ETC', 'ECS', 'ERP')
+AND a.RECORD_SOURCE = 'KINETIC.SHERRIGM'
+)
+;
+
+-- 1154494
+SELECT COUNT(*)
+FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+;
+
+-- Including Extract_Date because the problem is only happening for one extract date
+
+-- 1134102 DISTINCT
+-- 1154494
+-- 20392
+SELECT COUNT(*)
+FROM (SELECT -- DISTINCT
+Company, InvoiceNum, InvoiceDate, InvoiceType, CreditMemo, CustNum, CustID, Name, InvoiceLine, PartNum, LineDesc, ProdCode, SellingShipQty, SalesUm, DocUnitPrice, DocExtPrice, DocDiscount, DocTotalMiscChrg, SalesPrice, DocUnitCost, DocExtCost, GM, GMpct, ShipToCustNum, ShipToNum, OTS, NULL AS AddressID, ShipToName, ShipToAddress1, ShipToAddress2, ShipToAddress3, ShipToCity, ShipToState, ShipToZIP, ShipToCountry, SalesRepList, BusinessUnit, SoldToState, GroupCode, TerritoryID, Character03, MasterKey, Plant, Formula, Width, Thick, Area, SFSold, BaseForula, RouteToMarketCode, RouteToMarket, CustPlatformCode, CustPlatform, CustDescriptionCode, CustDescription, Branded, Market_c, Application_c, Form_c, Format_c, Brand_c, BusinessUnit_c, Market2_c, Platform_c, ProjectName_c, OrderNum, NtlAccount, Assist, BillToCountry, RequestDate, NeedByDate, CustSegment_c, OrderDate, TestMarketID, TestMarket, NULL AS Pounds, Extract_Date FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies)
+;
+
+SELECT COUNT(*)
+FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+GROUP BY Company, InvoiceNum, InvoiceDate, InvoiceType, CreditMemo, CustNum, CustID, Name, InvoiceLine, PartNum, LineDesc, ProdCode, SellingShipQty, SalesUm, DocUnitPrice, DocExtPrice, DocDiscount, DocTotalMiscChrg, SalesPrice, DocUnitCost, DocExtCost, GM, GMpct, ShipToCustNum, ShipToNum, OTS, AddressID, ShipToName, ShipToAddress1, ShipToAddress2, ShipToAddress3, ShipToCity, ShipToState, ShipToZIP, ShipToCountry, SalesRepList, BusinessUnit, SoldToState, GroupCode, TerritoryID, Character03, MasterKey, Plant, Formula, Width, Thick, Area, SFSold, BaseForula, RouteToMarketCode, RouteToMarket, CustPlatformCode, CustPlatform, CustDescriptionCode, CustDescription, Branded, Market_c, Application_c, Form_c, Format_c, Brand_c, BusinessUnit_c, Market2_c, Platform_c, ProjectName_c, OrderNum, NtlAccount, Assist, BillToCountry, RequestDate, NeedByDate, CustSegment_c, OrderDate, TestMarketID, TestMarket, Pounds, Extract_Date
+HAVING COUNT(*) > 1
+-- ORDER BY COUNT(*) DESC
+;
+
+-- 2025-10-24T12:00:00.000+00:00
+SELECT EXTRACT_DATE, COUNT(*)
+FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+GROUP BY Company, InvoiceNum, InvoiceDate, InvoiceType, CreditMemo, CustNum, CustID, Name, InvoiceLine, PartNum, LineDesc, ProdCode, SellingShipQty, SalesUm, DocUnitPrice, DocExtPrice, DocDiscount, DocTotalMiscChrg, SalesPrice, DocUnitCost, DocExtCost, GM, GMpct, ShipToCustNum, ShipToNum, OTS, AddressID, ShipToName, ShipToAddress1, ShipToAddress2, ShipToAddress3, ShipToCity, ShipToState, ShipToZIP, ShipToCountry, SalesRepList, BusinessUnit, SoldToState, GroupCode, TerritoryID, Character03, MasterKey, Plant, Formula, Width, Thick, Area, SFSold, BaseForula, RouteToMarketCode, RouteToMarket, CustPlatformCode, CustPlatform, CustDescriptionCode, CustDescription, Branded, Market_c, Application_c, Form_c, Format_c, Brand_c, BusinessUnit_c, Market2_c, Platform_c, ProjectName_c, OrderNum, NtlAccount, Assist, BillToCountry, RequestDate, NeedByDate, CustSegment_c, OrderDate, TestMarketID, TestMarket, Pounds, Extract_Date
+HAVING COUNT(*) > 1
+;
+
+-- 1134102
+SELECT COUNT(*)
+FROM (
+SELECT *
+FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+QUALIFY ROW_NUMBER() OVER (PARTITION BY Company, InvoiceNum, InvoiceDate, InvoiceType, CreditMemo, CustNum, CustID, Name, InvoiceLine, PartNum, LineDesc, ProdCode, SellingShipQty, SalesUm, DocUnitPrice, DocExtPrice, DocDiscount, DocTotalMiscChrg, SalesPrice, DocUnitCost, DocExtCost, GM, GMpct, ShipToCustNum, ShipToNum, OTS, AddressID, ShipToName, ShipToAddress1, ShipToAddress2, ShipToAddress3, ShipToCity, ShipToState, ShipToZIP, ShipToCountry, SalesRepList, BusinessUnit, SoldToState, GroupCode, TerritoryID, Character03, MasterKey, Plant, Formula, Width, Thick, Area, SFSold, BaseForula, RouteToMarketCode, RouteToMarket, CustPlatformCode, CustPlatform, CustDescriptionCode, CustDescription, Branded, Market_c, Application_c, Form_c, Format_c, Brand_c, BusinessUnit_c, Market2_c, Platform_c, ProjectName_c, OrderNum, NtlAccount, Assist, BillToCountry, RequestDate, NeedByDate, CustSegment_c, OrderDate, TestMarketID, TestMarket, Pounds, Extract_Date ORDER BY EXTRACT_DATE DESC) = 1
+) AS x
+;
+
+CREATE TABLE psa.kinetic.psa_sales_sherrigmquery_allcompanies_dedupe_20260623 AS
+SELECT *
+FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+QUALIFY ROW_NUMBER() OVER (PARTITION BY Company, InvoiceNum, InvoiceDate, InvoiceType, CreditMemo, CustNum, CustID, Name, InvoiceLine, PartNum, LineDesc, ProdCode, SellingShipQty, SalesUm, DocUnitPrice, DocExtPrice, DocDiscount, DocTotalMiscChrg, SalesPrice, DocUnitCost, DocExtCost, GM, GMpct, ShipToCustNum, ShipToNum, OTS, AddressID, ShipToName, ShipToAddress1, ShipToAddress2, ShipToAddress3, ShipToCity, ShipToState, ShipToZIP, ShipToCountry, SalesRepList, BusinessUnit, SoldToState, GroupCode, TerritoryID, Character03, MasterKey, Plant, Formula, Width, Thick, Area, SFSold, BaseForula, RouteToMarketCode, RouteToMarket, CustPlatformCode, CustPlatform, CustDescriptionCode, CustDescription, Branded, Market_c, Application_c, Form_c, Format_c, Brand_c, BusinessUnit_c, Market2_c, Platform_c, ProjectName_c, OrderNum, NtlAccount, Assist, BillToCountry, RequestDate, NeedByDate, CustSegment_c, OrderDate, TestMarketID, TestMarket, Pounds, Extract_Date ORDER BY EXTRACT_DATE DESC) = 1
+;
+
+-- 1134102
+SELECT COUNT(*)
+FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies_dedupe_20260623
+;
+
+-- TRUNCATE TABLE psa.kinetic.psa_sales_sherrigmquery_allcompanies
+-- ;
+
+-- -- 1134102
+-- INSERT INTO psa.kinetic.psa_sales_sherrigmquery_allcompanies
+-- SELECT * FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies_dedupe_20260623
+-- ;
+
+
+
+
+-- 563347
+SELECT COUNT(*)
+FROM (SELECT -- DISTINCT
+Company, InvoiceNum, InvoiceDate, InvoiceType, CreditMemo, CustNum, CustID, Name, InvoiceLine, PartNum, LineDesc, ProdCode, SellingShipQty, SalesUm, DocUnitPrice, DocExtPrice, DocDiscount, DocTotalMiscChrg, SalesPrice, DocUnitCost, DocExtCost, GM, GMpct, ShipToCustNum, ShipToNum, OTS, NULL AS AddressID, ShipToName, ShipToAddress1, ShipToAddress2, ShipToAddress3, ShipToCity, ShipToState, ShipToZIP, ShipToCountry, SalesRepList, BusinessUnit, SoldToState, GroupCode, TerritoryID, Character03, MasterKey, Plant, Formula, Width, Thick, Area, SFSold, BaseForula, RouteToMarketCode, RouteToMarket, CustPlatformCode, CustPlatform, CustDescriptionCode, CustDescription, Branded, Market_c, Application_c, Form_c, Format_c, Brand_c, BusinessUnit_c, Market2_c, Platform_c, ProjectName_c, OrderNum, NtlAccount, Assist, BillToCountry, RequestDate, NeedByDate, CustSegment_c, OrderDate, TestMarketID, TestMarket, NULL AS Pounds, Extract_Date FROM tim_wilson.psa_kinetic.psa_sales_sherrigmquery_allcompanies)
+;
+
+SELECT EXTRACT_DATE, COUNT(*)
+FROM tim_wilson.psa_kinetic.psa_sales_sherrigmquery_allcompanies
+GROUP BY Company, InvoiceNum, InvoiceDate, InvoiceType, CreditMemo, CustNum, CustID, Name, InvoiceLine, PartNum, LineDesc, ProdCode, SellingShipQty, SalesUm, DocUnitPrice, DocExtPrice, DocDiscount, DocTotalMiscChrg, SalesPrice, DocUnitCost, DocExtCost, GM, GMpct, ShipToCustNum, ShipToNum, OTS, AddressID, ShipToName, ShipToAddress1, ShipToAddress2, ShipToAddress3, ShipToCity, ShipToState, ShipToZIP, ShipToCountry, SalesRepList, BusinessUnit, SoldToState, GroupCode, TerritoryID, Character03, MasterKey, Plant, Formula, Width, Thick, Area, SFSold, BaseForula, RouteToMarketCode, RouteToMarket, CustPlatformCode, CustPlatform, CustDescriptionCode, CustDescription, Branded, Market_c, Application_c, Form_c, Format_c, Brand_c, BusinessUnit_c, Market2_c, Platform_c, ProjectName_c, OrderNum, NtlAccount, Assist, BillToCountry, RequestDate, NeedByDate, CustSegment_c, OrderDate, TestMarketID, TestMarket, Pounds, Extract_Date
+HAVING COUNT(*) > 1
+;
+
+-- TRUNCATE TABLE tim_wilson.psa_kinetic.psa_sales_sherrigmquery_allcompanies
+-- ;
+
+-- -- 1114792
+-- INSERT INTO tim_wilson.psa_kinetic.psa_sales_sherrigmquery_allcompanies
+-- SELECT * FROM psa_prod.kinetic.psa_sales_sherrigmquery_allcompanies
+-- ;
+
+-- -- 1134102
+-- INSERT INTO tim_wilson.psa_kinetic.psa_sales_sherrigmquery_allcompanies
+-- SELECT * FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+-- ;
+
+
+-- 1134102 with and without DISTINCT
+SELECT COUNT(*)
+FROM (SELECT DISTINCT
+Company, InvoiceNum, InvoiceDate, InvoiceType, CreditMemo, CustNum, CustID, Name, InvoiceLine, PartNum, LineDesc, ProdCode, SellingShipQty, SalesUm, DocUnitPrice, DocExtPrice, DocDiscount, DocTotalMiscChrg, SalesPrice, DocUnitCost, DocExtCost, GM, GMpct, ShipToCustNum, ShipToNum, OTS, AddressID, ShipToName, ShipToAddress1, ShipToAddress2, ShipToAddress3, ShipToCity, ShipToState, ShipToZIP, ShipToCountry, SalesRepList, BusinessUnit, SoldToState, GroupCode, TerritoryID, Character03, MasterKey, Plant, Formula, Width, Thick, Area, SFSold, BaseForula, RouteToMarketCode, RouteToMarket, CustPlatformCode, CustPlatform, CustDescriptionCode, CustDescription, Branded, Market_c, Application_c, Form_c, Format_c, Brand_c, BusinessUnit_c, Market2_c, Platform_c, ProjectName_c, OrderNum, NtlAccount, Assist, BillToCountry, RequestDate, NeedByDate, CustSegment_c, OrderDate, TestMarketID, TestMarket, Pounds, Extract_Date FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies)
+;
+
+WITH uat AS (
+SELECT EXTRACT_DATE, COUNT(*) AS uatcnt
+FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+GROUP BY Extract_Date
+ORDER BY Extract_Date DESC
+)
+,
+
+prod AS (
+SELECT EXTRACT_DATE, COUNT(*) AS prodcnt
+FROM psa_prod.kinetic.psa_sales_sherrigmquery_allcompanies
+GROUP BY Extract_Date
+ORDER BY Extract_Date DESC
+)
+
+SELECT uat.*, prodcnt
+FROM uat
+
+FULL OUTER JOIN prod
+ON uat.extract_date = prod.extract_date
+
+-- WHERE uat.uatcnt = prod.prodcnt
+
+ORDER BY uat.extract_date DESC
+;
+
+-- prod psa is correct
+-- uat  psa has duplicates
+
+-- TRUNCATE TABLE psa.kinetic.psa_sales_sherrigmquery_allcompanies
+-- ;
+
+-- INSERT INTO psa.kinetic.psa_sales_sherrigmquery_allcompanies
+-- SELECT * FROM psa_prod.kinetic.psa_sales_sherrigmquery_allcompanies
+-- ;
+
+
+SELECT *
+FROM uat.meta.waterlevels
+WHERE TABLE_NAME LIKE '%stg_sales_sherrigmquery_allcompanies%'
+ORDER BY WATERLEVEL_TS DESC
+;
+
+SELECT *
+-- DELETE
+FROM uat.meta.waterlevels
+WHERE TABLE_NAME LIKE '%stg_sales_sherrigmquery_allcompanies%'
+AND WATERLEVEL_TS = '2026-06-22T13:00:00.000+00:00'
+;
+
+SELECT *
+FROM production.meta.waterlevels
+WHERE TABLE_NAME LIKE '%stg_sales_sherrigmquery_allcompanies%'
+ORDER BY WATERLEVEL_TS DESC
+;
+
+SELECT *
+-- DELETE
+FROM production.meta.waterlevels
+WHERE TABLE_NAME LIKE '%stg_sales_sherrigmquery_allcompanies%'
+AND WATERLEVEL_TS > '2026-06-22T11:00:11.000+00:00'
+;
+
+WITH uat AS (
+SELECT EXTRACT_DATE, COUNT(*) AS uatcnt
+FROM uat.silver.sat_outbound_invoice_kinetic
+GROUP BY Extract_Date
+ORDER BY Extract_Date DESC
+)
+,
+
+prod AS (
+SELECT EXTRACT_DATE, COUNT(*) AS prodcnt
+FROM production.silver.sat_outbound_invoice_kinetic
+GROUP BY Extract_Date
+ORDER BY Extract_Date DESC
+)
+
+-- sum(uatcnt)	sum(prodcnt)
+-- 382314	382296
+SELECT uat.*, prod.*
+-- SELECT SUM(uat.uatcnt), SUM(prod.prodcnt)
+FROM uat
+
+FULL OUTER JOIN prod
+ON uat.extract_date = prod.extract_date
+
+-- WHERE uat.uatcnt = prod.prodcnt
+
+ORDER BY uat.extract_date DESC
+;
+
+-- 381209
+SELECT COUNT(*)
+FROM uat.silver.sat_outbound_invoice_kinetic
+;
+
+-- 381225
+SELECT COUNT(*)
+FROM production.silver.sat_outbound_invoice_kinetic
+;
+
+SELECT *
+FROM develop.meta.waterlevels
+WHERE TABLE_NAME LIKE '%stg_sales_sherrigmquery_allcompanies%'
+ORDER BY WATERLEVEL_TS DESC
+;
+
+--
+-- 25/06/2026
+--
+
+-- Compare record counts in dev/uat/prod sat_outbound_invoice_kinetic
+-- by invoice date
+WITH dev AS (
+SELECT INVOICEDATE, COUNT(*) AS devcnt
+FROM develop.silver.sat_outbound_invoice_kinetic
+GROUP BY INVOICEDATE
+ORDER BY INVOICEDATE DESC
+)
+,
+
+uat AS (
+SELECT INVOICEDATE, COUNT(*) AS uatcnt
+FROM uat.silver.sat_outbound_invoice_kinetic
+GROUP BY INVOICEDATE
+ORDER BY INVOICEDATE DESC
+)
+,
+
+prod AS (
+SELECT INVOICEDATE, COUNT(*) AS prodcnt
+FROM production.silver.sat_outbound_invoice_kinetic
+GROUP BY INVOICEDATE
+ORDER BY INVOICEDATE DESC
+)
+
+-- sum(devcnt)	sum(uatcnt)	sum(prodcnt)
+-- 381175	382314	382296
+-- SELECT SUM(dev.devcnt), SUM(uat.uatcnt), SUM(prod.prodcnt)
+SELECT dev.*, uatcnt, prodcnt
+FROM dev
+
+FULL OUTER JOIN uat
+ON dev.INVOICEDATE = uat.INVOICEDATE
+
+FULL OUTER JOIN prod
+ON uat.INVOICEDATE = prod.INVOICEDATE
+
+ORDER BY dev.INVOICEDATE DESC
+;
+
+-- Compare salesprice in dev/uat/prod sat_outbound_invoice_kinetic
+-- by invoice date
+WITH dev AS (
+SELECT INVOICEDATE, SUM(SALESPRICE) AS devprice
+FROM develop.silver.sat_outbound_invoice_kinetic
+GROUP BY INVOICEDATE
+ORDER BY INVOICEDATE DESC
+)
+,
+
+uat AS (
+SELECT INVOICEDATE, SUM(SALESPRICE) AS uatprice
+FROM uat.silver.sat_outbound_invoice_kinetic
+GROUP BY INVOICEDATE
+ORDER BY INVOICEDATE DESC
+)
+,
+
+prod AS (
+SELECT INVOICEDATE, SUM(SALESPRICE) AS prodprice
+FROM production.silver.sat_outbound_invoice_kinetic
+GROUP BY INVOICEDATE
+ORDER BY INVOICEDATE DESC
+)
+
+-- sum(devprice)	sum(uatprice)	sum(prodprice)
+-- 941897752.49	944344235.25	944433042.56
+-- SELECT SUM(dev.devprice), SUM(uat.uatprice), SUM(prod.prodprice)
+SELECT dev.*, uatprice, prodprice
+FROM dev
+
+FULL OUTER JOIN uat
+ON dev.INVOICEDATE = uat.INVOICEDATE
+
+FULL OUTER JOIN prod
+ON uat.INVOICEDATE = prod.INVOICEDATE
+
+ORDER BY dev.INVOICEDATE DESC
+;
+
+-- Compare record counts in uat/prod psa_sales_sherrigmquery_allcompanies
+-- by invoice date
+
+WITH uat AS (
+SELECT INVOICEDATE, COUNT(*) AS uatcnt
+FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+GROUP BY INVOICEDATE
+ORDER BY INVOICEDATE DESC
+)
+,
+
+prod AS (
+SELECT INVOICEDATE, COUNT(*) AS prodcnt
+FROM psa_prod.kinetic.psa_sales_sherrigmquery_allcompanies
+GROUP BY INVOICEDATE
+ORDER BY INVOICEDATE DESC
+)
+
+-- sum(uatcnt)	sum(prodcnt)
+-- 1122093	1128363
+-- select SUM(uatcnt), SUM(prodcnt)
+SELECT uat.*, prodcnt
+FROM uat
+
+FULL OUTER JOIN prod
+ON uat.INVOICEDATE = prod.INVOICEDATE
+
+ORDER BY uat.INVOICEDATE DESC
+;
+
+-- Compare record counts in uat/prod psa_sales_sherrigmquery_allcompanies
+-- by extract date
+
+WITH uat AS (
+SELECT Extract_Date, COUNT(*) AS uatcnt
+FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+GROUP BY Extract_Date
+ORDER BY Extract_Date DESC
+)
+,
+
+prod AS (
+SELECT Extract_Date, COUNT(*) AS prodcnt
+FROM psa_prod.kinetic.psa_sales_sherrigmquery_allcompanies
+GROUP BY Extract_Date
+ORDER BY Extract_Date DESC
+)
+
+SELECT uat.*, prodcnt
+FROM uat
+
+FULL OUTER JOIN prod
+ON uat.Extract_Date = prod.Extract_Date
+
+ORDER BY uat.Extract_Date DESC
+;
+

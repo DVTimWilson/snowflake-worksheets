@@ -1,0 +1,17 @@
+SELECT *
+FROM landing.kinetic.coparts
+WHERE parttran_partnum LIKE '%001198%'
+;
+
+SELECT *
+FROM tim_wilson.bronze.src_coparts
+WHERE parttran_partnum LIKE '%001198%'
+;
+
+SELECT a.*
+FROM `landing`.`kinetic`.`coparts` AS a
+INNER JOIN (SELECT DISTINCT LABORDTL_JOBNUM FROM `tim_wilson`.`bronze`.`src_resgrpeff`) AS b
+ON UPPER(a.PARTTRAN_JOBNUM) = UPPER(b.LABORDTL_JOBNUM)
+AND CALCULATED_ISCOPART = 1
+WHERE a.parttran_partnum LIKE '%001198%'
+;

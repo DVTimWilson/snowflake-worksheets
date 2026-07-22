@@ -1,0 +1,213 @@
+SELECT * 
+FROM landing.kinetic.stockstat
+WHERE DATE(Extract_Date) = '2026-07-19'
+;
+
+-- landing.kinetic.stockstat_historical_20260721
+
+ALTER TABLE landing.kinetic.stockstat_historical_20260721
+SET TBLPROPERTIES ('delta.columnMapping.mode' = 'name')
+;
+
+ALTER TABLE landing.kinetic.stockstat_historical_20260721
+DROP COLUMN Extract_Date
+;
+
+ALTER TABLE landing.kinetic.stockstat_historical_20260721
+RENAME COLUMN EXTRACT_TIMESTAMP TO `Extract_Date`
+;
+
+CREATE OR REPLACE TABLE landing.kinetic.stockstat_backup_20260721 AS
+SELECT *
+FROM landing.kinetic.stockstat
+;
+
+-- 6063221
+SELECT COUNT(*)
+FROM landing.kinetic.stockstat
+;
+
+-- 6036492
+SELECT COUNT(*)
+FROM landing.kinetic.stockstat_backup_20260720
+;
+
+-- 6063221
+SELECT COUNT(*)
+FROM landing.kinetic.stockstat_backup_20260721
+;
+
+CREATE TABLE landing.reftables.bu_site_part_costs_temp
+TBLPROPERTIES ('delta.columnMapping.mode' = 'name')
+AS
+SELECT *
+FROM landing.reftables.bu_site_part_costs
+WHERE 1=0
+;
+
+-- 2050
+SELECT COUNT(*)
+FROM landing.kinetic.stockstat_historical_20260721
+;
+
+SELECT distinct Extract_Date, Plant_Plant, PartBin_Company
+FROM landing.kinetic.stockstat_historical_20260721
+-- where PartBin_Company = 'ERP'
+ORDER BY 1 desc
+;
+
+GRANT USAGE ON CATALOG joe_barter TO `twilson@ecoreintl.com`
+;
+
+GRANT USAGE ON SCHEMA joe_barter.psa_kinetic TO `twilson@ecoreintl.com`
+;
+
+GRANT USAGE ON SCHEMA joe_barter.silver TO `twilson@ecoreintl.com`
+;
+
+GRANT SELECT ON TABLE joe_barter.psa_kinetic.psa_inventory_stockstat_historic_20260721 TO `twilson@ecoreintl.com`
+;
+
+GRANT SELECT ON TABLE joe_barter.silver.sat_inventory_stock_levels_historic_20260721 TO `twilson@ecoreintl.com`
+;
+
+GRANT SELECT ON TABLE joe_barter.silver.sat_inventory_stock_levels TO `twilson@ecoreintl.com`
+;
+
+GRANT SELECT ON TABLE joe_barter.silver.hub_inventory_item_historic_20260721 TO `twilson@ecoreintl.com`
+;
+
+GRANT SELECT ON TABLE joe_barter.silver.hub_inventory_item TO `twilson@ecoreintl.com`
+;
+
+-- 2050
+SELECT COUNT(*)
+FROM joe_barter.psa_kinetic.psa_inventory_stockstat_historic_20260721
+;
+
+SELECT *
+FROM joe_barter.psa_kinetic.psa_inventory_stockstat_historic_20260721
+;
+
+-- 2050
+SELECT *
+FROM joe_barter.silver.sat_inventory_stock_levels_historic_20260721
+;
+
+-- 2050 they are all new
+SELECT *
+FROM joe_barter.silver.sat_inventory_stock_levels_historic_20260721 AS a
+
+LEFT ANTI JOIN joe_barter.silver.sat_inventory_stock_levels AS b
+ON a.INVENTORY_STOCK_LEVELS_LHK = b.INVENTORY_STOCK_LEVELS_LHK
+;
+
+-- 102
+SELECT *
+FROM joe_barter.silver.hub_inventory_item_historic_20260721
+;
+
+-- 17 entirely new hub records
+SELECT a.*
+FROM joe_barter.silver.hub_inventory_item_historic_20260721 AS a
+
+LEFT ANTI JOIN joe_barter.silver.hub_inventory_item AS b
+ON a.INVENTORY_ITEM_HK = b.INVENTORY_ITEM_HK
+;
+
+-- 85
+SELECT a.*
+FROM joe_barter.silver.hub_inventory_item_historic_20260721 AS a
+
+LEFT SEMI JOIN joe_barter.silver.hub_inventory_item AS b
+ON a.INVENTORY_ITEM_HK = b.INVENTORY_ITEM_HK
+;
+
+-- INSERT INTO joe_barter.psa_kinetic.psa_inventory_stockstat
+-- SELECT *
+-- FROM joe_barter.psa_kinetic.psa_inventory_stockstat_historic_20260721
+-- ;
+-- INSERT INTO joe_barter.silver.sat_inventory_stock_levels
+-- SELECT *
+-- FROM joe_barter.silver.sat_inventory_stock_levels_historic_20260721
+-- ;
+-- INSERT INTO joe_barter.silver.hub_inventory_item
+-- SELECT a.*
+-- FROM joe_barter.silver.hub_inventory_item_historic_20260721 AS a
+
+-- LEFT ANTI JOIN joe_barter.silver.hub_inventory_item AS b
+-- ON a.INVENTORY_ITEM_HK = b.INVENTORY_ITEM_HK
+-- ;
+
+SELECT ENTITY,SITE,SUM(EXTENDED_COST),COUNT(*)
+FROM production.gold_coreview.mart_inventory_stock_levels
+WHERE RECORD_SOURCE LIKE 'KINETIC.%'
+GROUP BY 1,2
+ORDER BY 1,2
+;
+
+SELECT ENTITY,SITE,COUNT(*)
+FROM production.gold_coreview.mart_inventory_stock_levels_backfill
+WHERE RECORD_SOURCE LIKE 'KINETIC.%'
+GROUP BY 1,2
+ORDER BY 1,2
+;
+SELECT ENTITY, SITE, SUM(EXTENDED_COST), DATE, COUNT(*)
+FROM production.gold_coreview.mart_inventory_stock_levels_backfill
+WHERE 1=1
+AND RECORD_SOURCE LIKE 'KINETIC.%'
+AND SITE = 'Greenville'
+GROUP BY ENTITY, SITE, DATE
+Order by date desc
+;
+--
+-- Production
+--
+
+-- INSERT INTO psa_prod.kinetic.psa_inventory_stockstat
+-- SELECT *
+-- FROM joe_barter.psa_kinetic.psa_inventory_stockstat_historic_20260721
+-- ;
+-- INSERT INTO production.silver.sat_inventory_stock_levels
+-- SELECT *
+-- FROM joe_barter.silver.sat_inventory_stock_levels_historic_20260721
+-- ;
+-- INSERT INTO production.silver.hub_inventory_item
+-- SELECT a.*
+-- FROM joe_barter.silver.hub_inventory_item_historic_20260721 AS a
+-- ;
+-- LEFT ANTI JOIN production.silver.hub_inventory_item AS b
+-- ON a.INVENTORY_ITEM_HK = b.INVENTORY_ITEM_HK
+-- ;
+
+--dbt build -s sat_inventory_stock_levels_latest+ --indirect-selection cautious
+
+SELECT a.*
+FROM joe_barter.silver.sat_inventory_stock_levels_historic_20260721 AS a
+
+LEFT ANTI JOIN uat.silver.sat_inventory_stock_levels AS b
+ON a.INVENTORY_STOCK_LEVELS_LHK = b.INVENTORY_STOCK_LEVELS_LHK
+;
+
+SELECT *
+FROM production.silver.hub_inventory_item
+WHERE INVENTORY_ITEM_HK IN (unbase64('HX9nAjfO4FBZ8XQwI57K2Q=='), unbase64('KQ0odyGkR2Bmwe2jUvoH5w=='))
+;
+
+
+--
+-- Develop
+--
+
+-- INSERT INTO develop.silver.sat_inventory_stock_levels
+-- SELECT *
+-- FROM joe_barter.silver.sat_inventory_stock_levels_historic_20260721
+-- ;
+-- INSERT INTO develop.silver.hub_inventory_item
+-- SELECT a.*
+-- FROM joe_barter.silver.hub_inventory_item_historic_20260721 AS a
+
+-- LEFT ANTI JOIN develop.silver.hub_inventory_item AS b
+-- ON a.INVENTORY_ITEM_HK = b.INVENTORY_ITEM_HK
+-- ;
+

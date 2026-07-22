@@ -1,0 +1,48 @@
+-- DEVELOP / UAT
+
+CREATE TABLE psa.backup.psa_master_product_categories_kinetic_ref_20251223
+AS SELECT * FROM psa.refs.psa_master_product_categories_kinetic_ref
+;
+
+-- DROP TABLE psa.refs.psa_master_product_categories_kinetic_ref
+;
+
+CREATE TABLE psa.backup.psa_master_product_categories_non_kinetic_ref_20251223
+AS SELECT * FROM psa.refs.psa_master_product_categories_non_kinetic_ref
+;
+
+-- DROP TABLE psa.refs.psa_master_product_categories_non_kinetic_ref
+;
+
+-- PROD 23/12/2025
+
+CREATE TABLE psa_prod.backup.psa_master_product_categories_kinetic_ref_20251223
+AS SELECT * FROM psa_prod.refs.psa_master_product_categories_kinetic_ref
+;
+
+-- DROP TABLE psa_prod.refs.psa_master_product_categories_kinetic_ref
+;
+
+CREATE TABLE psa_prod.backup.psa_master_product_categories_non_kinetic_ref_20251223
+AS SELECT * FROM psa_prod.refs.psa_master_product_categories_non_kinetic_ref
+;
+
+-- DROP TABLE psa_prod.refs.psa_master_product_categories_non_kinetic_ref
+;
+
+-- PROD 06/01/2026
+
+CREATE TABLE psa_prod.backup.psa_master_product_categories_kinetic_ref_20260106
+AS SELECT * FROM psa_prod.refs.psa_master_product_categories_kinetic_ref
+;
+
+-- DROP TABLE psa_prod.refs.psa_master_product_categories_kinetic_ref
+;
+
+CREATE TABLE psa_prod.backup.psa_master_product_categories_non_kinetic_ref_20260106
+AS SELECT * FROM psa_prod.refs.psa_master_product_categories_non_kinetic_ref
+;
+
+-- DROP TABLE psa_prod.refs.psa_master_product_categories_non_kinetic_ref
+;
+

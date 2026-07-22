@@ -1,0 +1,8 @@
+SELECT *
+FROM develop.gold_coreview.mart_outbound_transactions
+WHERE PRODUCT_ID LIKE 'SBA-347437%'
+    AND WEIGHT_LBS = 2299000
+;
+
+DROP TABLE tim_wilson.psa_kinetic.psa_coparts
+;

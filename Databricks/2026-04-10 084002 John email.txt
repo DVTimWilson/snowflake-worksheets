@@ -1,0 +1,149 @@
+-- Missing 6 invoice lines from the mart
+SELECT * 
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE InvoiceNum IN ('228799', '228800', '228820', '228821', '228856', '228897')
+;
+
+SELECT * 
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE Name ILIKE 'SpectraTurf'
+AND MONTH(InvoiceDate) = 3 AND YEAR(INVOICEDATE) = 2026
+ORDER BY InvoiceDate
+;
+
+SELECT * 
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE InvoiceNum = '228809'
+AND PartNum = 'SBA-354521'
+;
+
+-- SELECT * 
+-- FROM production.gold_coreview.mart_kinetic_sherri_query
+-- WHERE InvoiceNum = '228810'
+-- AND PartNum = 'SBA-347438'
+-- ;
+
+-- SELECT * 
+-- FROM production.gold_coreview.mart_outbound_transactions
+-- WHERE INVOICE_NUMBER = '228810'
+-- AND PRODUCT_ID = 'SBA-347438'
+-- ;
+
+SELECT * 
+FROM uat.gold_coreview.mart_outbound_transactions
+WHERE INVOICE_NUMBER = '228809'
+AND PRODUCT_ID = 'SBA-354521'
+;
+
+SELECT * 
+FROM production.gold_coreview.mart_outbound_transactions
+WHERE INVOICE_NUMBER = '228809'
+AND PRODUCT_ID = 'SBA-354521'
+;
+
+SELECT * 
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE InvoiceNum = '228810'
+AND PartNum = 'SBA-347438'
+;
+
+SELECT * 
+FROM uat.gold_coreview.mart_outbound_transactions
+WHERE INVOICE_NUMBER = '228810'
+AND PRODUCT_ID = 'SBA-347438'
+;
+
+SELECT * 
+FROM production.gold_coreview.mart_outbound_transactions
+WHERE INVOICE_NUMBER = '228810'
+AND PRODUCT_ID = 'SBA-347438'
+;
+
+SELECT * 
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE InvoiceNum = '228814'
+AND PartNum = 'SBR-000034'
+;
+
+SELECT * 
+FROM uat.gold_coreview.mart_outbound_transactions
+WHERE INVOICE_NUMBER = '228814'
+AND PRODUCT_ID = 'SBR-000034'
+;
+
+SELECT * 
+FROM production.gold_coreview.mart_outbound_transactions
+WHERE INVOICE_NUMBER = '228814'
+AND PRODUCT_ID = 'SBR-000034'
+;
+
+SELECT * 
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE InvoiceNum = '228815'
+AND PartNum = 'SBA-347443'
+;
+
+SELECT * 
+FROM uat.gold_coreview.mart_outbound_transactions
+WHERE INVOICE_NUMBER = '228815'
+AND PRODUCT_ID = 'SBA-347443'
+;
+
+SELECT * 
+FROM production.gold_coreview.mart_outbound_transactions
+WHERE INVOICE_NUMBER = '228815'
+AND PRODUCT_ID = 'SBA-347443'
+;
+
+SELECT * 
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE InvoiceNum = '228817'
+AND PartNum = 'TRD-000825'
+;
+
+SELECT * 
+FROM uat.gold_coreview.mart_outbound_transactions
+WHERE INVOICE_NUMBER = '228817'
+AND PRODUCT_ID = 'TRD-000825'
+;
+
+SELECT * 
+FROM production.gold_coreview.mart_outbound_transactions
+WHERE INVOICE_NUMBER = '228817'
+AND PRODUCT_ID = 'TRD-000825'
+;
+
+SELECT DISTINCT InvoiceType
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+;
+
+--
+
+SELECT * 
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE InvoiceNum = '228781'
+AND PartNum = 'SBA-354460'
+ORDER BY Extract_Date DESC
+;
+
+SELECT * 
+FROM uat.gold_coreview.mart_outbound_transactions
+WHERE INVOICE_NUMBER = '228781'
+AND PRODUCT_ID = 'SBA-354460'
+;
+
+SELECT * 
+FROM production.gold_coreview.mart_outbound_transactions
+WHERE INVOICE_NUMBER = '228781'
+AND PRODUCT_ID = 'SBA-354460'
+;
+
+SELECT DISTINCT InvoiceType
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+;
+
+SELECT * 
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE InvoiceNum = '228861'
+ORDER BY EXTRACT_DATE DESC
+;

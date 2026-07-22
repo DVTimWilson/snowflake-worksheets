@@ -1,0 +1,5 @@
+SELECT *
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+--WHERE POUNDS IS NOT NULL
+ORDER BY InvoiceDate DESC
+;

@@ -1,0 +1,449 @@
+SELECT DISTINCT COMPANY
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+;
+
+SELECT COMPANY, PLANT, COUNT(*)
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+-- WHERE COMPANY IN ('ETC', 'ERP', 'ECS')
+GROUP BY COMPANY, PLANT
+ORDER BY 1, 2
+;
+
+-- DRC, ECS, EII, ERP, ETC, SAI, STI
+SELECT DISTINCT COMPANY
+FROM uat.silver.sat_outbound_invoice_kinetic_latest
+ORDER BY 1
+;
+
+SELECT DISTINCT NAME
+FROM uat.silver.sat_outbound_invoice_kinetic_latest
+ORDER BY 1
+;
+
+-- DRC, EII, SAI, STI
+-- ECS, ERP, ETC missing
+SELECT DISTINCT ENTITY
+FROM uat.silver.br_outbound_invoice_sherri
+ORDER BY 1
+;
+
+-- compiled models/intermediate/business_rules/outbound_invoices/br_outbound_invoice_sherri.sql
+-- INNER JOIN  349120
+-- LEFT OUTER JOIN  349229
+SELECT COUNT(*)
+FROM (
+SELECT 
+     kin.INVOICE_LINE_LHK
+     , kin.UNIQUE_KEY
+     , kin.INVOICELINE
+     , CAST(kin.INVOICENUM AS string) AS INVOICE_NUMBER
+     , kin.INVOICEDATE AS INVOICE_DATE
+     , kin.NAME AS CUSTOMER
+     , kin.PARTNUM AS PRODUCT_ID
+     , kin.LINEDESC AS PRODUCT_DESCRIPTION
+     , COALESCE(NULLIF(mpc.COREVIEW_PRODUCT_CATEGORY, ''), 'Uncategorized') AS COREVIEW_PRODUCT_CATEGORY
+     , kin.PLANT AS PLANT
+     , COALESCE(
+  -- company -> site map (fast constant map lookup)
+  element_at(
+    map_from_arrays(
+      array('DRC','SAI','STI','TSS','CRC','PRC','ETI','ETR','DOS','ATURF'),
+      array('Delphos','Buffalo','Corona','Newville','Barberton','Farmingdale','Lockport','Chambersburg','Driftwood','Buffalo')
+    ),
+    UPPER(TRIM(kin.COMPANY))
+  ),
+  -- plant -> site map
+  element_at(
+    map_from_arrays(
+      array('CORONA','CORONADE','BFCOMMON','CHAMBER','LOCKPORT','NEWVILLE'),
+      array('Corona','Corona','Butterfly Commons','Chambersburg','Lockport','Newville')
+    ),
+    UPPER(TRIM(kin.PLANT))
+  ),
+  -- special cross-rule
+  CASE WHEN UPPER(TRIM(kin.COMPANY)) = 'EII' AND UPPER(TRIM(kin.PLANT)) = 'MFGSYS' THEN 'Lancaster' END,
+  -- explicit -1 → Uncategorized
+  CASE WHEN UPPER(TRIM(kin.PLANT)) = '-1' THEN 'Uncategorized' END,
+  -- fallback to cleaned plant text
+  INITCAP(REPLACE(UPPER(TRIM(kin.PLANT)), '_', ' ')),
+  'Uncategorized'
+) AS SITE
+     , 
+CASE
+  WHEN UPPER(TRIM(kin.COMPANY)) <> 'EII' AND mec.BUSINESS_SEGMENT = 'Materials Business Unit (MBU)' THEN 'MBU'
+  WHEN UPPER(TRIM(kin.COMPANY)) <> 'EII' AND mec.BUSINESS_SEGMENT = 'Outdoor Surfacing'           THEN 'OSG'
+  WHEN UPPER(TRIM(kin.BUSINESS_UNIT_ID)) = 'MTL'                                                                THEN 'MBU'
+  WHEN UPPER(TRIM(kin.COMPANY)) =  'EII' AND (UPPER(TRIM(kin.BUSINESS_UNIT_ID)) IS NULL OR UPPER(TRIM(kin.BUSINESS_UNIT_ID)) <> 'F&I')         THEN 'MBU'
+  WHEN UPPER(TRIM(kin.BUSINESS_UNIT_ID)) IS NULL OR UPPER(TRIM(kin.BUSINESS_UNIT_ID)) IN ('','-1')                                    THEN 'Uncategorized'
+  ELSE UPPER(TRIM(kin.BUSINESS_UNIT_ID))
+END AS BU
+     , kin.COMPANY AS ENTITY
+     , kin.DOCEXTPRICE - kin.DOCTOTALMISCCHRG AS SALES_DOLLAR
+     , kin.DOCEXTPRICE AS SALES_DOLLAR_WITH_FREIGHT
+     , kin.DOCEXTCOST AS COGS_DOLLAR
+     , kin.DOCUNITCOST AS UNIT_COST
+     , kin.GM AS GROSS_MARGIN_DOLLAR
+     , kin.GMPCT AS GROSS_MARGIN_PCT
+     , kin.SELLINGSHIPQTY as QUANTITY
+     , CASE
+  WHEN UPPER(TRIM(pm.PART_IUM)) IS NULL OR UPPER(TRIM(pm.PART_IUM)) IN ('', '-1', '0', 'NULL') THEN 'Uncategorized'
+  ELSE COALESCE(
+         element_at(
+           map_from_arrays(
+             array('EACH', 'LOAD'),
+             array('EA', 'LD')
+           ),
+           UPPER(TRIM(pm.PART_IUM))
+         ),
+         UPPER(TRIM(pm.PART_IUM))
+       )
+END AS UOM
+     , 
+
+(
+  
+    CAST(COALESCE(TRY_MULTIPLY(kin.SELLINGSHIPQTY, pm.PART_NETWEIGHT) , 0) AS DECIMAL(38,8))
+  
+) AS WEIGHT_LBS
+     , 'NA' AS COGSPC_SOURCE
+     , kin.LOAD_DATETIME
+     , kin.RECORD_SOURCE
+     , kin.HASHDIFF
+FROM `uat`.`silver`.`sat_outbound_invoice_kinetic_latest` as kin
+
+LEFT OUTER JOIN (
+  SELECT PART_NUMBER
+  , CoreView_Product_Category
+FROM `uat`.`silver`.`ref_sat_master_product_categories_kinetic_latest`) as mpc
+    ON -- Case-insensitive equality for ad-hoc use
+UPPER(kin.PartNum) = UPPER(mpc.PART_NUMBER)
+
+INNER JOIN (
+    SELECT y.Business_Segment 
+           , y.Company_Code
+    FROM `uat`.`silver`.`ref_master_ecore_companies` AS y
+) AS mec
+    ON -- Case-insensitive equality for ad-hoc use
+UPPER(kin.COMPANY) = UPPER(mec.company_code)
+
+LEFT OUTER JOIN (
+  SELECT PART_PARTNUM
+    , PART_IUM
+    , PART_NETWEIGHT
+    , PART_COMPANY 
+  FROM `uat`.`silver`.`ref_sat_kinetic_part_master_latest`
+) AS pm
+    ON -- Case-insensitive equality for ad-hoc use
+UPPER(kin.PARTNUM) = UPPER(pm.PART_PARTNUM)
+    AND -- Case-insensitive equality for ad-hoc use
+UPPER(kin.COMPANY) = UPPER(pm.PART_COMPANY)
+WHERE kin.COMPANY IN ('ETC','ERP','ECS')
+-- WHERE kin.COMPANY NOT IN ('ETC','ERP','ECS')
+-- WHERE kin.PLANT ='CORONA'
+) AS z
+;
+
+-- INSERT INTO landing.reftables.master_ecore_companies
+-- (Company_Name, Company_Code, Business_Segment, Description, Legal_Entity_Name, Begin_Date, End_Date, Active, Notes, Acquisition_Date, Modified)
+-- VALUES
+-- ('Ecore Tire Collection', 'ETC', 'Materials Business Unit (MBU)', NULL, 'Ecore Tire Collection', '4/13/2026', NULL, 'Yes', NULL, '2026-4-13', CAST(CURRENT_TIMESTAMP() AS STRING))
+-- , ('Ecore Rubber Processing', 'ERP', 'Materials Business Unit (MBU)', NULL, 'Ecore Rubber Processing', '4/13/2026', NULL, 'Yes', NULL, '2026-4-13', CAST(CURRENT_TIMESTAMP() AS STRING))
+-- , ('Ecore Circular Solutions', 'ECS', 'Materials Business Unit (MBU)', NULL, 'Ecore Circular Solutions', '4/13/2026', NULL, 'Yes', NULL, '2026-4-13', CAST(CURRENT_TIMESTAMP() AS STRING))
+-- ;
+
+-- 2026-05-05 13:31:26.881378
+-- INSERT INTO landing.reftables.master_ecore_companies
+-- (Company_Name, Company_Code, Business_Segment, Description, Legal_Entity_Name, Begin_Date, End_Date, Active, Notes, Acquisition_Date, Modified)
+-- VALUES
+-- ('Ecore Tire Collection', 'ETC', 'Materials Business Unit (MBU)', NULL, 'Ecore Tire Collection', '4/13/2026', NULL, 'Yes', NULL, '2026-4-13', '2026-05-05 13:31:26.881378')
+-- , ('Ecore Rubber Processing', 'ERP', 'Materials Business Unit (MBU)', NULL, 'Ecore Rubber Processing', '4/13/2026', NULL, 'Yes', NULL, '2026-4-13', '2026-05-05 13:31:26.881378')
+-- , ('Ecore Circular Solutions', 'ECS', 'Materials Business Unit (MBU)', NULL, 'Ecore Circular Solutions', '4/13/2026', NULL, 'Yes', NULL, '2026-4-13', '2026-05-05 13:31:26.881378')
+-- ;
+
+-- DELETE FROM landing.reftables.master_ecore_companies
+-- WHERE Company_Code IN ('ETC', 'ERP', 'ECS')
+-- ;
+
+-- 4010 · Revenue - Freight
+SELECT DISTINCT Account
+FROM landing.quickbooks.outbound_sales_360_v2
+;
+
+-- 4010 · Revenue - Freight
+SELECT DISTINCT Account
+FROM landing_workato_test.quickbooks.outbound_sales_360_20260428
+;
+
+SELECT *
+FROM landing_workato_test.quickbooks.outbound_sales_360_20260428
+WHERE Account = '4010 · Revenue - Freight'
+;
+
+-- 4010 · Revenue - Freight
+SELECT DISTINCT Account
+FROM landing.quickbooks.outbound_sales_eti_v2
+ORDER BY 1
+;
+
+-- 4010 · Revenue - Freight
+SELECT DISTINCT Account
+FROM landing_workato_test.quickbooks.outbound_sales_eti_20260428
+;
+
+SELECT *
+FROM landing_workato_test.quickbooks.outbound_sales_eti_20260428
+WHERE Account = '4010 · Revenue - Freight'
+;
+
+-- check entities appearing in historical contra cogs data
+-- 360, EII, TSS
+SELECT Entity, COUNT(*)
+FROM landing.reftables.contra_cogs_for_coreview
+GROUP BY Entity
+;
+
+--
+-- 06/05/2026
+--
+
+SELECT UPPER(TRIM(`Name`)), UPPER(TRIM(`Company`)) FROM `uat`.`silver`.`sat_outbound_invoice_kinetic_latest`  WHERE `Name` IS NOT NULL
+;
+
+-- models/intermediate/business_rules/outbound_invoices/br_ref_outbound_invoice_ecore_companies.sql
+WITH union_list(company) AS (
+  SELECT UPPER(TRIM(`Name`)) FROM `uat`.`silver`.`sat_outbound_invoice_kinetic_latest`  WHERE `Name` IS NOT NULL
+  UNION
+  SELECT UPPER(TRIM(`Name`)) FROM `uat`.`silver`.`sat_outbound_invoice_quickbooks_360_v2_latest`  WHERE `Name` IS NOT NULL UNION
+  SELECT UPPER(TRIM(`Name`)) FROM `uat`.`silver`.`sat_outbound_invoice_quickbooks_crc_v2_latest`  WHERE `Name` IS NOT NULL UNION
+  SELECT UPPER(TRIM(`Name`)) FROM `uat`.`silver`.`sat_outbound_invoice_quickbooks_dos_v2_latest`  WHERE `Name` IS NOT NULL UNION
+  SELECT UPPER(TRIM(`Name`)) FROM `uat`.`silver`.`sat_outbound_invoice_quickbooks_eti_v2_latest`  WHERE `Name` IS NOT NULL UNION
+  SELECT UPPER(TRIM(`Name`)) FROM `uat`.`silver`.`sat_outbound_invoice_quickbooks_etr_v2_latest`  WHERE `Name` IS NOT NULL UNION
+  SELECT UPPER(TRIM(`Name`)) FROM `uat`.`silver`.`sat_outbound_invoice_quickbooks_prc_v2_latest`  WHERE `Name` IS NOT NULL UNION
+  SELECT UPPER(TRIM(`Name`)) FROM `uat`.`silver`.`sat_outbound_invoice_quickbooks_tss_v2_latest`  WHERE `Name` IS NOT NULL UNION
+  SELECT UPPER(TRIM(`Name`)) FROM `uat`.`silver`.`sat_outbound_invoice_quickbooks_dgh`  WHERE `Name` IS NOT NULL UNION
+  SELECT UPPER(TRIM(`Name`)) FROM `uat`.`silver`.`sat_outbound_invoice_quickbooks_edge`  WHERE `Name` IS NOT NULL UNION
+  SELECT UPPER(TRIM(`Name`)) FROM `uat`.`silver`.`sat_outbound_invoice_quickbooks_hti`  WHERE `Name` IS NOT NULL
+),
+
+patterns AS (
+  SELECT stack(25,
+    1,'%ECORE SALES%','EII',
+    1,'%(ECORE)%','EII',
+    1,'ECORE %','EII',
+    2,'%DURAPLAY%','DOS',
+    2,'%DURPLAY%','DOS',
+    2,'%A-TURF%','ATURF',
+    2,'%SPECTRATURF%','STI',
+    2,'%SURFACE AMERICA INC%','SAI',
+    2,'%PRC%','PRC',
+    2,'%PREMIUM RUBBER%','PRC',
+    2,'360 TIRE%','360',
+    2,'%CRC%','CRC',
+    2,'%TSS%','TSS',
+    2,'%TRUCK STOP%','TSS',
+    2,'DELPHOS RUBBER%','DRC',
+    2,'% DELPHOS%','DRC',
+    2,'%(DELPHOS)%','DRC',
+    2,'%DRC%','DRC',
+    2,'%HTI RECYCLING%','HTI',
+    2,'%HIGH TREAD%','HTI',
+    2,'%EDGE RUBBER%','EDGE',
+    2,'%DGH%','DGH',
+    2,'ECORE RUBBER PROCESSING','ERP',
+    2,'ECORE CIRCULAR SOLUTIONS','ECS',
+    2,'ECORE TIRE COLLECTION%','ETC'
+  ) AS (priority, pattern, code)
+),
+
+scored AS (
+  SELECT 
+    d.company,
+    p.code,
+    p.priority,
+    COALESCE(x.acquisition_date, CAST('1900-01-01' AS DATE)) AS acquisition_date,
+    ROW_NUMBER() OVER (
+      PARTITION BY d.company
+      ORDER BY p.priority DESC
+    ) AS rn
+  FROM union_list AS d
+  INNER JOIN patterns AS p
+    ON d.company LIKE p.pattern 
+  INNER JOIN landing.reftables.MASTER_ECORE_COMPANIES AS x
+    ON p.code = UPPER(x.company_code)
+)
+
+SELECT
+  company AS invoice_company_name,
+  code    AS internal_company_code,
+  acquisition_date
+FROM scored
+WHERE 1=1
+--   AND company NOT LIKE '%DO NOT USE%'
+  AND rn = 1
+ORDER BY 1
+;
+
+SELECT DISTINCT Extract_Date
+FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+ORDER BY 1 DESC
+;
+
+-- models/intermediate/business_rules/inbound_invoices/br_ref_inbound_invoice_ecore_companies.sql
+WITH union_list(company) AS (
+  SELECT UPPER(TRIM(`SUPPLIER_NAME`)) FROM `uat`.`silver`.`sat_inbound_invoice_kinetic_latest`  WHERE `SUPPLIER_NAME` IS NOT NULL
+  UNION
+  SELECT UPPER(TRIM(`NAME`))          FROM `uat`.`silver`.`sat_quickbooks_inbound_purchases_360_latest`  WHERE `NAME` IS NOT NULL
+  UNION
+  SELECT UPPER(TRIM(`NAME`))          FROM `uat`.`silver`.`sat_quickbooks_inbound_purchases_crc_latest`  WHERE `NAME` IS NOT NULL
+  UNION
+  SELECT UPPER(TRIM(`NAME`))          FROM `uat`.`silver`.`sat_quickbooks_inbound_purchases_dos_latest`  WHERE `NAME` IS NOT NULL 
+  UNION
+  SELECT UPPER(TRIM(`NAME`))          FROM `uat`.`silver`.`sat_quickbooks_inbound_purchases_eti_latest`  WHERE `NAME` IS NOT NULL
+  UNION
+  SELECT UPPER(TRIM(`NAME`))          FROM `uat`.`silver`.`sat_quickbooks_inbound_purchases_etr_latest`  WHERE `NAME` IS NOT NULL 
+  UNION
+  SELECT UPPER(TRIM(`NAME`))          FROM `uat`.`silver`.`sat_quickbooks_inbound_purchases_prc_latest`  WHERE `NAME` IS NOT NULL
+  UNION
+  SELECT UPPER(TRIM(`NAME`))          FROM `uat`.`silver`.`sat_quickbooks_inbound_purchases_pts_latest`  WHERE `NAME` IS NOT NULL
+  UNION
+  SELECT UPPER(TRIM(`NAME`))          FROM `uat`.`silver`.`sat_quickbooks_inbound_purchases_tss_latest`  WHERE `NAME` IS NOT NULL
+),
+
+patterns AS (
+  SELECT stack(25,
+    1,'%ECORE SALES%','EII',
+    1,'%(ECORE)%','EII',
+    1,'ECORE %','EII',
+    2,'%DURAPLAY%','DOS',
+    2,'%DURPLAY%','DOS',
+    2,'%A-TURF%','ATURF',
+    2,'%SPECTRATURF%','STI',
+    2,'%SURFACE AMERICA INC%','SAI',
+    2,'%PRC%','PRC',
+    2,'%PREMIUM RUBBER%','PRC',
+    2,'360 TIRE%','360',
+    2,'%CRC%','CRC',
+    2,'%TSS%','TSS',
+    2,'%TRUCK STOP%','TSS',
+    2,'DELPHOS RUBBER%','DRC',
+    2,'% DELPHOS%','DRC',
+    2,'%(DELPHOS)%','DRC',
+    2,'%DRC%','DRC',
+    2,'%HTI RECYCLING%','HTI',
+    2,'%HIGH TREAD%','HTI',
+    2,'%EDGE RUBBER%','EDGE',
+    2,'%DGH%','DGH',
+    2,'ECORE RUBBER PROCESSING','ERP',
+    2,'ECORE CIRCULAR SOLUTIONS','ECS',
+    2,'ECORE TIRE COLLECTION%','ETC'
+  ) AS (priority, pattern, code)
+),
+
+scored AS (
+  SELECT 
+    d.company,
+    p.code,
+    p.priority,
+    COALESCE(x.acquisition_date, CAST('1900-01-01' AS DATE)) AS acquisition_date,
+    ROW_NUMBER() OVER (
+      PARTITION BY d.company
+      ORDER BY p.priority DESC
+    ) AS rn
+  FROM union_list AS d
+  INNER JOIN patterns AS p
+    ON d.company LIKE p.pattern
+  INNER JOIN landing.reftables.MASTER_ECORE_COMPANIES AS x
+    ON p.code = UPPER(x.company_code)
+)
+
+SELECT
+  company AS invoice_company_name,
+  code    AS internal_company_code,
+  acquisition_date
+FROM scored
+WHERE 1=1
+--   AND company NOT LIKE '%DO NOT USE%'
+  AND rn = 1
+;
+
+--
+-- 07/05/2026
+--
+
+-- Check daily totals for ETI, ETC, ERP, ECS
+SELECT INVOICE_DATE, ENTITY, SUM(SALES_DOLLAR_WITH_FREIGHT)
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+WHERE ENTITY IN ('ETI', 'ETC', 'ERP', 'ECS')
+AND INVOICE_DATE BETWEEN '2026-04-01' AND '2026-05-06'
+GROUP BY INVOICE_DATE, ENTITY
+ORDER BY INVOICE_DATE, ENTITY
+;
+
+SELECT INVOICE_DATE, ENTITY, SUM(TOTAL_COST)
+FROM tim_wilson.gold_coreview.mart_inbound_transactions
+WHERE ENTITY IN ('ETI', 'ETC', 'ERP', 'ECS')
+AND INVOICE_DATE BETWEEN '2026-04-01' AND '2026-05-06'
+GROUP BY INVOICE_DATE, ENTITY
+ORDER BY INVOICE_DATE, ENTITY
+;
+
+SELECT *, (ETC + ERP + ECS) AS ETC_ERP_ECS_TOTAL
+FROM (
+SELECT INVOICE_DATE, IFNULL(ETI, 0) AS ETI, IFNULL(ETC, 0) AS ETC, IFNULL(ERP, 0) AS ERP, IFNULL(ECS, 0) AS ECS
+FROM (
+SELECT INVOICE_DATE, ENTITY, SUM(SALES_DOLLAR_WITH_FREIGHT) AS TOTAL_SALES_DOLLAR_WITH_FREIGHT
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+WHERE ENTITY IN ('ETI', 'ETC', 'ERP', 'ECS')
+AND INVOICE_DATE BETWEEN '2026-04-01' AND '2026-05-06'
+GROUP BY INVOICE_DATE, ENTITY
+ORDER BY INVOICE_DATE, ENTITY
+) AS x
+PIVOT (
+  SUM(TOTAL_SALES_DOLLAR_WITH_FREIGHT)
+  FOR ENTITY IN ('ETI', 'ETC', 'ERP', 'ECS')
+) AS pivottable
+) AS y
+;
+
+SELECT *
+FROM landing.reftables.master_ecore_companies
+;
+
+SELECT *, (ETC + ERP + ECS) AS ETC_ERP_ECS_TOTAL
+FROM (
+SELECT INVOICE_DATE, IFNULL(ETI, 0) AS ETI, IFNULL(ETC, 0) AS ETC, IFNULL(ERP, 0) AS ERP, IFNULL(ECS, 0) AS ECS
+FROM (
+SELECT INVOICE_DATE, ENTITY, SUM(SALES_DOLLAR_WITH_FREIGHT) AS TOTAL_SALES_DOLLAR_WITH_FREIGHT
+FROM develop.gold_coreview.mart_outbound_transactions
+WHERE ENTITY IN ('ETI', 'ETC', 'ERP', 'ECS')
+AND INVOICE_DATE BETWEEN '2026-04-01' AND CURRENT_DATE()
+GROUP BY INVOICE_DATE, ENTITY
+ORDER BY INVOICE_DATE, ENTITY
+) AS x
+PIVOT (
+  SUM(TOTAL_SALES_DOLLAR_WITH_FREIGHT)
+  FOR ENTITY IN ('ETI', 'ETC', 'ERP', 'ECS')
+) AS pivottable
+) AS y
+;
+
+SELECT *, (ETC + ERP + ECS) AS ETC_ERP_ECS_TOTAL
+FROM (
+SELECT INVOICE_DATE, IFNULL(ETI, 0) AS ETI, IFNULL(ETC, 0) AS ETC, IFNULL(ERP, 0) AS ERP, IFNULL(ECS, 0) AS ECS
+FROM (
+SELECT INVOICE_DATE, ENTITY, SUM(SALES_DOLLAR_WITH_FREIGHT) AS TOTAL_SALES_DOLLAR_WITH_FREIGHT
+FROM uat.gold_coreview.mart_outbound_transactions
+WHERE ENTITY IN ('ETI', 'ETC', 'ERP', 'ECS')
+AND INVOICE_DATE BETWEEN '2026-04-01' AND CURRENT_DATE()
+GROUP BY INVOICE_DATE, ENTITY
+ORDER BY INVOICE_DATE, ENTITY
+) AS x
+PIVOT (
+  SUM(TOTAL_SALES_DOLLAR_WITH_FREIGHT)
+  FOR ENTITY IN ('ETI', 'ETC', 'ERP', 'ECS')
+) AS pivottable
+) AS y
+;
+
+
+

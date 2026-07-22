@@ -1,0 +1,114 @@
+-- 79518243.310000	8745157.819960
+SELECT SUM(SALES_DOLLAR), SUM(GROSS_MARGIN_DOLLAR)
+FROM uat.gold_coreview.mart_outbound_transactions
+WHERE ENTITY = 'DRC'
+;
+
+-- 79603441.910000	8762552.458960
+SELECT SUM(SALES_DOLLAR), SUM(GROSS_MARGIN_DOLLAR)
+FROM production.gold_coreview.mart_outbound_transactions
+WHERE ENTITY = 'DRC'
+;
+
+-- 79603441.910000	8762552.458960
+SELECT SUM(SALES_DOLLAR), SUM(GROSS_MARGIN_DOLLAR)
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+WHERE ENTITY = 'DRC'
+;
+
+SELECT *
+FROM uat.gold_coreview.mart_outbound_transactions
+WHERE ENTITY = 'DRC'
+ORDER BY INVOICE_DATE, INVOICE_NUMBER
+;
+
+SELECT *
+FROM production.gold_coreview.mart_outbound_transactions
+WHERE ENTITY = 'DRC'
+ORDER BY INVOICE_DATE, INVOICE_NUMBER
+;
+
+-- 10/04/2026
+-- Walkthrough with Gordon
+
+SELECT *
+FROM uat.gold_coreview.mart_inventory_transactions
+WHERE 1 = 1
+-- AND COMPANY = '360'
+-- AND PARTNUM = '15 Granulated Rubber (Tire):Recycled Tire Wire-Plant 2'
+AND PARTNUM ILIKE '%crumb%'
+LIMIT 100
+;
+
+
+0.040000  #33454
+0.030000
+0.040000
+0.030000
+0.050000
+0.030000
+0.040000
+0.040000
+0.040000
+0.040000
+;
+
+SELECT *
+FROM uat.gold_coreview.mart_outbound_transactions
+WHERE INVOICE_NUMBER = '33454'
+;
+
+SELECT *
+FROM uat.gold_coreview.mart_inventory_transactions
+WHERE COMPANY = '360'
+AND PARTNUM = '12 Casings:B Grade Casing:Low 2 Casing B Grade (Low 2 Casing B Grade)'
+AND TRANTYPE = 'Invoice'
+ORDER BY TRANDATE DESC
+LIMIT 100
+;
+
+-- 16
+-- #20069
+-- 10.770000
+
+SELECT COMPANY, TRANNUM, PARTNUM, TRANQTY, EXTCOST, *
+FROM uat.gold_coreview.mart_inventory_transactions
+WHERE COMPANY = 'ETI'
+AND PARTNUM = '(PA) TR 8 - Ecore (Class 8 TR Crumb Rubber)'
+AND TRANTYPE = 'Invoice'
+ORDER BY TRANDATE DESC
+LIMIT 100
+;
+
+SELECT COMPANY, TRANNUM, PARTNUM, TRANQTY, EXTCOST, *
+FROM tim_wilson.gold_coreview.mart_inventory_transactions
+WHERE COMPANY = 'ETI'
+AND PARTNUM = '(PA) TR 8 - Ecore (Class 8 TR Crumb Rubber)'
+AND TRANTYPE = 'Invoice'
+ORDER BY TRANDATE DESC
+LIMIT 100
+;
+
+SELECT x.COMPANY, COUNT(*), ANY_VALUE(z.zcount)
+FROM (
+
+SELECT t.COMPANY, t.TRANNUM, t.PARTNUM, t.TRANQTY, t.EXTCOST
+, i.PRODUCT_ID, i.QUANTITY, i.UNIT_COST
+FROM tim_wilson.gold_coreview.mart_inventory_transactions AS t
+
+LEFT OUTER JOIN tim_wilson.gold_coreview.mart_outbound_transactions AS i
+ON t.TRANNUM = i.INVOICE_NUMBER
+
+WHERE 1 = 1 
+AND t.RECORD_SOURCE ILIKE 'QUICK%'
+AND t.TRANTYPE = 'Invoice'
+AND i.QUANTITY != 0
+AND TRY_DIVIDE(ABS(t.EXTCOST - i.UNIT_COST), t.EXTCOST) > 0.05
+ORDER BY TRY_DIVIDE(ABS(t.EXTCOST - i.UNIT_COST), t.EXTCOST) DESC, t.TRANDATE DESC, t.TRANNUM ASC
+) AS x
+
+INNER JOIN (SELECT COMPANY, COUNT(*) AS zcount FROM tim_wilson.gold_coreview.mart_inventory_transactions GROUP BY COMPANY) AS z
+ON x.company = z.company
+
+GROUP BY x.COMPANY
+;

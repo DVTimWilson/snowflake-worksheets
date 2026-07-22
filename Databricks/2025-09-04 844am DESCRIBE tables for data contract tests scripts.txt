@@ -1,0 +1,31 @@
+SHOW COLUMNS IN hti_preacquisition IN quickbooks
+;
+
+SHOW COLUMNS IN coparts IN kinetic
+;
+
+SELECT *
+FROM landing.information_schema.columns
+WHERE table_schema = 'kinetic'
+AND table_name = 'sales_sherrigmquery_allcompanies'
+ORDER BY ordinal_position
+;
+
+SELECT *
+FROM landing.information_schema.columns
+WHERE table_schema = 'kinetic'
+AND table_name = 'coparts'
+ORDER BY ordinal_position
+;
+
+DESCRIBE TABLE landing.kinetic.sales_sherrigmquery_allcompanies
+;
+
+DESCRIBE TABLE landing.quickbooks.quickbooksstaging
+;
+
+DESCRIBE TABLE landing.kinetic.porcptdatefilter
+;
+
+DESCRIBE TABLE landing.kinetic.coparts
+;

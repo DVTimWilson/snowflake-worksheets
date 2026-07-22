@@ -1,0 +1,97 @@
+with left_table as (
+
+  select
+    INVENTORY_STOCK_LEVELS_LHK as id
+
+  from `tim_wilson`.`silver`.`sat_quickbooks_stock_status_360`
+
+  where INVENTORY_STOCK_LEVELS_LHK is not null
+    and 1=1
+
+),
+
+right_table as (
+
+  select
+    INVENTORY_STOCK_LEVELS_LHK as id
+
+  from `tim_wilson`.`silver`.`lnk_inventory_stock_levels`
+
+  where INVENTORY_STOCK_LEVELS_LHK is not null
+    and RECORD_SOURCE = 'QUICKBOOKS.STOCKSTAT_360'
+
+),
+
+exceptions as (
+
+  select
+    left_table.id
+
+  from left_table
+
+  left anti join right_table
+         on left_table.id = right_table.id
+
+)
+
+select * from exceptions
+;
+
+
+  select
+    *
+
+  from `tim_wilson`.`bronze`.`stg_quickbooks_stock_status_360`
+
+  where INVENTORY_STOCK_LEVELS_LHK = UNBASE64('23Oiz14wZ2HigO2FY4JVGA==')
+;
+
+  select
+    *
+
+  from `tim_wilson`.`silver`.`sat_quickbooks_stock_status_360`
+
+  where INVENTORY_STOCK_LEVELS_LHK = UNBASE64('23Oiz14wZ2HigO2FY4JVGA==')
+;
+
+  select
+    *
+
+  from `tim_wilson`.`silver`.`lnk_inventory_stock_levels`
+
+  where INVENTORY_STOCK_LEVELS_LHK = UNBASE64('23Oiz14wZ2HigO2FY4JVGA==')
+;
+
+-- 101018
+  select
+    count(*)
+
+  from `tim_wilson`.`bronze`.`stg_quickbooks_stock_status_360`
+;
+
+-- 12354
+  select
+    count(*)
+
+  from `tim_wilson`.`silver`.`sat_quickbooks_stock_status_360`
+;
+
+-- 11898
+  select
+    count(*)
+
+  from `tim_wilson`.`silver`.`lnk_inventory_stock_levels`
+  WHERE RECORD_SOURCE = 'QUICKBOOKS.STOCKSTAT_360'
+;
+
+GRANT ALL PRIVILEGES, MANAGE ON CATALOG bernard_elongo TO vault_admin
+;
+
+DROP CATALOG bernard_elongo CASCADE
+;
+
+GRANT ALL PRIVILEGES, MANAGE ON CATALOG evan_m_phyillaier TO vault_admin
+;
+
+DROP CATALOG evan_m_phyillaier CASCADE
+;

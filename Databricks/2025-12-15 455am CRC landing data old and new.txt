@@ -1,0 +1,23 @@
+SELECT *
+FROM landing.quickbooks.outbound_sales_crc
+WHERE DATE BETWEEN '2025-05-01' AND '2025-08-31'
+ORDER BY Date, Num
+;
+
+-- 2025-11-14
+SELECT MAX(Date)
+FROM landing.quickbooks.outbound_sales_crc
+;
+
+SELECT *
+FROM landing.quickbooks.outbound_sales_crc_v2
+WHERE DATE BETWEEN '2025-05-01' AND '2025-08-31'
+ORDER BY Date, Num
+;
+
+-- 2025-12-05
+SELECT MAX(Date)
+FROM landing.quickbooks.outbound_sales_crc_v2
+;
+
+
