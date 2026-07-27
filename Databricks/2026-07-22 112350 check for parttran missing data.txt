@@ -1,0 +1,6 @@
+SELECT COMPANY, TRANDATE, COUNT(*)
+FROM landing.kinetic.parttran
+WHERE TranDate > '2026-06-01'
+GROUP BY Company, TranDate
+ORDER BY Company, TranDate DESC
+;
