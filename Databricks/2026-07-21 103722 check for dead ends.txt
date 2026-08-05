@@ -67,3 +67,16 @@ ORDER BY o.table_schema, o.table_name
 SELECT DISTINCT target_type
 FROM system.access.table_lineage
 ;
+
+
+SELECT DISTINCT source_table_catalog, source_table_schema, source_table_name, target_table_name
+  FROM system.access.table_lineage
+  WHERE source_table_catalog = 'develop'
+  AND target_table_name = 'sat_operator_dayforce'
+;
+
+SELECT DISTINCT source_table_catalog, source_table_schema, source_table_name, target_table_name
+  FROM system.access.table_lineage
+  WHERE source_table_catalog = 'production'
+  AND source_table_name = 'sat_operator_dayforce'
+;

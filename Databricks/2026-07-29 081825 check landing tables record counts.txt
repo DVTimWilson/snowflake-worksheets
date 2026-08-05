@@ -1,0 +1,67 @@
+-- 9,554,413
+SELECT COUNT(*)
+FROM landing.dayforce.allocatedhoursandearnings
+;
+
+SELECT DISTINCT DATE
+FROM landing.dayforce.allocatedhoursandearnings
+WHERE DATE >= DATEADD(MONTH, -1, CURRENT_DATE())
+ORDER BY DATE ASC
+;
+
+SELECT DISTINCT EXTRACT_DATE
+FROM landing.dayforce.allocatedhoursandearnings
+WHERE EXTRACT_DATE >= DATEADD(WEEK, -1, CURRENT_DATE())
+ORDER BY EXTRACT_DATE ASC
+;
+
+-- 241,500
+SELECT COUNT(*)
+FROM landing.dayforce.allocatedhoursandearnings
+WHERE DATE > DATEADD(MONTH, -1, CURRENT_DATE())
+;
+
+-- 576,187
+SELECT COUNT(*)
+FROM landing.dayforce.allocatedhoursandearnings
+WHERE EXTRACT_DATE > DATEADD(WEEK, -2, CURRENT_DATE())
+;
+
+SELECT table_schema, table_name, table_type
+FROM landing.information_schema.tables
+WHERE table_schema NOT IN ('backup', 'information_schema')
+  AND table_type != 'VIEW'
+  AND LEFT(table_name, 2) != '__'
+  AND LEFT(table_schema, 1) != '_'
+  AND NOT table_name RLIKE '[0-9a-f]{8}_[0-9a-f]{4}_[0-9a-f]{4}_[0-9a-f]{4}_[0-9a-f]{12}'
+ORDER BY table_schema, table_name
+;
+
+BEGIN
+  DECLARE v_count BIGINT;
+  DECLARE v_results ARRAY<STRUCT<table_schema: STRING, table_name: STRING, row_count: BIGINT>> DEFAULT ARRAY();
+
+  FOR t AS
+    SELECT table_schema, table_name
+    FROM landing.information_schema.tables
+    WHERE table_schema NOT IN ('backup', 'information_schema')
+      AND table_type NOT IN ('VIEW', 'MATERIALIZED_VIEW')
+      AND LEFT(table_name, 2) != '__'
+    --   AND LEFT(table_schema, 1) != '_'
+      AND NOT table_name RLIKE '[0-9a-f]{8}_[0-9a-f]{4}_[0-9a-f]{4}_[0-9a-f]{4}_[0-9a-f]{12}'
+    ORDER BY table_schema, table_name
+  DO
+    BEGIN
+      DECLARE CONTINUE HANDLER FOR SQLEXCEPTION SET v_count = -1;
+      EXECUTE IMMEDIATE
+        CONCAT('SELECT COUNT(*) FROM `landing`.`', t.table_schema, '`.`', t.table_name, '`')
+        INTO v_count;
+    END;
+    SET v_results = ARRAY_APPEND(v_results, NAMED_STRUCT('table_schema', t.table_schema, 'table_name', t.table_name, 'row_count', v_count));
+  END FOR;
+
+  SELECT * FROM (SELECT inline(v_results)) AS x ORDER BY row_count DESC;
+END;
+
+
+

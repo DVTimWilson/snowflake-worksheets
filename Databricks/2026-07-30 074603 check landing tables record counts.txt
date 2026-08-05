@@ -1,0 +1,189 @@
+SELECT EXTRACT_DATE, COUNT(*)
+FROM landing.dayforce.allocatedhoursandearnings
+GROUP BY EXTRACT_DATE
+ORDER BY EXTRACT_DATE DESC
+;
+
+SELECT DATE, COUNT(*)
+FROM landing.dayforce.allocatedhoursandearnings
+GROUP BY DATE
+ORDER BY DATE DESC
+;
+
+SELECT DATE, COUNT(*)
+FROM landing.dayforce.allocatedhoursandearnings
+WHERE DATE(EXTRACT_DATE) = '2026-07-20'
+GROUP BY DATE
+ORDER BY DATE DESC
+;
+
+SELECT EXTRACT_DATE, COUNT(*)
+FROM tim_wilson.psa_dayforce.psa_allocatedhoursandearnings
+GROUP BY EXTRACT_DATE
+ORDER BY EXTRACT_DATE DESC
+;
+
+SELECT PSA_LOADED_AT, COUNT(*)
+FROM tim_wilson.psa_dayforce.psa_allocatedhoursandearnings
+GROUP BY PSA_LOADED_AT
+ORDER BY PSA_LOADED_AT DESC
+;
+
+SELECT DATE, COUNT(*)
+FROM tim_wilson.psa_dayforce.psa_allocatedhoursandearnings
+GROUP BY DATE
+ORDER BY DATE DESC
+;
+
+SELECT EXTRACT_DATE, COUNT(*)
+FROM tim_wilson.psa_dayforce.psa_allocatedhoursandearnings
+WHERE DATE = '2026-06-25'
+GROUP BY EXTRACT_DATE
+ORDER BY EXTRACT_DATE DESC
+;
+
+SELECT EXTRACT_DATE, COUNT(*)
+FROM tim_wilson.psa_dayforce.psa_allocatedhoursandearnings
+GROUP BY EXTRACT_DATE
+ORDER BY EXTRACT_DATE DESC
+;
+
+SELECT PSA_LOADED_AT, COUNT(*)
+FROM psa_prod.dayforce.psa_allocatedhoursandearnings
+GROUP BY PSA_LOADED_AT
+ORDER BY PSA_LOADED_AT DESC
+;
+
+SELECT DATE, COUNT(*)
+FROM psa_prod.dayforce.psa_allocatedhoursandearnings
+GROUP BY DATE
+ORDER BY DATE DESC
+;
+
+SELECT EXTRACT_DATE, COUNT(*)
+FROM psa.dayforce.psa_allocatedhoursandearnings
+WHERE DATE = '2026-06-25'
+GROUP BY EXTRACT_DATE
+ORDER BY EXTRACT_DATE DESC
+;
+
+SELECT EXTRACT_DATE, COUNT(*)
+FROM psa.dayforce.psa_allocatedhoursandearnings
+WHERE DATE(PSA_LOADED_AT) = '2026-07-30'
+GROUP BY EXTRACT_DATE
+ORDER BY EXTRACT_DATE DESC
+;
+
+SELECT DATE, COUNT(*)
+FROM psa.dayforce.psa_allocatedhoursandearnings
+WHERE DATE(PSA_LOADED_AT) = '2026-07-30'
+GROUP BY DATE
+ORDER BY DATE DESC
+;
+
+SELECT DATE, COUNT(*)
+FROM psa_prod.dayforce.psa_allocatedhoursandearnings
+WHERE DATE(PSA_LOADED_AT) = '2026-07-30'
+GROUP BY DATE
+ORDER BY DATE DESC
+;
+
+-- sat_operator_dayforce is a dead end table, not loaded correctly and not testable
+SELECT DATE, COUNT(*)
+FROM tim_wilson.silver.sat_operator_dayforce
+GROUP BY DATE
+ORDER BY DATE DESC
+;
+
+SELECT DATE, COUNT(*)
+FROM uat.silver.sat_operator_dayforce
+GROUP BY DATE
+ORDER BY DATE DESC
+;
+
+SELECT DATE, COUNT(*)
+FROM production.silver.sat_operator_dayforce
+GROUP BY DATE
+ORDER BY DATE DESC
+;
+
+-- 440184
+SELECT COUNT(*)
+FROM tim_wilson.silver.sat_operator_dayforce
+;
+
+-- 443070
+SELECT COUNT(*)
+FROM uat.silver.sat_operator_dayforce
+;
+
+-- 358307
+SELECT COUNT(*)
+FROM production.silver.sat_operator_dayforce
+;
+
+-- DELETE
+-- FROM tim_wilson.psa_dayforce.psa_allocatedhoursandearnings
+-- WHERE EXTRACT_DATE > DATEADD(MONTH, -1, CURRENT_DATE())
+-- ;
+
+-- DELETE
+-- FROM tim_wilson.psa_dayforce.psa_allocatedhoursandearnings
+-- WHERE PSA_LOADED_AT > '2026-07-30'
+-- ;
+
+SELECT COUNT(*)
+FROM tim_wilson.bronze.src_allocatedhoursandearnings
+;
+
+
+
+--
+-- bu_site_part_costs
+--
+
+CREATE TABLE landing.reftables.bu_site_part_costs_temp
+TBLPROPERTIES ('delta.columnMapping.mode' = 'name')
+AS
+SELECT *
+FROM landing.reftables.bu_site_part_costs
+WHERE 1=0
+;
+
+INSERT INTO landing.reftables.bu_site_part_costs_temp
+SELECT *, TO_TIMESTAMP('2026-07-29T10:00:00.000+00:00') AS EXTRACT_DATE
+FROM landing.reftables.bu_site_part_costs_20260729
+;
+
+SELECT *
+FROM landing.reftables.bu_site_part_costs_temp
+;
+
+
+
+-- sat_operator_dayforce is a dead end table, not loaded correctly and not testable
+SELECT LOAD_DATETIME, COUNT(*)
+FROM uat.silver.sat_operator_dayforce
+GROUP BY LOAD_DATETIME
+ORDER BY LOAD_DATETIME DESC
+;
+
+SELECT LOAD_DATETIME, COUNT(*)
+FROM production.silver.sat_operator_dayforce
+GROUP BY LOAD_DATETIME
+ORDER BY LOAD_DATETIME DESC
+;
+
+-- nh_lnk_operator_timesheet_entry is testable
+SELECT EXTRACT_DATE, COUNT(*)
+FROM uat.silver.nh_lnk_operator_timesheet_entry
+GROUP BY EXTRACT_DATE
+ORDER BY EXTRACT_DATE DESC
+;
+
+SELECT EXTRACT_DATE, COUNT(*)
+FROM production.silver.nh_lnk_operator_timesheet_entry
+GROUP BY EXTRACT_DATE
+ORDER BY EXTRACT_DATE DESC
+;
+
