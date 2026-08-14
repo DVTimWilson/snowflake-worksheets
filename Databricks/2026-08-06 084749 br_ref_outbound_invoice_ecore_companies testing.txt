@@ -1,0 +1,758 @@
+WITH union_list(company) AS (
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_kinetic_latest`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_360_v2_latest`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_crc_v2_latest`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_dos_v2_latest`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_eti_v3_latest`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_etr_v2_latest`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_prc_v2_latest`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_tss_v2_latest`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_dgh`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_edge`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_hti`  WHERE `Name` IS NOT NULL
+)
+
+SELECT COMPANY, COUNT(*) AS RCOUNT
+FROM union_list
+WHERE COMPANY NOT LIKE '%DO NOT USE%'
+AND (
+COMPANY LIKE '%ECORE%'
+OR
+COMPANY LIKE '%360 TIRE%'
+OR
+COMPANY LIKE '%A-TURF%'
+OR
+COMPANY LIKE '%ATURF%'
+OR
+COMPANY LIKE '%CARDINAL%'
+OR
+COMPANY LIKE '%CRC%'
+OR
+COMPANY LIKE '%D&G%'
+OR
+COMPANY LIKE '%DGH%'
+OR
+COMPANY LIKE '%DELPHOS%'
+OR
+COMPANY LIKE '%DRC%'
+OR
+COMPANY LIKE '%DURAPLAY%'
+OR
+COMPANY LIKE '%DURPLAY%'
+OR
+COMPANY LIKE '%EDGE RUBBER%'
+OR
+COMPANY LIKE '%HTI RECYCLING%'
+OR
+COMPANY LIKE '%HIGH TREAD%'
+-- OR
+-- COMPANY LIKE '%OZARK%'
+OR
+COMPANY LIKE '%PREMIER RUBBER%'
+OR
+COMPANY LIKE '%PRC%'
+OR
+COMPANY LIKE '%PRO-TECHS%'
+OR
+COMPANY LIKE '%SPECTRATURF%'
+OR
+COMPANY LIKE '%SPECTRA TURF%'
+OR
+COMPANY LIKE '%SURFACE AMERICA%'
+OR
+COMPANY LIKE '%TRUCK STOP SUPPLY%'
+OR
+COMPANY LIKE '%TSS%'
+)
+GROUP BY company
+ORDER BY company
+;
+  
+  -- depends_on: `tim_wilson`.`silver`.`hub_outbound_invoice`
+-- depends_on: `tim_wilson`.`silver`.`lnk_outbound_invoice_line`
+
+WITH union_list(company) AS (
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_kinetic_latest`  WHERE `Name` IS NOT NULL
+  UNION
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_360_v2_latest`  WHERE `Name` IS NOT NULL
+  UNION
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_crc_v2_latest`  WHERE `Name` IS NOT NULL
+  UNION
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_dos_v2_latest`  WHERE `Name` IS NOT NULL
+  UNION
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_eti_v3_latest`  WHERE `Name` IS NOT NULL
+  UNION
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_etr_v2_latest`  WHERE `Name` IS NOT NULL
+  UNION
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_prc_v2_latest`  WHERE `Name` IS NOT NULL
+  UNION
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_tss_v2_latest`  WHERE `Name` IS NOT NULL
+  UNION
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_dgh`  WHERE `Name` IS NOT NULL
+  UNION
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_edge`  WHERE `Name` IS NOT NULL
+  UNION
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_hti`  WHERE `Name` IS NOT NULL
+),
+
+patterns AS (
+  SELECT stack(34,
+    1,'%ECORE SALES%','EII',
+    1,'%(ECORE)%','EII',
+    1,'ECORE %','EII',
+    1,'%ECORE%', 'EII',
+    2,'%DURAPLAY%','DOS',
+    2,'%DURPLAY%','DOS',
+    2,'%A-TURF%','ATURF',
+    2,'%SPECTRATURF%','STI',
+    2,'%SURFACE AMERICA INC%','SAI',
+    2,'%PRC%','PRC',
+    2,'%PREMIUM RUBBER%','PRC',
+    2,'%ECORE%', 'PRC',
+    2,'360 TIRE%','360',
+    2,'%ECORE%', '360',
+    2,'%CRC%','CRC',
+    2,'%TSS%','TSS',
+    2,'%TRUCK STOP%','TSS',
+    2,'DELPHOS RUBBER%','DRC',
+    2,'%CARDINAL%', 'DRC',
+    2,'% DELPHOS%','DRC',
+    2,'%(DELPHOS)%','DRC',
+    2,'%DRC%','DRC',
+    2,'%ECORE%', 'DRC',
+    2,'%HTI RECYCLING%','HTI',
+    2,'%HIGH TREAD%','HTI',
+    2,'%EDGE RUBBER%','EDGE',
+    2,'%DGH%','DGH',
+    2,'ECORE RUBBER PROCESSING','ERP',
+    2,'ECORE CIRCULAR SOLUTIONS','ECS',
+    2,'ECORE TIRE COLLECTION%','ETC',
+    2,'%ECORE%', 'ECS',
+    2,'%ECORE%', 'ERP',
+    2,'%ECORE%', 'ETC',
+    2,'%DELPHOS%', 'ECS'
+  ) AS (priority, pattern, code)
+),
+
+scored AS (
+  SELECT 
+    d.company,
+    p.code,
+    p.priority,
+    COALESCE(x.acquisition_date, CAST('1900-01-01' AS DATE)) AS acquisition_date,
+    ROW_NUMBER() OVER (
+      PARTITION BY d.company
+      ORDER BY p.priority DESC
+    ) AS rn
+  FROM union_list AS d
+  INNER JOIN patterns AS p
+    ON d.company LIKE p.pattern 
+  INNER JOIN landing.reftables.MASTER_ECORE_COMPANIES AS x
+    ON p.code = UPPER(x.company_code)
+)
+
+SELECT
+  company AS invoice_company_name,
+  code    AS internal_company_code
+--   acquisition_date
+FROM scored
+WHERE 1=1
+--   AND company NOT LIKE '%DO NOT USE%'
+  AND rn = 1
+  
+  
+;
+
+-- Cardinal Rubber Co == Site Delphos DRC
+-- Ecore == Site Farmingdale PRC
+-- Ecore Circular Solutions == Site Delphos DRC, otherwise 360
+-- Delphos dba Premier Materials == ECS
+
+WITH union_list(company) AS (
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_kinetic_latest`  WHERE `Name` IS NOT NULL
+  UNION
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_360_v2_latest`  WHERE `Name` IS NOT NULL
+  UNION
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_crc_v2_latest`  WHERE `Name` IS NOT NULL
+  UNION
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_dos_v2_latest`  WHERE `Name` IS NOT NULL
+  UNION
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_eti_v3_latest`  WHERE `Name` IS NOT NULL
+  UNION
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_etr_v2_latest`  WHERE `Name` IS NOT NULL
+  UNION
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_prc_v2_latest`  WHERE `Name` IS NOT NULL
+  UNION
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_tss_v2_latest`  WHERE `Name` IS NOT NULL
+  UNION
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_dgh`  WHERE `Name` IS NOT NULL
+  UNION
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_edge`  WHERE `Name` IS NOT NULL
+  UNION
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_hti`  WHERE `Name` IS NOT NULL
+),
+
+-- include_patterns AS (
+--   SELECT stack(25,
+--     1,'%ECORE SALES%','EII',
+--     1,'%(ECORE)%','EII',
+--     1,'ECORE %','EII',
+--     2,'%DURAPLAY%','DOS',
+--     2,'%DURPLAY%','DOS',
+--     2,'%A-TURF%','ATURF',
+--     2,'%SPECTRATURF%','STI',
+--     2,'%SURFACE AMERICA INC%','SAI',
+--     2,'%PRC%','PRC',
+--     2,'%PREMIUM RUBBER%','PRC',
+--     2,'360 TIRE%','360',
+--     2,'%CRC%','CRC',
+--     2,'%TSS%','TSS',
+--     2,'%TRUCK STOP%','TSS',
+--     2,'DELPHOS RUBBER%','DRC',
+--     2,'% DELPHOS%','DRC',
+--     2,'%(DELPHOS)%','DRC',
+--     2,'%DRC%','DRC',
+--     2,'%HTI RECYCLING%','HTI',
+--     2,'%HIGH TREAD%','HTI',
+--     2,'%EDGE RUBBER%','EDGE',
+--     2,'%DGH%','DGH',
+--     2,'ECORE RUBBER PROCESSING','ERP',
+--     2,'ECORE CIRCULAR SOLUTIONS','ECS',
+--     2,'ECORE TIRE COLLECTION%','ETC'
+--   ) AS (priority, pattern, code)
+-- ),
+
+include_patterns AS (
+  SELECT stack(26,
+    1,'ECORE %','EII',
+    2,'%DURAPLAY%','DOS',
+    2,'%DURPLAY%','DOS',
+    2,'%A-TURF%','ATURF',
+    2,'%SPECTRATURF%','STI',
+    2,'%SURFACE AMERICA INC%','SAI',
+    2,'%PRC%','PRC',
+    2,'%PREMIUM RUBBER%','PRC',
+    2,'360 TIRE%','360',
+    2,'%CRC%','CRC',
+    2,'%TSS%','TSS',
+    2,'%TRUCK STOP%','TSS',
+    2,'DELPHOS RUBBER%','DRC',
+    2,'% DELPHOS%','DRC',
+    2,'%(DELPHOS)%','DRC',
+    2,'%DRC%','DRC',
+    2,'%HTI RECYCLING%','HTI',
+    2,'%HIGH TREAD%','HTI',
+    2,'%EDGE RUBBER%','EDGE',
+    2,'%DGH%','DGH',
+    2,'ECORE RUBBER PROCESSING','ERP',
+    2,'ECORE CIRCULAR SOLUTIONS','ECS',
+    2,'ECORE TIRE COLLECTION%','ETC',
+    2,'ECORETIRE COLLECTION%','ETC'
+  ) AS (priority, pattern, code)
+),
+
+exclude_patterns AS (
+  SELECT stack(2,
+    1,'%DO NOT USE%', 'NA',
+    1,'%BOSS TRUCK STOP%', 'NA'
+  ) AS (priority, pattern, code)
+)
+
+SELECT d.COMPANY
+FROM union_list AS d
+WHERE EXISTS (
+  SELECT 1 FROM include_patterns p WHERE d.company LIKE p.pattern
+)
+AND NOT EXISTS (
+  SELECT 1 FROM exclude_patterns e WHERE d.company LIKE e.pattern
+)
+ORDER BY d.COMPANY
+;
+
+-- 23
+SELECT *
+FROM landing.reftables.MASTER_ECORE_COMPANIES
+ORDER BY Company_Name
+;
+
+-- 23
+SELECT DISTINCT COMPANY_CODE
+FROM landing.reftables.MASTER_ECORE_COMPANIES
+ORDER BY COMPANY_CODE
+;
+
+SELECT UPPER(TRIM(`Name`)), *
+FROM `tim_wilson`.`silver`.`sat_outbound_invoice_kinetic_latest`
+;
+
+WITH union_list(company_name, company_code) AS (
+  SELECT UPPER(TRIM(`Name`)), COMPANY FROM `tim_wilson`.`silver`.`sat_outbound_invoice_kinetic_latest`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)), COMPANY FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_360_v2_latest`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)), COMPANY FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_crc_v2_latest`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)), COMPANY FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_dos_v2_latest`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)), COMPANY FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_eti_v3_latest`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)), COMPANY FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_etr_v2_latest`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)), COMPANY FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_prc_v2_latest`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)), COMPANY FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_tss_v2_latest`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)), COMPANYCODE FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_dgh`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)), COMPANYCODE FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_edge`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)), COMPANYCODE FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_hti`  WHERE `Name` IS NOT NULL
+)
+
+SELECT COMPANY_NAME, COMPANY_CODE, COUNT(*) AS RCOUNT
+FROM union_list
+WHERE COMPANY_NAME NOT LIKE '%DO NOT USE%'
+AND (
+COMPANY_NAME LIKE '%ECORE%'
+OR
+COMPANY_NAME LIKE '%EII%'
+OR
+COMPANY_NAME LIKE '%360 TIRE%'
+OR
+COMPANY_NAME LIKE '%A-TURF%'
+OR
+COMPANY_NAME LIKE '%ATURF%'
+OR
+COMPANY_NAME LIKE '%CARDINAL%'
+OR
+COMPANY_NAME LIKE '%CRC%'
+OR
+COMPANY_NAME LIKE '%D&G%'
+OR
+COMPANY_NAME LIKE '%DGH%'
+OR
+COMPANY_NAME LIKE '%DELPHOS%'
+OR
+COMPANY_NAME LIKE '%DRC%'
+OR
+COMPANY_NAME LIKE '%DURAPLAY%'
+OR
+COMPANY_NAME LIKE '%DURPLAY%'
+OR
+COMPANY_NAME LIKE '%EDGE RUBBER%'
+OR
+COMPANY_NAME LIKE '%HTI RECYCLING%'
+OR
+COMPANY_NAME LIKE '%HIGH TREAD%'
+-- OR
+-- COMPANY LIKE '%OZARK%'
+OR
+COMPANY_NAME LIKE '%PREMIER RUBBER%'
+OR
+COMPANY_NAME LIKE '%PRC%'
+OR
+COMPANY_NAME LIKE '%PRO-TECHS%'
+OR
+COMPANY_NAME LIKE '%SPECTRATURF%'
+OR
+COMPANY_NAME LIKE '%SPECTRA TURF%'
+OR
+COMPANY_NAME LIKE '%SURFACE AMERICA%'
+OR
+COMPANY_NAME LIKE '%TRUCK STOP SUPPLY%'
+OR
+COMPANY_NAME LIKE '%TSS%'
+)
+GROUP BY COMPANY_NAME, COMPANY_CODE
+ORDER BY COMPANY_NAME, COMPANY_CODE
+;
+
+SELECT *
+FROM tim_wilson.silver.br_ref_outbound_invoice_ecore_companies
+;
+
+SELECT DISTINCT CUSTOMER
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+ORDER BY CUSTOMER
+;
+
+--
+-- 07/08/2026
+--
+
+WITH union_list(company) AS (
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_kinetic`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_360_v2`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_crc_v2`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_dos_v2`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_eti_v3`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_etr_v2`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_prc_v2`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_tss_v2`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_dgh`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_edge`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)) FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_hti`  WHERE `Name` IS NOT NULL
+)
+
+SELECT COMPANY, COUNT(*) AS RCOUNT
+FROM union_list
+WHERE 1=1
+AND COMPANY NOT LIKE '%DO NOT USE%'
+AND (
+COMPANY LIKE 'ECORE%'
+OR
+COMPANY LIKE '%360 TIRE%'
+OR
+COMPANY LIKE '%A-TURF%'
+OR
+COMPANY LIKE '%ATURF%'
+OR
+COMPANY LIKE '%CARDINAL RUBBER%'
+OR
+COMPANY LIKE '%CRC%'
+OR
+COMPANY LIKE '%D&G%'
+OR
+COMPANY LIKE '%DGH%'
+OR
+COMPANY LIKE '%DELPHOS%'
+OR
+COMPANY LIKE '%DRC%'
+OR
+COMPANY LIKE '%DURAPLAY%'
+OR
+COMPANY LIKE '%DURPLAY%'
+OR
+COMPANY LIKE '%EDGE RUBBER%'
+OR
+COMPANY LIKE '%HTI RECYCLING%'
+OR
+COMPANY LIKE '%HIGH TREAD%'
+OR
+COMPANY LIKE '%PREMIER RUBBER%'
+OR
+COMPANY LIKE '%PRC%'
+OR
+COMPANY LIKE '%PRO-TECHS%'
+OR
+COMPANY LIKE '%SPECTRATURF%'
+OR
+COMPANY LIKE '%SPECTRA TURF%'
+OR
+COMPANY LIKE '%SURFACE AMERICA%'
+OR
+COMPANY LIKE '%TRUCK STOP SUPPLY%'
+OR
+COMPANY LIKE '%TSS%'
+)
+GROUP BY company
+ORDER BY company
+;
+
+-- BECORE PROMOTIONS INC
+-- RESTORECORE INC
+
+
+WITH outbound_data AS (
+  SELECT NAME, RECORD_SOURCE FROM `tim_wilson`.`silver`.`sat_outbound_invoice_kinetic`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT NAME, RECORD_SOURCE FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_360_v2`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT NAME, RECORD_SOURCE FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_crc_v2`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT NAME, RECORD_SOURCE FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_dos_v2`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT NAME, RECORD_SOURCE FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_eti_v3`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT NAME, RECORD_SOURCE FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_etr_v2`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT NAME, RECORD_SOURCE FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_prc_v2`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT NAME, RECORD_SOURCE FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_tss_v2`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT NAME, RECORD_SOURCE FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_dgh`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT NAME, RECORD_SOURCE FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_edge`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT NAME, RECORD_SOURCE FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_hti`  WHERE `Name` IS NOT NULL
+)
+
+SELECT *
+FROM outbound_data
+WHERE UPPER(NAME) LIKE '%PREMIER RUBBER LLC%'
+;
+
+SELECT *
+FROM `tim_wilson`.`silver`.`sat_outbound_invoice_kinetic`
+WHERE UPPER(NAME) LIKE '%PREMIER RUBBER LLC%'
+;
+
+-- 
+-- 10/08/2026
+--
+
+-- 53 records
+WITH invoice_data(INVOICE_COMPANY_NAME, INVOICE_DATE) AS (
+  SELECT UPPER(TRIM(`Name`)), INVOICEDATE FROM `tim_wilson`.`silver`.`sat_outbound_invoice_kinetic_latest`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)), DATE FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_360_v2_latest`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)), DATE FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_crc_v2_latest`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)), DATE FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_dos_v2_latest`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)), DATE FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_eti_v3_latest`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)), DATE FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_etr_v2_latest`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)), DATE FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_prc_v2_latest`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)), DATE FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_tss_v2_latest`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)), DATE FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_dgh`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)), DATE FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_edge`  WHERE `Name` IS NOT NULL
+  UNION ALL
+  SELECT UPPER(TRIM(`Name`)), DATE FROM `tim_wilson`.`silver`.`sat_outbound_invoice_quickbooks_hti`  WHERE `Name` IS NOT NULL
+),
+
+all_patterns AS (
+  SELECT stack(33,
+    -- Specific Ecore patterns (date-dependent)
+    1, '%ECORE - 360, LLC%',              '360',   DATE'1900-01-01', DATE'9999-12-31',
+    1, '%ECORE 360 LLC%',                 '360',   DATE'1900-01-01', DATE'9999-12-31',
+    1, '%ECORE - DELPHOS%',               'DRC',   DATE'1900-01-01', DATE'9999-12-31',
+    1, '%ECORE - PREMIER MATERIALS - DELPHOS%', 'DRC', DATE'1900-01-01', DATE'9999-12-31',
+    1, '%ECORE CIRCULAR SOLUTIONS%',      'ECS',   DATE'1900-01-01', DATE'9999-12-31',
+    -- Map Ecore Tire Collection to either ETI or ETC on the basis of invoice date and acquisition date
+    1, '%ECORE TIRE COLLECTION%',         'ETI',   DATE'1900-01-01', DATE'2026-04-12',
+    1, '%ECORE TIRE COLLECTION%',         'ETC',   DATE'2026-04-13', DATE'9999-12-31',
+    1, '%ECORETIRE COLLECTION%',          'ETI',   DATE'1900-01-01', DATE'2026-04-12',
+    1, '%ECORETIRE COLLECTION%',          'ETC',   DATE'2026-04-13', DATE'9999-12-31',
+    1, '%ECORE INTERNATIONAL%',           'EII',   DATE'1900-01-01', DATE'9999-12-31',
+    -- Catch-all Ecore
+    2, 'ECORE%',                          'EII',   DATE'1900-01-01', DATE'9999-12-31',
+    -- Non-Ecore patterns
+    3, '%360 TIRE%%',                     '360',   DATE'1900-01-01', DATE'9999-12-31',
+    3, 'A-TURF%',                         'ATURF', DATE'1900-01-01', DATE'9999-12-31',
+    3, 'ATURF%',                          'ATURF', DATE'1900-01-01', DATE'9999-12-31',
+    3, '%CARDINAL RUBBER%',               'CRC',   DATE'1900-01-01', DATE'9999-12-31',
+    3, '%CRC%',                           'CRC',   DATE'1900-01-01', DATE'9999-12-31',
+    3, '%D&G%',                           'DGH',   DATE'1900-01-01', DATE'9999-12-31',
+    3, '%DGH%',                           'DGH',   DATE'1900-01-01', DATE'9999-12-31',
+    3, '%DELPHOS%',                       'DRC',   DATE'1900-01-01', DATE'9999-12-31',
+    3, '%DRC%',                           'DRC',   DATE'1900-01-01', DATE'9999-12-31',
+    3, '%DURAPLAY%',                      'DOS',   DATE'1900-01-01', DATE'9999-12-31',
+    3, '%DURPLAY%',                       'DOS',   DATE'1900-01-01', DATE'9999-12-31',
+    3, '%EDGE RUBBER%',                   'EDGE',  DATE'1900-01-01', DATE'9999-12-31',
+    3, '%HTI RECYCLING%',                 'HTI',   DATE'1900-01-01', DATE'9999-12-31',
+    3, '%HIGH TREAD%',                    'HTI',   DATE'1900-01-01', DATE'9999-12-31',
+    3, '%PREMIER RUBBER%',                'PRC',   DATE'1900-01-01', DATE'9999-12-31',
+    3, '%PRC%',                           'PRC',   DATE'1900-01-01', DATE'9999-12-31',
+    3, '%PRO-TECHS%',                     'PTS',   DATE'1900-01-01', DATE'9999-12-31',
+    3, '%SPECTRATURF%',                   'STI',   DATE'1900-01-01', DATE'9999-12-31',
+    3, '%SPECTRA TURF%',                  'STI',   DATE'1900-01-01', DATE'9999-12-31',
+    3, '%SURFACE AMERICA%',               'SAI',   DATE'1900-01-01', DATE'9999-12-31',
+    3, '%TRUCK STOP SUPPLY%',             'TSS',   DATE'1900-01-01', DATE'9999-12-31',
+    3, '%TSS%',                           'TSS',   DATE'1900-01-01', DATE'9999-12-31'
+  ) AS (priority, pattern, code, valid_from, valid_to)
+),
+
+scored AS (
+  SELECT
+    d.INVOICE_COMPANY_NAME
+    , p.code AS INTERNAL_COMPANY_CODE
+    , x.ACQUISITION_DATE
+    , ROW_NUMBER() OVER (
+        PARTITION BY d.INVOICE_COMPANY_NAME, d.INVOICE_DATE
+        ORDER BY p.priority
+      ) AS rn
+  FROM invoice_data AS d
+  INNER JOIN all_patterns AS p
+    ON d.INVOICE_COMPANY_NAME LIKE p.pattern
+    AND d.INVOICE_DATE >= p.valid_from
+    AND d.INVOICE_DATE <= p.valid_to
+  LEFT OUTER JOIN landing.reftables.MASTER_ECORE_COMPANIES AS x
+    ON UPPER(p.code) = UPPER(x.COMPANY_CODE)
+)
+
+SELECT DISTINCT
+  INVOICE_COMPANY_NAME
+  , INTERNAL_COMPANY_CODE
+  , ACQUISITION_DATE
+FROM scored
+WHERE rn = 1
+  AND INVOICE_COMPANY_NAME NOT LIKE '%DO NOT USE%'
+ORDER BY INVOICE_COMPANY_NAME
+;
+
+-- DGH INC.
+-- EDGE RUBBER RECYCLING LLC
+-- EDGE RUBBER RECYCLING LLC (NEW COMPANY)
+-- D&G HEAVY EQUIPMENT LEASING
+
+SELECT *
+FROM landing.reftables.MASTER_ECORE_COMPANIES AS x
+WHERE UPPER(COMPANY_NAME) = UPPER('D&G Heavy Equipment Leasing')
+;
+
+-- SELECT COMPANY, COUNT(*) AS RCOUNT
+-- FROM union_list
+-- WHERE 1=1
+-- AND COMPANY NOT LIKE '%DO NOT USE%'
+-- AND (
+-- COMPANY LIKE 'ECORE%'
+-- OR
+-- COMPANY LIKE '%360 TIRE%'
+-- OR
+-- COMPANY LIKE '%A-TURF%'
+-- OR
+-- COMPANY LIKE '%ATURF%'
+-- OR
+-- COMPANY LIKE '%CARDINAL RUBBER%'
+-- OR
+-- COMPANY LIKE '%CRC%'
+-- OR
+-- COMPANY LIKE '%D&G%'
+-- OR
+-- COMPANY LIKE '%DGH%'
+-- OR
+-- COMPANY LIKE '%DELPHOS%'
+-- OR
+-- COMPANY LIKE '%DRC%'
+-- OR
+-- COMPANY LIKE '%DURAPLAY%'
+-- OR
+-- COMPANY LIKE '%DURPLAY%'
+-- OR
+-- COMPANY LIKE '%EDGE RUBBER%'
+-- OR
+-- COMPANY LIKE '%HTI RECYCLING%'
+-- OR
+-- COMPANY LIKE '%HIGH TREAD%'
+-- OR
+-- COMPANY LIKE '%PREMIER RUBBER%'
+-- OR
+-- COMPANY LIKE '%PRC%'
+-- OR
+-- COMPANY LIKE '%PRO-TECHS%'
+-- OR
+-- COMPANY LIKE '%SPECTRATURF%'
+-- OR
+-- COMPANY LIKE '%SPECTRA TURF%'
+-- OR
+-- COMPANY LIKE '%SURFACE AMERICA%'
+-- OR
+-- COMPANY LIKE '%TRUCK STOP SUPPLY%'
+-- OR
+-- COMPANY LIKE '%TSS%'
+-- )
+
+-- Test mart_outbound_transactions IS_INTERNAL_TRANSFER flag after refactoring br_ref_outbound_invoice_ecore_companies
+
+-- General tests
+
+SELECT *
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+WHERE UPPER(CUSTOMER) LIKE '%DELPHOS DBA%'
+;
+
+SELECT *
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+WHERE UPPER(CUSTOMER) LIKE '%ECORE CIRCULAR SOLUTIONS%'
+AND DATE(INVOICE_DATE) >= '2026-04-13'
+;
+
+SELECT *
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+WHERE UPPER(CUSTOMER) LIKE '%ECORE CIRCULAR SOLUTIONS%'
+AND DATE(INVOICE_DATE) < '2026-04-13'
+;
+
+SELECT *
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+WHERE UPPER(CUSTOMER) = 'ECORE'
+;
+
+SELECT *
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+WHERE UPPER(CUSTOMER) LIKE '%CARDINAL RUBBER CO.%'
+;
+
+-- Specific tests of IS INTERNAL_TRANSFER flag
+
+SELECT DISTINCT IS_INTERNAL_TRANSFER
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+WHERE UPPER(CUSTOMER) LIKE '%DELPHOS DBA%'
+;
+
+SELECT DISTINCT IS_INTERNAL_TRANSFER
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+WHERE UPPER(CUSTOMER) LIKE '%ECORE CIRCULAR SOLUTIONS%'
+AND DATE(INVOICE_DATE) >= '2026-04-13'
+;
+
+SELECT IS_INTERNAL_TRANSFER, COUNT(*)
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+WHERE UPPER(CUSTOMER) LIKE '%ECORE CIRCULAR SOLUTIONS%'
+AND DATE(INVOICE_DATE) >= '2026-04-13'
+GROUP BY IS_INTERNAL_TRANSFER
+;
+
+SELECT *
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+WHERE UPPER(CUSTOMER) LIKE '%ECORE CIRCULAR SOLUTIONS%'
+AND DATE(INVOICE_DATE) < '2026-04-13'
+AND IS_INTERNAL_TRANSFER = 0
+;
+
+SELECT DISTINCT IS_INTERNAL_TRANSFER
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+WHERE UPPER(CUSTOMER) LIKE '%ECORE CIRCULAR SOLUTIONS%'
+AND DATE(INVOICE_DATE) < '2026-04-13'
+;
+
+SELECT IS_INTERNAL_TRANSFER, COUNT(*)
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+WHERE UPPER(CUSTOMER) LIKE '%ECORE CIRCULAR SOLUTIONS%'
+AND DATE(INVOICE_DATE) < DATE('2026-04-13')
+GROUP BY IS_INTERNAL_TRANSFER
+;
+
+SELECT *
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+WHERE UPPER(CUSTOMER) LIKE '%ECORE CIRCULAR SOLUTIONS%'
+AND DATE(INVOICE_DATE) < DATE('2026-04-13')
+AND IS_INTERNAL_TRANSFER = 1
+ORDER BY INVOICE_DATE DESC
+;
+
+SELECT DISTINCT IS_INTERNAL_TRANSFER
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+WHERE UPPER(CUSTOMER) = 'ECORE'
+;
+
+SELECT DISTINCT IS_INTERNAL_TRANSFER
+FROM tim_wilson.gold_coreview.mart_outbound_transactions
+WHERE UPPER(CUSTOMER) LIKE '%CARDINAL RUBBER CO.%'
+;

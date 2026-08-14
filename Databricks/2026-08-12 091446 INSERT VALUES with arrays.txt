@@ -1,0 +1,31 @@
+CREATE TABLE tim_wilson.tim_wilson.test_arrays ( 
+    id INT
+    , arrint ARRAY<INT> 
+    , arrstr ARRAY<STRING> 
+); 
+
+INSERT INTO tim_wilson.tim_wilson.test_arrays 
+    VALUES 
+    (1, array(10, 20, 30), array('A', 'B', 'C'))
+    , (2, array(100, 200, 300), array('D', 'E', 'F'))
+    , (3, CAST(ARRAY() AS ARRAY<INT>), CAST(ARRAY() AS ARRAY<STRING>))
+; 
+
+SELECT *
+FROM tim_wilson.tim_wilson.test_arrays
+;
+
+-- TRUNCATE TABLE tim_wilson.tim_wilson.test_arrays
+-- ;
+
+-- DROP TABLE tim_wilson.tim_wilson.test_arrays
+-- ;
+
+CREATE TABLE tim_wilson.tim_wilson.test_arrays ( 
+    id INT
+    , arrstr ARRAY<STRING> 
+); 
+
+INSERT INTO tim_wilson.tim_wilson.test_arrays 
+    VALUES 
+    (1, array(10, 20, 30), array('A', 'B', 'C'))

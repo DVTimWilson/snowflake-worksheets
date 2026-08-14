@@ -1,0 +1,100 @@
+SELECT DISTINCT EXTRACT_DATE
+FROM landing.kinetic.porcptdatefilter
+ORDER BY EXTRACT_DATE DESC
+LIMIT 100
+;
+
+SELECT DISTINCT EXTRACT_DATE
+FROM landing.kinetic.transorder
+ORDER BY EXTRACT_DATE DESC
+LIMIT 10
+;
+
+ALTER TABLE tim_wilson.psa_kinetic.psa_kinetic_sobacklog_v2
+SET TBLPROPERTIES ('delta.columnMapping.mode' = 'name');
+
+-- dbt_updated_at
+ALTER TABLE tim_wilson.psa_kinetic.psa_kinetic_sobacklog_v2
+ADD COLUMN dbt_updated_at_new TIMESTAMP;
+
+UPDATE tim_wilson.psa_kinetic.psa_kinetic_sobacklog_v2
+SET dbt_updated_at_new = CAST(dbt_updated_at AS TIMESTAMP);
+
+ALTER TABLE tim_wilson.psa_kinetic.psa_kinetic_sobacklog_v2
+DROP COLUMN dbt_updated_at;
+
+ALTER TABLE tim_wilson.psa_kinetic.psa_kinetic_sobacklog_v2
+RENAME COLUMN dbt_updated_at_new TO dbt_updated_at;
+
+
+-- dbt_valid_from
+ALTER TABLE tim_wilson.psa_kinetic.psa_kinetic_sobacklog_v2
+ADD COLUMN dbt_valid_from_new TIMESTAMP;
+
+UPDATE tim_wilson.psa_kinetic.psa_kinetic_sobacklog_v2
+SET dbt_valid_from_new = CAST(dbt_valid_from AS TIMESTAMP);
+
+ALTER TABLE tim_wilson.psa_kinetic.psa_kinetic_sobacklog_v2
+DROP COLUMN dbt_valid_from;
+
+ALTER TABLE tim_wilson.psa_kinetic.psa_kinetic_sobacklog_v2
+RENAME COLUMN dbt_valid_from_new TO dbt_valid_from;
+
+
+-- dbt_valid_to
+ALTER TABLE tim_wilson.psa_kinetic.psa_kinetic_sobacklog_v2
+ADD COLUMN dbt_valid_to_new TIMESTAMP;
+
+UPDATE tim_wilson.psa_kinetic.psa_kinetic_sobacklog_v2
+SET dbt_valid_to_new = CAST(dbt_valid_to AS TIMESTAMP);
+
+ALTER TABLE tim_wilson.psa_kinetic.psa_kinetic_sobacklog_v2
+DROP COLUMN dbt_valid_to;
+
+ALTER TABLE tim_wilson.psa_kinetic.psa_kinetic_sobacklog_v2
+RENAME COLUMN dbt_valid_to_new TO dbt_valid_to;
+
+
+-- EXTRACT_DATE
+ALTER TABLE tim_wilson.psa_kinetic.psa_kinetic_sobacklog_v2
+ADD COLUMN EXTRACT_DATE_NEW TIMESTAMP;
+
+UPDATE tim_wilson.psa_kinetic.psa_kinetic_sobacklog_v2
+SET EXTRACT_DATE_NEW = CAST(EXTRACT_DATE AS TIMESTAMP);
+
+ALTER TABLE tim_wilson.psa_kinetic.psa_kinetic_sobacklog_v2
+DROP COLUMN EXTRACT_DATE;
+
+ALTER TABLE tim_wilson.psa_kinetic.psa_kinetic_sobacklog_v2
+RENAME COLUMN EXTRACT_DATE_NEW TO EXTRACT_DATE;
+
+
+-- CREATE OR REPLACE TABLE tim_wilson.psa_kinetic.psa_kinetic_sobacklog_v2
+-- SELECT *
+-- FROM psa.kinetic.psa_kinetic_sobacklog_v2
+-- ;
+
+
+SELECT 
+DATE('2026-08-15 11:13:27.123456') AS EXTRACT_DATE_DATE
+, TO_TIMESTAMP(DATE('2026-08-15')) AS EXTRACT_DATE_TIMESTAMP
+;
+
+
+SELECT DISTINCT EXTRACT_DATE
+FROM tim_wilson.psa_kinetic.psa_kinetic_sobacklog_v2
+ORDER BY EXTRACT_DATE DESC
+LIMIT 10
+;
+
+SELECT DISTINCT EXTRACT_DATE
+FROM psa.kinetic.psa_kinetic_sobacklog_v2
+ORDER BY EXTRACT_DATE DESC
+LIMIT 10
+;
+
+SELECT DISTINCT EXTRACT_DATE
+FROM psa_prod.kinetic.psa_kinetic_sobacklog_v2
+ORDER BY EXTRACT_DATE DESC
+LIMIT 10
+;

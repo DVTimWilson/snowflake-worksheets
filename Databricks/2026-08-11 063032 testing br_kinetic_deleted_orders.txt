@@ -1,0 +1,68 @@
+-- 127402
+SELECT COUNT(*)
+FROM (
+WITH cte_oh_latest AS (
+    SELECT
+        Company
+        ,OrderNum
+        ,Extract_Date
+        ,DATE_DIFF(ChangeDate, Extract_Date) AS ChangeDate_ExtractDate_Diff
+    -- FROM landing.kinetic.orderhed
+    FROM `landing`.`kinetic`.`orderhed`
+    QUALIFY ROW_NUMBER() OVER (
+        PARTITION BY Company, OrderNum
+        ORDER BY Extract_Date DESC
+    ) = 1
+)
+
+,cte_oh_max_extract_date AS (
+    SELECT MAX(Extract_Date) AS latest_load_date
+    FROM `landing`.`kinetic`.`orderhed`)
+
+SELECT
+    ohl.Company
+    ,ohl.OrderNum
+    ,CASE
+        WHEN ohl.Extract_Date <> ohmed.latest_load_date
+             AND ChangeDate_ExtractDate_Diff > -4
+        THEN 1
+        ELSE 0
+    END AS IS_DELETED_ORDER
+FROM cte_oh_latest ohl
+CROSS JOIN cte_oh_max_extract_date ohmed
+)
+;
+
+-- 127402
+SELECT COUNT(*)
+FROM (
+WITH cte_oh_latest AS (
+    SELECT
+        Company
+        ,OrderNum
+        ,Extract_Date
+        ,DATEDIFF(ChangeDate, Extract_Date) AS ChangeDate_ExtractDate_Diff
+        ,MAX(Extract_Date) OVER () AS latest_load_date
+    FROM `landing`.`kinetic`.`orderhed`
+    QUALIFY ROW_NUMBER() OVER (
+        PARTITION BY Company, OrderNum
+        ORDER BY Extract_Date DESC
+    ) = 1
+)
+
+SELECT
+    Company
+    ,OrderNum
+    ,CASE
+        WHEN Extract_Date <> latest_load_date
+             AND ChangeDate_ExtractDate_Diff > -14
+        THEN 1
+        ELSE 0
+    END AS IS_DELETED_ORDER
+FROM cte_oh_latest
+)
+;
+
+SELECT ChangeDate, Extract_Date, DATEDIFF(ChangeDate, Extract_Date) AS ChangeDate_ExtractDate_Diff, *
+FROM `landing`.`kinetic`.`orderhed`
+;

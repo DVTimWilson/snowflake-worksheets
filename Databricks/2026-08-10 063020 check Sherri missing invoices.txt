@@ -1,0 +1,12 @@
+SELECT *
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE InvoiceNum = '228799'
+;
+
+SELECT *
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE InvoiceDate = '2026-03-11'
+AND Company = 'DRC'
+ORDER BY InvoiceNum
+;
+

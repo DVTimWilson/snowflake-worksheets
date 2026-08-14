@@ -1,0 +1,70 @@
+--
+-- PRODUCTION
+--
+
+SELECT *
+FROM psa_prod.kinetic.psa_kinetic_sobacklog_v2
+;
+
+GRANT MODIFY ON TABLE psa_prod.kinetic.psa_kinetic_sobacklog_v2 TO `twilson@ecoreintl.com`
+;
+
+ALTER TABLE psa_prod.kinetic.psa_kinetic_sobacklog_v2
+SET TBLPROPERTIES ('delta.columnMapping.mode' = 'name');
+
+
+-- 510591
+-- dbt_updated_at
+ALTER TABLE psa_prod.kinetic.psa_kinetic_sobacklog_v2
+ADD COLUMN dbt_updated_at_new TIMESTAMP;
+
+UPDATE psa_prod.kinetic.psa_kinetic_sobacklog_v2
+SET dbt_updated_at_new = CAST(dbt_updated_at AS TIMESTAMP);
+
+ALTER TABLE psa_prod.kinetic.psa_kinetic_sobacklog_v2
+DROP COLUMN dbt_updated_at;
+
+ALTER TABLE psa_prod.kinetic.psa_kinetic_sobacklog_v2
+RENAME COLUMN dbt_updated_at_new TO dbt_updated_at;
+
+
+-- dbt_valid_from
+ALTER TABLE psa_prod.kinetic.psa_kinetic_sobacklog_v2
+ADD COLUMN dbt_valid_from_new TIMESTAMP;
+
+UPDATE psa_prod.kinetic.psa_kinetic_sobacklog_v2
+SET dbt_valid_from_new = CAST(dbt_valid_from AS TIMESTAMP);
+
+ALTER TABLE psa_prod.kinetic.psa_kinetic_sobacklog_v2
+DROP COLUMN dbt_valid_from;
+
+ALTER TABLE psa_prod.kinetic.psa_kinetic_sobacklog_v2
+RENAME COLUMN dbt_valid_from_new TO dbt_valid_from;
+
+
+-- dbt_valid_to
+ALTER TABLE psa_prod.kinetic.psa_kinetic_sobacklog_v2
+ADD COLUMN dbt_valid_to_new TIMESTAMP;
+
+UPDATE psa_prod.kinetic.psa_kinetic_sobacklog_v2
+SET dbt_valid_to_new = CAST(dbt_valid_to AS TIMESTAMP);
+
+ALTER TABLE psa_prod.kinetic.psa_kinetic_sobacklog_v2
+DROP COLUMN dbt_valid_to;
+
+ALTER TABLE psa_prod.kinetic.psa_kinetic_sobacklog_v2
+RENAME COLUMN dbt_valid_to_new TO dbt_valid_to;
+
+
+-- EXTRACT_DATE
+ALTER TABLE psa_prod.kinetic.psa_kinetic_sobacklog_v2
+ADD COLUMN EXTRACT_DATE_NEW TIMESTAMP;
+
+UPDATE psa_prod.kinetic.psa_kinetic_sobacklog_v2
+SET EXTRACT_DATE_NEW = CAST(EXTRACT_DATE AS TIMESTAMP);
+
+ALTER TABLE psa_prod.kinetic.psa_kinetic_sobacklog_v2
+DROP COLUMN EXTRACT_DATE;
+
+ALTER TABLE psa_prod.kinetic.psa_kinetic_sobacklog_v2
+RENAME COLUMN EXTRACT_DATE_NEW TO EXTRACT_DATE;

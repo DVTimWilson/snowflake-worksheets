@@ -1,0 +1,124 @@
+--
+-- UAT
+--
+
+ALTER TABLE psa.kinetic.psa_kinetic_sobacklog_v2
+SET TBLPROPERTIES ('delta.columnMapping.mode' = 'name');
+
+
+-- dbt_updated_at
+ALTER TABLE psa.kinetic.psa_kinetic_sobacklog_v2
+ADD COLUMN dbt_updated_at_new TIMESTAMP;
+
+UPDATE psa.kinetic.psa_kinetic_sobacklog_v2
+SET dbt_updated_at_new = CAST(dbt_updated_at AS TIMESTAMP);
+
+ALTER TABLE psa.kinetic.psa_kinetic_sobacklog_v2
+DROP COLUMN dbt_updated_at;
+
+ALTER TABLE psa.kinetic.psa_kinetic_sobacklog_v2
+RENAME COLUMN dbt_updated_at_new TO dbt_updated_at;
+
+
+-- dbt_valid_from
+ALTER TABLE psa.kinetic.psa_kinetic_sobacklog_v2
+ADD COLUMN dbt_valid_from_new TIMESTAMP;
+
+UPDATE psa.kinetic.psa_kinetic_sobacklog_v2
+SET dbt_valid_from_new = CAST(dbt_valid_from AS TIMESTAMP);
+
+ALTER TABLE psa.kinetic.psa_kinetic_sobacklog_v2
+DROP COLUMN dbt_valid_from;
+
+ALTER TABLE psa.kinetic.psa_kinetic_sobacklog_v2
+RENAME COLUMN dbt_valid_from_new TO dbt_valid_from;
+
+
+-- dbt_valid_to
+ALTER TABLE psa.kinetic.psa_kinetic_sobacklog_v2
+ADD COLUMN dbt_valid_to_new TIMESTAMP;
+
+UPDATE psa.kinetic.psa_kinetic_sobacklog_v2
+SET dbt_valid_to_new = CAST(dbt_valid_to AS TIMESTAMP);
+
+ALTER TABLE psa.kinetic.psa_kinetic_sobacklog_v2
+DROP COLUMN dbt_valid_to;
+
+ALTER TABLE psa.kinetic.psa_kinetic_sobacklog_v2
+RENAME COLUMN dbt_valid_to_new TO dbt_valid_to;
+
+
+-- EXTRACT_DATE
+ALTER TABLE psa.kinetic.psa_kinetic_sobacklog_v2
+ADD COLUMN EXTRACT_DATE_NEW TIMESTAMP;
+
+-- SKIPPED: EXTRACT_DATE already dropped and EXTRACT_DATE_NEW already populated from prior run
+SELECT 'EXTRACT_DATE_NEW already populated - skip to RENAME statement' AS status;
+
+ALTER TABLE psa.kinetic.psa_kinetic_sobacklog_v2
+DROP COLUMN EXTRACT_DATE;
+
+CREATE OR REPLACE TABLE psa.kinetic.psa_kinetic_sobacklog_v2
+AS SELECT
+    order_release_company
+    ,customer_id
+    ,customer_name
+    ,order_header_order_number
+    ,order_line_need_by_date
+    ,order_line_request_date
+    ,order_header_order_date
+    ,order_header_project_name_c
+    ,ud_codes_code_description
+    ,ud_13_description_c
+    ,order_header_test_market_c
+    ,prod_group_description
+    ,part_part_number
+    ,part_part_description
+    ,calculated_quantity
+    ,order_line_sales_ium
+    ,order_header_sales_rep_list
+    ,order_header_entry_person
+    ,order_line_order_line
+    ,order_release_number
+    ,calculated_sales
+    ,calculated_ext_cost
+    ,calculated_gm
+    ,calculated_gm_percent
+    ,calculated_ship_to_address_1
+    ,calculated_ship_to_address_2
+    ,calculated_ship_to_address_3
+    ,calculated_ship_to_city
+    ,calculated_ship_to_state
+    ,calculated_ship_to_zip
+    ,business_unit_c
+    ,order_release_plant
+    ,brand_c
+    ,brand_description_c
+    ,customer_segment_c
+    ,draft_order_c
+    ,ship_via_description
+    ,EXTRACT_DATE_NEW AS EXTRACT_DATE
+    ,psa_loaded_at
+    ,dbt_scd_id
+    ,dbt_updated_at
+    ,dbt_valid_from
+    ,dbt_valid_to
+FROM psa.kinetic.psa_kinetic_sobacklog_v2;
+
+
+-- SELECT *
+-- FROM psa.kinetic.psa_kinetic_sobacklog_v2
+-- ;
+
+
+SELECT *
+FROM tim_wilson.gold_coreview.mart_sobacklog_salestracker
+;
+
+SELECT *
+FROM uat.gold_coreview.mart_sobacklog_salestracker
+;
+
+SELECT *
+FROM uat.silver.br_sobacklog_salestracker
+;
