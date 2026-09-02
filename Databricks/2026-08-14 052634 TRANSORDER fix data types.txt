@@ -1,0 +1,73 @@
+CREATE TABLE landing.backup.transorder_20260814 AS
+SELECT *
+FROM landing.kinetic.transorder
+;
+
+SELECT *
+FROM landing.backup.transorder_20260814
+;
+
+-- 4
+SELECT COUNT(*)
+FROM landing.backup.transorder_20260814
+;
+
+SELECT *
+FROM landing.kinetic.transorder
+;
+
+-- 4
+SELECT COUNT(*)
+FROM landing.kinetic.transorder
+;
+
+-- 95
+DESCRIBE HISTORY landing.kinetic.transorder LIMIT 10
+;
+
+RESTORE landing.kinetic.transorder VERSION AS OF 95
+;
+
+
+--
+-- Run the following commands ONE AT A TIME !!!
+--
+
+-- Enable change column data types
+ALTER TABLE landing.kinetic.transorder
+SET TBLPROPERTIES ('delta.columnMapping.mode' = 'name');
+
+
+-- EXTRACT_DATE
+ALTER TABLE landing.kinetic.transorder
+ADD COLUMN extract_date_new TIMESTAMP;
+
+UPDATE landing.kinetic.transorder
+SET extract_date_new = CAST(extract_date AS TIMESTAMP);
+
+ALTER TABLE landing.kinetic.transorder
+DROP COLUMN extract_date;
+
+ALTER TABLE landing.kinetic.transorder
+RENAME COLUMN extract_date_new TO extract_date;
+
+
+-- TF_SHIP_HEADER_DATE
+ALTER TABLE landing.kinetic.transorder
+ADD COLUMN tf_ship_header_ship_date_new TIMESTAMP;
+
+UPDATE landing.kinetic.transorder
+SET tf_ship_header_ship_date_new = CAST(tf_ship_header_ship_date AS TIMESTAMP);
+
+ALTER TABLE landing.kinetic.transorder
+DROP COLUMN tf_ship_header_ship_date;
+
+ALTER TABLE landing.kinetic.transorder
+RENAME COLUMN tf_ship_header_ship_date_new TO tf_ship_header_ship_date;
+
+
+
+
+
+
+

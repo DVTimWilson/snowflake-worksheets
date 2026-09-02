@@ -1,0 +1,182 @@
+WITH dupes AS (
+  SELECT *,
+    COUNT(*) OVER (
+      PARTITION BY RcvDtl_Company, RcvDtl_ReceiptDate, Part_ClassID,
+        Part_ProdCode, Calculated_EIIGLCode, Vendor_Name,
+        RcvDtl_PONum, RcvDtl_POLine, RcvDtl_PORelNum, RcvDtl_PackLine,
+        RcvDtl_PartNum, RcvDtl_PartDescription, RcvHead_Plant,
+        RcvDtl_WareHouseCode, RcvDtl_BinNum, RcvDtl_OurQty, RcvDtl_IUM,
+        RcvDtl_JobNum, RcvDtl_OurUnitCost, RcvDtl_PackSlip,
+        RcvDtl_Invoiced, RcvDtl_ReceivedTo, RcvDtl_ReceivedComplete,
+        RcvDtl_LotNum, RcvDtl_InspectionReq, RcvDtl_InspectionPending,
+        RcvHead_EntryDate, UserFile_Name, PODetail_XOrderQty,
+        RcvHead_EntryPerson, Calculated_BU, EXTRACT_DATE
+    ) AS dupe_count
+  -- FROM landing.kinetic.porcptdatefilter
+  -- FROM psa.kinetic.psa_porcptdatefilter
+  FROM landing.backup.psa_porcptdatefilter_20260814
+)
+SELECT *
+FROM dupes
+WHERE dupe_count > 1
+ORDER BY RcvDtl_Company, RcvDtl_PONum, RcvDtl_POLine, RcvDtl_PackSlip, RcvDtl_PackLine
+;
+
+-- 377873 dupes on natural key only
+-- 376693 dupes on all columns
+
+-- Backup psa table
+CREATE TABLE psa.backup.psa_porcptdatefilter_20260814 AS
+SELECT *
+FROM psa.kinetic.psa_porcptdatefilter
+;
+
+-- 84404
+SELECT COUNT(*) 
+FROM psa_prod.kinetic.psa_porcptdatefilter
+;
+
+-- 90897
+SELECT COUNT(*) 
+FROM psa.kinetic.psa_porcptdatefilter
+;
+
+-- 90897
+SELECT COUNT(*) 
+FROM psa.backup.psa_porcptdatefilter_20260814
+;
+
+-- Step 1: Verify expected row count after dedup
+-- 87340
+SELECT COUNT(*) AS deduped_count
+FROM (
+  SELECT DISTINCT
+    RcvDtl_Company, RcvDtl_ReceiptDate, Part_ClassID,
+    Part_ProdCode, Calculated_EIIGLCode, Vendor_Name,
+    RcvDtl_PONum, RcvDtl_POLine, RcvDtl_PORelNum, RcvDtl_PackLine,
+    RcvDtl_PartNum, RcvDtl_PartDescription, RcvHead_Plant,
+    RcvDtl_WareHouseCode, RcvDtl_BinNum, RcvDtl_OurQty, RcvDtl_IUM,
+    RcvDtl_JobNum, RcvDtl_OurUnitCost, RcvDtl_PackSlip,
+    RcvDtl_Invoiced, RcvDtl_ReceivedTo, RcvDtl_ReceivedComplete,
+    RcvDtl_LotNum, RcvDtl_InspectionReq, RcvDtl_InspectionPending,
+    RcvHead_EntryDate, UserFile_Name, PODetail_XOrderQty,
+    RcvHead_EntryPerson, Calculated_BU, EXTRACT_DATE
+  FROM psa.kinetic.psa_porcptdatefilter
+)
+;
+
+-- Step 2: Replace table with deduplicated data (keep most recent per dbt_updated_at)
+CREATE OR REPLACE TABLE psa.kinetic.psa_porcptdatefilter AS
+WITH ranked AS (
+  SELECT *,
+    ROW_NUMBER() OVER (
+      PARTITION BY RcvDtl_Company, RcvDtl_ReceiptDate, Part_ClassID,
+        Part_ProdCode, Calculated_EIIGLCode, Vendor_Name,
+        RcvDtl_PONum, RcvDtl_POLine, RcvDtl_PORelNum, RcvDtl_PackLine,
+        RcvDtl_PartNum, RcvDtl_PartDescription, RcvHead_Plant,
+        RcvDtl_WareHouseCode, RcvDtl_BinNum, RcvDtl_OurQty, RcvDtl_IUM,
+        RcvDtl_JobNum, RcvDtl_OurUnitCost, RcvDtl_PackSlip,
+        RcvDtl_Invoiced, RcvDtl_ReceivedTo, RcvDtl_ReceivedComplete,
+        RcvDtl_LotNum, RcvDtl_InspectionReq, RcvDtl_InspectionPending,
+        RcvHead_EntryDate, UserFile_Name, PODetail_XOrderQty,
+        RcvHead_EntryPerson, Calculated_BU, EXTRACT_DATE
+      ORDER BY dbt_updated_at DESC
+    ) AS rn
+  FROM psa.kinetic.psa_porcptdatefilter
+)
+SELECT
+  RcvDtl_Company, RcvDtl_ReceiptDate, Part_ClassID, Part_ProdCode,
+  Calculated_EIIGLCode, Vendor_Name, RcvDtl_PONum, RcvDtl_POLine,
+  RcvDtl_PORelNum, RcvDtl_PackLine, RcvDtl_PartNum, RcvDtl_PartDescription,
+  RcvHead_Plant, RcvDtl_WareHouseCode, RcvDtl_BinNum, RcvDtl_OurQty,
+  RcvDtl_IUM, RcvDtl_JobNum, RcvDtl_OurUnitCost, RcvDtl_PackSlip,
+  RcvDtl_Invoiced, RcvDtl_ReceivedTo, RcvDtl_ReceivedComplete,
+  RcvDtl_LotNum, RcvDtl_InspectionReq, RcvDtl_InspectionPending,
+  RcvHead_EntryDate, UserFile_Name, PODetail_XOrderQty,
+  RcvHead_EntryPerson, Calculated_BU, EXTRACT_DATE,
+  psa_loaded_at, dbt_scd_id, dbt_updated_at, dbt_valid_from, dbt_valid_to
+FROM ranked
+WHERE rn = 1
+;
+
+-- Step 3: Verify final row count matches Step 1
+-- 87340
+SELECT COUNT(*) AS final_count
+FROM psa.kinetic.psa_porcptdatefilter
+;
+
+
+-- 450275
+SELECT COUNT(*)
+FROM landing.kinetic.porcptdatefilter
+;
+
+-- Backup psa table
+CREATE TABLE landing.backup.psa_porcptdatefilter_20260814 AS
+SELECT *
+FROM landing.kinetic.porcptdatefilter
+;
+
+-- 450275
+SELECT COUNT(*)
+FROM landing.backup.psa_porcptdatefilter_20260814
+;
+
+-- Step 1: Verify expected row count after dedup
+-- 90335
+SELECT COUNT(*) AS deduped_count
+FROM (
+  SELECT DISTINCT
+    RcvDtl_Company, RcvDtl_ReceiptDate, Part_ClassID,
+    Part_ProdCode, Calculated_EIIGLCode, Vendor_Name,
+    RcvDtl_PONum, RcvDtl_POLine, RcvDtl_PORelNum, RcvDtl_PackLine,
+    RcvDtl_PartNum, RcvDtl_PartDescription, RcvHead_Plant,
+    RcvDtl_WareHouseCode, RcvDtl_BinNum, RcvDtl_OurQty, RcvDtl_IUM,
+    RcvDtl_JobNum, RcvDtl_OurUnitCost, RcvDtl_PackSlip,
+    RcvDtl_Invoiced, RcvDtl_ReceivedTo, RcvDtl_ReceivedComplete,
+    RcvDtl_LotNum, RcvDtl_InspectionReq, RcvDtl_InspectionPending,
+    RcvHead_EntryDate, UserFile_Name, PODetail_XOrderQty,
+    RcvHead_EntryPerson, Calculated_BU, EXTRACT_DATE
+  FROM landing.kinetic.porcptdatefilter
+)
+;
+
+-- Step 2: Replace table with deduplicated data (keep most recent per dbt_updated_at)
+CREATE OR REPLACE TABLE landing.kinetic.porcptdatefilter AS
+WITH ranked AS (
+  SELECT *,
+    ROW_NUMBER() OVER (
+      PARTITION BY RcvDtl_Company, RcvDtl_ReceiptDate, Part_ClassID,
+        Part_ProdCode, Calculated_EIIGLCode, Vendor_Name,
+        RcvDtl_PONum, RcvDtl_POLine, RcvDtl_PORelNum, RcvDtl_PackLine,
+        RcvDtl_PartNum, RcvDtl_PartDescription, RcvHead_Plant,
+        RcvDtl_WareHouseCode, RcvDtl_BinNum, RcvDtl_OurQty, RcvDtl_IUM,
+        RcvDtl_JobNum, RcvDtl_OurUnitCost, RcvDtl_PackSlip,
+        RcvDtl_Invoiced, RcvDtl_ReceivedTo, RcvDtl_ReceivedComplete,
+        RcvDtl_LotNum, RcvDtl_InspectionReq, RcvDtl_InspectionPending,
+        RcvHead_EntryDate, UserFile_Name, PODetail_XOrderQty,
+        RcvHead_EntryPerson, Calculated_BU, EXTRACT_DATE
+      ORDER BY EXTRACT_DATE DESC
+    ) AS rn
+  FROM landing.kinetic.porcptdatefilter
+)
+SELECT
+  RcvDtl_Company, RcvDtl_ReceiptDate, Part_ClassID, Part_ProdCode,
+  Calculated_EIIGLCode, Vendor_Name, RcvDtl_PONum, RcvDtl_POLine,
+  RcvDtl_PORelNum, RcvDtl_PackLine, RcvDtl_PartNum, RcvDtl_PartDescription,
+  RcvHead_Plant, RcvDtl_WareHouseCode, RcvDtl_BinNum, RcvDtl_OurQty,
+  RcvDtl_IUM, RcvDtl_JobNum, RcvDtl_OurUnitCost, RcvDtl_PackSlip,
+  RcvDtl_Invoiced, RcvDtl_ReceivedTo, RcvDtl_ReceivedComplete,
+  RcvDtl_LotNum, RcvDtl_InspectionReq, RcvDtl_InspectionPending,
+  RcvHead_EntryDate, UserFile_Name, PODetail_XOrderQty,
+  RcvHead_EntryPerson, Calculated_BU, EXTRACT_DATE
+FROM ranked
+WHERE rn = 1
+;
+
+-- Step 3: Verify final row count matches Step 1
+-- 90335
+SELECT COUNT(*) AS final_count
+FROM landing.kinetic.porcptdatefilter
+;
+
