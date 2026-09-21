@@ -1,0 +1,15 @@
+SELECT col1 AS NOTE_ID, col2 AS TARGET_ENTITY_NAME, col3 AS TARGET_ENTITY_ID
+FROM VALUES (1, 'User', 11)
+    , (2, 'User', 21)
+;
+
+-- Fran SUBSTRING() filter
+SELECT *
+FROM (
+SELECT col1 AS NOTE_ID, col2 AS TARGET_ENTITY_NAME, col3 AS TARGET_ENTITY_ID
+, SUBSTRING(col2, 5) AS TEST
+FROM VALUES (1, 'User1', 11)
+    , (2, 'User2', 21)
+) AS x
+WHERE TEST = '1'
+;

@@ -1,0 +1,29 @@
+-- Developer tuan_isiloglu
+CREATE CATALOG IF NOT EXISTS tuan_isiloglu
+MANAGED LOCATION 'abfss://unity-catalog-storage@ecoreucdatastorageacct01.dfs.core.windows.net/';
+
+GRANT ALL PRIVILEGES ON CATALOG tuan_isiloglu TO `tisiloglu@ecoreintl.com`
+;
+
+CREATE SCHEMA IF NOT EXISTS tuan_isiloglu.tuan_isiloglu
+;
+
+CREATE SCHEMA IF NOT EXISTS tuan_isiloglu.meta
+;
+CREATE SCHEMA IF NOT EXISTS tuan_isiloglu.bronze
+;
+CREATE SCHEMA IF NOT EXISTS tuan_isiloglu.silver
+;
+CREATE SCHEMA IF NOT EXISTS tuan_isiloglu.gold_mfg
+;
+CREATE SCHEMA IF NOT EXISTS tuan_isiloglu.gold_coreview
+;
+CREATE SCHEMA IF NOT EXISTS tuan_isiloglu.gold_sow4
+;
+CREATE SCHEMA IF NOT EXISTS tuan_isiloglu.gold_sow6
+;
+
+-- SHOW GRANTS `tisiloglu@ecoreintl.com` ON CATALOG develop;
+-- SHOW GRANTS `tisiloglu@ecoreintl.com` ON CATALOG uat;
+-- SHOW GRANTS `tisiloglu@ecoreintl.com` ON CATALOG tuan_isiloglu;
+

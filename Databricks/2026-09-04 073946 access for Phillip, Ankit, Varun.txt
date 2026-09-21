@@ -1,0 +1,66 @@
+-- User phillip_robinson
+CREATE CATALOG IF NOT EXISTS phillip_robinson
+MANAGED LOCATION 'abfss://unity-catalog-storage@ecoreucdatastorageacct01.dfs.core.windows.net/';
+
+GRANT ALL PRIVILEGES ON CATALOG phillip_robinson TO `pwrobinson@ecoreintl.com`
+;
+
+CREATE SCHEMA IF NOT EXISTS phillip_robinson.phillip_robinson
+;
+
+
+-- User varun_jain (Koantek)
+CREATE CATALOG IF NOT EXISTS varun_jain
+MANAGED LOCATION 'abfss://unity-catalog-storage@ecoreucdatastorageacct01.dfs.core.windows.net/';
+
+GRANT ALL PRIVILEGES ON CATALOG varun_jain TO `vjain@ecoreintl.com`
+;
+
+CREATE SCHEMA IF NOT EXISTS varun_jain.varun_jain
+;
+
+
+-- User ankit_saharan (Koantek)
+CREATE CATALOG IF NOT EXISTS ankit_saharan
+MANAGED LOCATION 'abfss://unity-catalog-storage@ecoreucdatastorageacct01.dfs.core.windows.net/';
+
+GRANT ALL PRIVILEGES ON CATALOG ankit_saharan TO `asaharan@ecoreintl.com`
+;
+
+CREATE SCHEMA IF NOT EXISTS ankit_saharan.ankit_saharan
+;
+
+
+WITH privileges AS (
+  SELECT grantee, catalog_name, NULL AS schema_name, NULL AS table_name, privilege_type
+  FROM system.information_schema.catalog_privileges
+
+  UNION
+
+  SELECT grantee, catalog_name, schema_name, NULL AS table_name, privilege_type
+  FROM system.information_schema.schema_privileges
+
+  UNION
+
+  SELECT grantee, table_catalog as catalog_name, table_schema as schema_name, table_name, privilege_type
+  FROM system.information_schema.table_privileges
+)
+
+SELECT * FROM privileges
+WHERE grantee LIKE 'documentation%'
+ORDER BY grantee, catalog_name, schema_name, table_name, privilege_type
+;
+
+
+SHOW GRANTS `pwrobinson@ecoreintl.com` ON CATALOG phillip_robinson
+;
+SHOW GRANTS `pwrobinson@ecoreintl.com` ON SCHEMA phillip_robinson.phillip_robinson
+;
+SHOW GRANTS `vjain@ecoreintl.com` ON CATALOG varun_jain
+;
+SHOW GRANTS `vjain@ecoreintl.com` ON SCHEMA varun_jain.varun_jain
+;
+SHOW GRANTS `asaharan@ecoreintl.com` ON CATALOG ankit_saharan
+;
+SHOW GRANTS `asaharan@ecoreintl.com` ON SCHEMA ankit_saharan.ankit_saharan
+;

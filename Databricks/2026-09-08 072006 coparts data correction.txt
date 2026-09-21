@@ -1,0 +1,558 @@
+SELECT EXTRACT_DATE, CompanyCode
+FROM landing.kinetic.coparts
+WHERE Extract_Date >= '2026-08-05'
+GROUP BY Extract_Date, CompanyCode
+ORDER BY Extract_Date, CompanyCode
+;
+
+select count(*), PartBin_Company, PartBin_WarehouseCode, Extract_Date
+from landing_workato_test.kinetic.stockstat
+group by PartBin_Company, PartBin_WarehouseCode, Extract_Date
+order by PartBin_Company, PartBin_WarehouseCode
+;
+
+select count(*), plant_name, extract_date
+from landing_workato_test.kinetic.multiscrap
+group by plant_name, extract_date
+;
+
+select count(*), CompanyCode, PartTran_WareHouseCode, Extract_Date
+from landing.kinetic.coparts
+where Extract_Date between '2026-08-01' and '2026-09-09'
+group by CompanyCode, PartTran_WareHouseCode, Extract_Date
+order by Extract_Date, PartTran_WareHouseCode, CompanyCode
+;
+
+select count(*), CompanyCode, PartTran_WareHouseCode, PartTran_TranDate
+from landing.kinetic.coparts
+where Extract_Date between '2026-08-11' and '2026-09-09'
+group by CompanyCode, PartTran_WareHouseCode, PartTran_TranDate
+order by PartTran_TranDate, PartTran_WareHouseCode, CompanyCode
+;
+
+-- 231105
+select count(*)
+from landing.kinetic.coparts
+where Extract_Date between '2026-08-11' and '2026-09-09'
+;
+
+select count(*), CompanyCode, PartTran_WareHouseCode, PartTran_TranDate
+from landing_workato_test.kinetic.coparts_20260725_to_20260908
+-- where Extract_Date between '2026-08-11' and '2026-09-09'
+group by CompanyCode, PartTran_WareHouseCode, PartTran_TranDate
+order by PartTran_TranDate, PartTran_WareHouseCode, CompanyCode
+;
+
+-- 3568
+select count(*)
+from landing_workato_test.kinetic.coparts_20260725_to_20260908
+;
+
+select Extract_Date, count(*)
+from landing.kinetic.coparts
+where Extract_Date between '2026-08-01' and '2026-09-09'
+GROUP BY Extract_Date
+ORDER BY Extract_Date
+;
+
+-- Landing data 24/07/2026
+-- 1790
+select count(*)
+from landing.kinetic.coparts
+WHERE PartTran_TranDate = '2026-07-24'
+;
+
+-- 381 leaving 1409
+select count(*)
+from landing.kinetic.coparts
+WHERE PartTran_TranDate = '2026-07-24'
+AND CompanyCode || '|' || PartTran_WareHouseCode IN (
+'DRC|EQ'
+,'DRC|OZARK'
+,'DRC|SBR'
+,'DRC|YORK'
+,'E360|EQ'
+,'E360|MAIN'
+,'E360|OZARK'
+,'E360|SBR'
+,'E360|YORK'
+,'ECS|EQ'
+,'ECS|MAIN'
+,'ECS|OZARK'
+,'ECS|SBR'
+,'ECS|YORK'
+,'EII|MAIN'
+,'ERP|EQ'
+,'ERP|MAIN'
+,'ERP|SBR'
+,'ERP|YORK'
+,'ETC|EQ'
+,'ETC|MAIN'
+,'ETC|OZARK'
+,'ETC|SBR'
+,'ETC|YORK'
+)
+;
+
+-- 381
+select count(*)
+from psa.kinetic.psa_coparts
+WHERE PartTran_TranDate = '2026-07-24'
+AND CompanyCode || '|' || PartTran_WareHouseCode IN (
+'DRC|EQ'
+,'DRC|OZARK'
+,'DRC|SBR'
+,'DRC|YORK'
+,'E360|EQ'
+,'E360|MAIN'
+,'E360|OZARK'
+,'E360|SBR'
+,'E360|YORK'
+,'ECS|EQ'
+,'ECS|MAIN'
+,'ECS|OZARK'
+,'ECS|SBR'
+,'ECS|YORK'
+,'EII|MAIN'
+,'ERP|EQ'
+,'ERP|MAIN'
+,'ERP|SBR'
+,'ERP|YORK'
+,'ETC|EQ'
+,'ETC|MAIN'
+,'ETC|OZARK'
+,'ETC|SBR'
+,'ETC|YORK'
+)
+;
+
+
+
+--
+-- 10/09/2026
+--
+
+--
+-- Backups
+--
+
+-- CREATE TABLE landing.backup.coparts_20260010 AS
+-- SELECT * FROM landing.kinetic.coparts
+-- ;
+
+-- -- nnnnn
+-- SELECT COUNT(*) FROM landing.backup.coparts_20260010
+-- ;
+-- SELECT COUNT(*) FROM landing.kinetic.coparts
+-- ;
+
+-- CREATE TABLE landing_workato_test.backup.coparts_20260725_to_20260908_20260910 AS
+-- SELECT * FROM landing_workato_test.kinetic.coparts_20260725_to_20260908
+-- ;
+
+-- -- nnnnn
+-- SELECT COUNT(*) FROM landing_workato_test.backup.coparts_20260725_to_20260908_20260910
+-- ;
+-- SELECT COUNT(*) FROM landing_workato_test.kinetic.coparts_20260725_to_20260908
+-- ;
+
+-- psa
+CREATE TABLE psa.backup.psa_coparts_20260910 AS
+SELECT * FROM psa.kinetic.psa_coparts
+;
+
+-- psa_prod
+-- CREATE TABLE psa_prod.backup.psa_coparts_20260910 AS
+-- SELECT * FROM psa_prod.kinetic.psa_coparts
+-- ;
+
+CREATE TABLE develop.backup.sat_production_process_coparts_20260910 AS
+SELECT * FROM develop.silver.sat_production_process_coparts
+;
+
+CREATE TABLE develop.backup.hub_inventory_item_20260910 AS
+SELECT * FROM develop.silver.hub_inventory_item
+;
+
+CREATE TABLE develop.backup.hub_job_20260910 AS
+SELECT * FROM develop.silver.hub_job
+;
+
+CREATE TABLE develop.backup.hub_resource_group_20260910 AS
+SELECT * FROM develop.silver.hub_resource_group
+;
+
+CREATE TABLE develop.backup.nh_lnk_production_process_resource_grp_grain_20260910 AS
+SELECT * FROM develop.silver.nh_lnk_production_process_resource_grp_grain
+;
+
+
+-- 1 hub_inventory_item
+-- 212
+SELECT *
+-- DELETE
+FROM develop.silver.hub_inventory_item AS a
+
+INNER JOIN develop.silver.sat_production_process_coparts AS b
+ON a.PART_NUMBER = b.PART_NUMBER
+
+WHERE 1=1
+AND b.PARTTRAN_TRANDATE >= '2026-07-24'
+
+ORDER BY b.PARTTRAN_TRANDATE, b.PART_NUMBER
+;
+
+-- -- ? hub_job
+-- -- nnnnn
+-- SELECT *
+-- -- DELETE
+-- FROM develop.silver.hub_job
+-- WHERE 1=1
+-- AND PARTTRAN_TRANDATE >= '2026-07-24'
+-- ;
+
+-- -- ? hub_resource_group
+-- -- nnnnn
+-- SELECT *
+-- -- DELETE
+-- FROM develop.silver.hub_resource_group
+-- WHERE 1=1
+-- AND PARTTRAN_TRANDATE >= '2026-07-24'
+-- ;
+
+-- ? nh_lnk_production_process_resource_grp_grain
+-- nnnnn
+-- SELECT *
+-- -- DELETE
+-- FROM develop.silver.nh_lnk_production_process_resource_grp_grain
+-- WHERE 1=1
+-- AND PARTTRAN_TRANDATE >= '2026-07-24'
+-- ;
+
+-- 2 sat_production_process_coparts
+-- 212
+SELECT *
+-- DELETE
+FROM develop.silver.sat_production_process_coparts
+WHERE 1=1
+AND PARTTRAN_TRANDATE >= '2026-07-24'
+;
+
+-- 6 psa
+-- 20343
+-- Deleted nnnnn
+SELECT *
+-- DELETE
+FROM psa.kinetic.psa_coparts
+WHERE 1=1
+AND PARTTRAN_TRANDATE >= '2026-07-24'
+;
+
+-- 7 landing
+-- 244899
+-- Deleted nnnnn
+SELECT *
+-- DELETE
+FROM landing.kinetic.coparts
+WHERE 1=1
+AND PARTTRAN_TRANDATE >= '2026-07-25'
+;
+
+-- landing
+-- delete unwanted records from 24/07/2026
+-- 381
+select count(*)
+-- DELETE
+from landing.kinetic.coparts
+WHERE PartTran_TranDate = '2026-07-24'
+AND CompanyCode || '|' || PartTran_WareHouseCode IN (
+'DRC|EQ'
+,'DRC|OZARK'
+,'DRC|SBR'
+,'DRC|YORK'
+,'E360|EQ'
+,'E360|MAIN'
+,'E360|OZARK'
+,'E360|SBR'
+,'E360|YORK'
+,'ECS|EQ'
+,'ECS|MAIN'
+,'ECS|OZARK'
+,'ECS|SBR'
+,'ECS|YORK'
+,'EII|MAIN'
+,'ERP|EQ'
+,'ERP|MAIN'
+,'ERP|SBR'
+,'ERP|YORK'
+,'ETC|EQ'
+,'ETC|MAIN'
+,'ETC|OZARK'
+,'ETC|SBR'
+,'ETC|YORK'
+)
+;
+
+-- delete newer records
+-- 243109
+select count(*)
+-- DELETE
+from landing.kinetic.coparts
+WHERE PartTran_TranDate >= '2026-07-25'
+;
+
+-- INSERT INTO landing.kinetic.coparts
+-- (CompanyCode, PartTran_PartNum, PartTran_WareHouseCode, PartTran_BinNum, PartTran_TranNum, PartTran_TranType, PartTran_TranDate, PartTran_TranQty, PartTran_UM, PartTran_JobNum, JobOper_OpCode, JobOpDtl_ResourceGrpID, Calculated_EndDate, Calculated_IsCoPart, Calculated_IUM, Calculated_LaborQtyLF, Calculated_WeightLbs3, Calculated_CubicFTJobV2, Calculated_ThicknessMMtoFT, Calculated_WidthConvINtoFT, Calculated_LinearFeetConv, Part_PartDescription, Part_NetWeight, Extract_Date, PartTran_SysTime)
+-- SELECT CompanyCode, PartTran_PartNum, PartTran_WareHouseCode, PartTran_BinNum, PartTran_TranNum, PartTran_TranType, PartTran_TranDate, PartTran_TranQty, PartTran_UM, PartTran_JobNum, JobOper_OpCode, JobOpDtl_ResourceGrpID, Calculated_EndDate, Calculated_IsCoPart, Calculated_IUM, Calculated_LaborQtyLF, Calculated_WeightLbs3, Calculated_CubicFTJobV2, Calculated_ThicknessMMtoFT, Calculated_WidthConvINtoFT, Calculated_LinearFeetConv, Part_PartDescription, Part_NetWeight, Extract_Date, PartTran_SysTime
+-- FROM landing_workato_test.kinetic.coparts_20260725_to_20260908
+-- ;
+
+-- 2026-09-10T08:10:01.000+00:00
+-- 2026-09-09T08:10:01.000+00:00
+-- 2026-09-08T08:10:02.000+00:00
+SELECT DISTINCT EXTRACT_DATE FROM landing.kinetic.coparts
+ORDER BY 1 DESC
+;
+
+-- 2026-09-09T08:10:01.000+00:00
+SELECT *
+FROM develop.meta.waterlevels
+WHERE TABLE_NAME = '`develop`.`bronze`.`stg_coparts`'
+ORDER BY WATERLEVEL_TS DESC
+;
+
+-- 2026-09-09T08:10:01.000+00:00
+SELECT *
+FROM develop.meta.waterlevels
+WHERE TABLE_NAME = '`develop`.`bronze`.`stg_coparts`'
+ORDER BY STARTED_AT_TS DESC
+;
+
+-- 2026-09-08T13:38:24.000+00:00
+SELECT DISTINCT EXTRACT_DATE FROM landing_workato_test.kinetic.coparts_20260725_to_20260908
+ORDER BY 1 DESC
+;
+
+-- nnnnn
+SELECT COUNT(*)
+FROM landing.kinetic.coparts
+WHERE Extract_Date = TO_TIMESTAMP('2026-09-08T13:38:24.000+00:00')
+;
+
+-- -- nnnnn
+-- UPDATE landing.kinetic.coparts
+-- SET Extract_Date = TO_TIMESTAMP('2026-09-09T09:00:00.000+00:00')  -- update to later than latest waterlevel timestamp
+-- WHERE Extract_Date = TO_TIMESTAMP('2026-09-08T13:38:24.000+00:00')
+-- ;
+
+-- 2026-09-10T08:10:01.000+00:00
+-- 2026-09-09T08:10:01.000+00:00
+SELECT DISTINCT EXTRACT_DATE FROM landing.kinetic.coparts
+ORDER BY 1 DESC
+;
+
+
+
+SELECT *
+FROM uat.meta.waterlevels
+WHERE TABLE_NAME = '`uat`.`bronze`.`stg_coparts`'
+ORDER BY STARTED_AT_TS DESC
+;
+
+SELECT *
+FROM production.meta.waterlevels
+WHERE TABLE_NAME = '`production`.`bronze`.`stg_coparts`'
+ORDER BY STARTED_AT_TS DESC
+;
+
+
+
+--
+-- 11/09/2026
+--
+
+-- CREATE TABLE landing_workato_test.kinetic.coparts AS
+-- SELECT * FROM landing.kinetic.coparts
+-- WHERE 1=0
+-- ;
+
+
+
+select count(*), CompanyCode, PartTran_WareHouseCode, PartTran_TranDate
+from landing_workato_test.kinetic.coparts_20260725_to_20260908
+group by CompanyCode, PartTran_WareHouseCode, PartTran_TranDate
+order by PartTran_TranDate, PartTran_WareHouseCode, CompanyCode
+;
+
+select count(*), CompanyCode, PartTran_WareHouseCode, PartTran_TranDate
+from landing_workato_test.kinetic.coparts_20260728_to_20260911
+group by CompanyCode, PartTran_WareHouseCode, PartTran_TranDate
+order by PartTran_TranDate, PartTran_WareHouseCode, CompanyCode
+;
+
+-- 3783
+select count(*)
+from landing_workato_test.kinetic.coparts
+;
+
+CREATE TABLE landing_workato_test.kinetic.coparts_new AS
+SELECT * FROM landing.kinetic.coparts
+WHERE PartTran_TranDate <= '2026-07-24'
+;
+
+-- landing
+-- delete unwanted records from 24/07/2026
+-- 381
+SELECT count(*)
+-- DELETE
+FROM landing_workato_test.kinetic.coparts_new
+WHERE PartTran_TranDate = '2026-07-24'
+AND CompanyCode || '|' || PartTran_WareHouseCode IN (
+'DRC|EQ'
+,'DRC|OZARK'
+,'DRC|SBR'
+,'DRC|YORK'
+,'E360|EQ'
+,'E360|MAIN'
+,'E360|OZARK'
+,'E360|SBR'
+,'E360|YORK'
+,'ECS|EQ'
+,'ECS|MAIN'
+,'ECS|OZARK'
+,'ECS|SBR'
+,'ECS|YORK'
+,'EII|MAIN'
+,'ERP|EQ'
+,'ERP|MAIN'
+,'ERP|SBR'
+,'ERP|YORK'
+,'ETC|EQ'
+,'ETC|MAIN'
+,'ETC|OZARK'
+,'ETC|SBR'
+,'ETC|YORK'
+)
+;
+
+select count(*), CompanyCode, PartTran_WareHouseCode, PartTran_TranDate
+from landing_workato_test.kinetic.coparts_new
+group by CompanyCode, PartTran_WareHouseCode, PartTran_TranDate
+order by PartTran_TranDate DESC, PartTran_WareHouseCode, CompanyCode
+;
+
+-- 124
+INSERT INTO landing_workato_test.kinetic.coparts_new
+SELECT *
+FROM landing_workato_test.kinetic.coparts_20260725_to_20260908
+WHERE PartTran_TranDate BETWEEN '2026-07-25' AND '2026-07-27'
+;
+
+select count(*), CompanyCode, PartTran_WareHouseCode, PartTran_TranDate
+from landing_workato_test.kinetic.coparts_new
+group by CompanyCode, PartTran_WareHouseCode, PartTran_TranDate
+order by PartTran_TranDate DESC, PartTran_WareHouseCode, CompanyCode
+;
+
+-- 124
+INSERT INTO landing_workato_test.kinetic.coparts_new
+SELECT *
+FROM landing_workato_test.kinetic.coparts_20260728_to_20260911
+;
+
+select count(*), CompanyCode, PartTran_WareHouseCode, PartTran_TranDate
+from landing_workato_test.kinetic.coparts_new
+WHERE PartTran_TranDate >= '2026-07-24'
+group by CompanyCode, PartTran_WareHouseCode, PartTran_TranDate
+order by PartTran_TranDate ASC, PartTran_WareHouseCode, CompanyCode
+;
+
+select count(*), PartTran_TranDate
+from landing_workato_test.kinetic.coparts_20260725_to_20260908
+WHERE PartTran_TranDate >= '2026-07-24'
+group by PartTran_TranDate
+order by PartTran_TranDate 
+;
+
+select count(*), PartTran_TranDate
+from landing_workato_test.kinetic.coparts_20260728_to_20260911
+WHERE PartTran_TranDate >= '2026-07-24'
+group by PartTran_TranDate
+order by PartTran_TranDate 
+;
+
+select count(*), PartTran_TranDate
+from landing_workato_test.kinetic.coparts_new
+WHERE PartTran_TranDate >= '2026-07-24'
+group by PartTran_TranDate
+order by PartTran_TranDate 
+;
+
+select count(*), PartTran_TranDate
+from landing.kinetic.coparts
+WHERE PartTran_TranDate >= '2026-07-24'
+group by PartTran_TranDate
+order by PartTran_TranDate 
+;
+
+-- develop.silver.dim_calendar_usa
+-- Side-by-side comparison of record counts by PartTran_TranDate
+WITH date_spine AS (
+  SELECT date_day, day_name
+  FROM develop.silver.dim_calendar_usa
+  WHERE date_day BETWEEN '2026-07-24' AND '2026-09-11'
+),
+src_0725_0908 AS (
+  SELECT CAST(PartTran_TranDate AS DATE) AS tran_date, COUNT(*) AS cnt
+  FROM landing_workato_test.kinetic.coparts_20260725_to_20260908
+  GROUP BY CAST(PartTran_TranDate AS DATE)
+),
+src_0728_0911 AS (
+  SELECT CAST(PartTran_TranDate AS DATE) AS tran_date, COUNT(*) AS cnt
+  FROM landing_workato_test.kinetic.coparts_20260728_to_20260911
+  GROUP BY CAST(PartTran_TranDate AS DATE)
+),
+src_0801_0915 AS (
+  SELECT CAST(PartTran_TranDate AS DATE) AS tran_date, COUNT(*) AS cnt
+  FROM landing_workato_test.kinetic.coparts_20260801_to_20260915
+  GROUP BY CAST(PartTran_TranDate AS DATE)
+),
+src_new AS (
+  SELECT CAST(PartTran_TranDate AS DATE) AS tran_date, COUNT(*) AS cnt
+  FROM landing_workato_test.kinetic.coparts_new
+  GROUP BY CAST(PartTran_TranDate AS DATE)
+),
+src_landing AS (
+  SELECT CAST(PartTran_TranDate AS DATE) AS tran_date, COUNT(*) AS cnt
+  FROM landing.kinetic.coparts
+  GROUP BY CAST(PartTran_TranDate AS DATE)
+),
+src_landing_original AS (
+  SELECT CAST(PartTran_TranDate AS DATE) AS tran_date, COUNT(*) AS cnt
+  FROM landing.backup.coparts_20260015
+  GROUP BY CAST(PartTran_TranDate AS DATE)
+)
+SELECT
+  d.date_day,
+  d.day_name,
+  a.cnt AS coparts_0725_0908,
+  b.cnt AS coparts_0728_0911,
+  f.cnt AS coparts_0801_0915,
+  c.cnt AS coparts_new,
+  g.cnt AS landing_coparts_original,
+  e.cnt AS landing_coparts
+FROM date_spine d
+LEFT OUTER JOIN src_0725_0908 a ON d.date_day = a.tran_date
+LEFT OUTER JOIN src_0728_0911 b ON d.date_day = b.tran_date
+LEFT OUTER JOIN src_0801_0915 f ON d.date_day = f.tran_date
+LEFT OUTER JOIN src_new c ON d.date_day = c.tran_date
+LEFT OUTER JOIN src_landing e ON d.date_day = e.tran_date
+LEFT OUTER JOIN src_landing_original g ON d.date_day = g.tran_date
+ORDER BY d.date_day
+;
+
+SELECT EXTRACT_DATE, COUNT(*)
+  FROM landing.backup.coparts_20260015
+  WHERE PartTran_TranDate = '2026-09-08'
+  GROUP BY EXTRACT_DATE
+;

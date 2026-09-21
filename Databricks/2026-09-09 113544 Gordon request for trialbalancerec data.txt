@@ -1,0 +1,5 @@
+SELECT *
+FROM production.gold_coreview.mart_trial_balance_rec_revenue
+WHERE YEAR(JE_DATE) = 2026
+ORDER BY JE_DATE, AR_INVOICE_NUMBER
+;

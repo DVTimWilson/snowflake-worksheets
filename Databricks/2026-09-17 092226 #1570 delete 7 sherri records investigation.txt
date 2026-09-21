@@ -1,0 +1,317 @@
+-- 1
+-- -716.90000
+SELECT DocExtPrice, *
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE 1=1
+AND InvoiceNum = 767559
+AND InvoiceLine = 1
+ORDER BY Extract_Date DESC
+;
+
+-- 1
+-- 8976.80000
+SELECT DocExtPrice, *
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE 1=1
+AND InvoiceNum = 760422
+ORDER BY Extract_Date DESC
+;
+
+-- 1
+-- -23600.00000
+SELECT DocExtPrice, *
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE 1=1
+AND InvoiceNum = 765351
+ORDER BY Extract_Date DESC
+;
+
+-- 10
+-- 42.48 x 5
+SELECT DocExtPrice, *
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE 1=1
+AND InvoiceNum = 767268
+ORDER BY Extract_Date DESC
+;
+
+-- 5
+-- 774.00 * 5
+SELECT DocExtPrice, *
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE 1=1
+AND InvoiceNum = 767291
+ORDER BY Extract_Date DESC
+;
+
+-- 2
+-- 2909.90
+SELECT DocExtPrice, *
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE 1=1
+AND InvoiceNum = 779351
+ORDER BY Extract_Date DESC
+;
+
+-- 2
+-- 19231.88
+SELECT DocExtPrice, *
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE 1=1
+AND InvoiceNum = 787085
+ORDER BY Extract_Date DESC
+;
+
+-- landing.kinetic.sales_sherrigmquery_allcompanies
+-- psa.kinetic.psa_sales_sherrigmquery_allcompanies
+
+-- silver.sat_outbound_invoice_kinetic
+-- silver.lnk_outbound_invoice_line
+-- silver.lnk_order_fulfillment ?
+-- silver.hub_outbound_invoice
+-- silver.hub_order ?
+-- silver.hub_customer ?
+
+-- 10
+SELECT *
+FROM production.silver.hub_order AS o
+
+INNER JOIN production.silver.lnk_order_fulfilment AS l1
+ON o.ORDER_HK = l1.ORDER_HK
+
+INNER JOIN production.silver.lnk_outbound_invoice_line AS l2
+ON l1.OUTBOUND_INVOICE_HK = l2.OUTBOUND_INVOICE_HK
+
+WHERE l2.INVOICE_LINE_LHK IN (
+    SELECT INVOICE_LINE_LHK
+    FROM production.silver.sat_outbound_invoice_kinetic
+    WHERE INVOICENUM IN (
+    760422
+    , 765351
+    , 767268
+    , 767291
+    , 779351
+    , 787085
+    )
+    OR (
+    InvoiceNum = 767559
+AND InvoiceLine = 1
+    )
+)
+;
+
+-- SELECT converted to a DELETE for curiosity's sake.....
+-- DELETE FROM production.silver.hub_order
+-- WHERE ORDER_HK IN (
+--     SELECT o.ORDER_HK
+--     FROM production.silver.hub_order AS o
+
+--     INNER JOIN production.silver.lnk_order_fulfilment AS l1
+--     ON o.ORDER_HK = l1.ORDER_HK
+
+--     INNER JOIN production.silver.lnk_outbound_invoice_line AS l2
+--     ON l1.OUTBOUND_INVOICE_HK = l2.OUTBOUND_INVOICE_HK
+
+--     WHERE l2.INVOICE_LINE_LHK IN (
+--         SELECT INVOICE_LINE_LHK
+--         FROM production.silver.sat_outbound_invoice_kinetic
+--         WHERE INVOICENUM IN (
+--         760422
+--         , 765351
+--         , 767268
+--         , 767291
+--         , 779351
+--         , 787085
+--         )
+--         OR (
+--         InvoiceNum = 767559
+--     AND InvoiceLine = 1
+--         )
+--     )
+-- )
+-- ;
+
+-- 10
+SELECT *
+FROM production.silver.hub_customer AS c
+
+INNER JOIN production.silver.lnk_outbound_invoice_line AS l
+ON c.CUSTOMER_HK = l.CUSTOMER_HK
+
+WHERE l.INVOICE_LINE_LHK IN (
+    SELECT INVOICE_LINE_LHK
+    FROM production.silver.sat_outbound_invoice_kinetic
+    WHERE INVOICENUM IN (
+    760422
+    , 765351
+    , 767268
+    , 767291
+    , 779351
+    , 787085
+    )
+    OR (
+    InvoiceNum = 767559
+AND InvoiceLine = 1
+    )
+)
+;
+
+-- 7 DISTINCT customers
+-- 42286 records
+-- don't delete any hub_customer records then
+SELECT *
+FROM production.silver.lnk_outbound_invoice_line
+
+WHERE CUSTOMER_HK IN (
+    SELECT c.CUSTOMER_HK
+    FROM production.silver.hub_customer AS c
+
+    INNER JOIN production.silver.lnk_outbound_invoice_line AS l
+    ON c.CUSTOMER_HK = l.CUSTOMER_HK
+
+    WHERE l.INVOICE_LINE_LHK IN (
+        SELECT INVOICE_LINE_LHK
+        FROM production.silver.sat_outbound_invoice_kinetic
+        WHERE INVOICENUM IN (
+        760422
+        , 765351
+        , 767268
+        , 767291
+        , 779351
+        , 787085
+        )
+        OR (
+        InvoiceNum = 767559
+    AND InvoiceLine = 1
+        )
+    )
+)
+ORDER BY CUSTOMER_HK
+;
+
+-- 10 but what about the orders...?
+-- 7 DISTINCT
+-- if the invoice is deleted then there can be no relationship to an order
+-- 9
+-- 6 DISTINCT
+SELECT l1.* 
+FROM production.silver.lnk_order_fulfilment AS l1
+
+INNER JOIN production.silver.lnk_outbound_invoice_line AS l2
+ON l1.OUTBOUND_INVOICE_HK = l2.OUTBOUND_INVOICE_HK
+AND l1.CUSTOMER_HK = l2.CUSTOMER_HK
+
+WHERE l2.INVOICE_LINE_LHK IN (
+    SELECT INVOICE_LINE_LHK
+    FROM production.silver.sat_outbound_invoice_kinetic
+    WHERE INVOICENUM IN (
+    760422
+    , 765351
+    , 767268
+    , 767291
+    , 779351
+    , 787085
+    )
+-- Only deleting invoice line 1, the invoice and order remains
+--     OR (
+--     InvoiceNum = 767559
+-- AND InvoiceLine = 1
+--     )
+)
+;
+
+-- 6
+SELECT *
+FROM production.silver.hub_outbound_invoice
+
+WHERE OUTBOUND_INVOICE_HK IN (
+    SELECT OUTBOUND_INVOICE_HK
+    FROM production.silver.lnk_outbound_invoice_line
+    WHERE INVOICE_LINE_LHK IN (
+        SELECT INVOICE_LINE_LHK
+        FROM production.silver.sat_outbound_invoice_kinetic
+        WHERE INVOICENUM IN (
+        760422
+        , 765351
+        , 767268
+        , 767291
+        , 779351
+        , 787085
+        )
+    )
+)
+;
+
+-- 10
+SELECT *
+FROM production.silver.lnk_outbound_invoice_line
+WHERE INVOICE_LINE_LHK IN (
+    SELECT INVOICE_LINE_LHK
+    FROM production.silver.sat_outbound_invoice_kinetic
+    WHERE INVOICENUM IN (
+    760422
+    , 765351
+    , 767268
+    , 767291
+    , 779351
+    , 787085
+    )
+    OR (
+    InvoiceNum = 767559
+AND InvoiceLine = 1
+    )
+)
+;
+
+-- 10
+SELECT *
+FROM production.silver.sat_outbound_invoice_kinetic
+WHERE 1=1
+AND
+(
+(
+    InvoiceNum = 767559
+AND InvoiceLine = 1
+)
+OR INVOICENUM IN (
+  760422
+, 765351
+, 767268
+, 767291
+, 779351
+, 787085
+)
+)
+ORDER BY InvoiceNum, InvoiceLine
+;
+
+-- Orders
+-- ORDER_NUMBER
+-- 0
+-- 813301
+-- 820643
+-- 832129
+-- 833813
+-- 821348
+-- 772671
+-- 832129
+-- 833813
+-- 821348
+
+SELECT ORDERNUM, *
+FROM production.silver.sat_orderhed_kinetic
+WHERE ORDERNUM IN (
+ 0
+, 813301
+, 820643
+, 832129
+, 833813
+, 821348
+, 772671
+, 832129
+, 833813
+, 821348
+)
+;
+
+

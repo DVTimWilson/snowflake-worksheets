@@ -1,0 +1,389 @@
+-- landing.kinetic.sales_sherrigmquery_allcompanies
+-- psa.kinetic.psa_sales_sherrigmquery_allcompanies
+
+-- silver.sat_outbound_invoice_kinetic
+-- silver.lnk_outbound_invoice_line
+-- silver.hub_outbound_invoice
+
+--
+-- landing backup
+--
+
+SELECT Extract_Date, COUNT(*)
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+GROUP BY Extract_Date
+ORDER BY Extract_Date DESC
+LIMIT 10
+;
+
+CREATE TABLE landing.backup.sales_sherrigmquery_allcompanies_20260921_ticket_1570 AS
+SELECT *
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+;
+
+-- 3029219
+SELECT COUNT(*)
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+;
+
+-- 3029219
+SELECT COUNT(*)
+FROM landing.backup.sales_sherrigmquery_allcompanies_20260921_ticket_1570
+;
+
+-- 22
+SELECT *
+-- DELETE
+FROM landing.kinetic.sales_sherrigmquery_allcompanies
+WHERE INVOICENUM IN (
+    760422
+    , 765351
+    , 767268
+    , 767291
+    , 779351
+    , 787085
+    )
+    OR (
+    InvoiceNum = 767559
+AND InvoiceLine = 1
+    )
+ORDER BY Extract_Date, InvoiceNum
+;
+
+--
+-- Develop
+--
+
+-- Backups
+
+CREATE TABLE develop.backup.hub_outbound_invoice_20260921_ticket_1570 AS
+SELECT *
+FROM develop.silver.hub_outbound_invoice
+;
+
+CREATE TABLE develop.backup.lnk_outbound_invoice_line_20260921_ticket_1570 AS
+SELECT *
+FROM develop.silver.lnk_outbound_invoice_line
+;
+
+CREATE TABLE develop.backup.sat_outbound_invoice_kinetic_20260921_ticket_1570 AS
+SELECT *
+FROM develop.silver.sat_outbound_invoice_kinetic
+;
+
+-- Record deletions
+
+-- 6
+SELECT *
+-- DELETE
+FROM develop.silver.hub_outbound_invoice
+WHERE OUTBOUND_INVOICE_HK IN (
+    SELECT OUTBOUND_INVOICE_HK
+    FROM develop.silver.lnk_outbound_invoice_line
+    WHERE INVOICE_LINE_LHK IN (
+        SELECT INVOICE_LINE_LHK
+        FROM develop.silver.sat_outbound_invoice_kinetic
+        WHERE INVOICENUM IN (
+        760422
+        , 765351
+        , 767268
+        , 767291
+        , 779351
+        , 787085
+        )
+    )
+)
+;
+
+-- 10
+SELECT *
+-- DELETE
+FROM develop.silver.lnk_outbound_invoice_line
+WHERE INVOICE_LINE_LHK IN (
+    SELECT INVOICE_LINE_LHK
+    FROM develop.silver.sat_outbound_invoice_kinetic
+    WHERE INVOICENUM IN (
+    760422
+    , 765351
+    , 767268
+    , 767291
+    , 779351
+    , 787085
+    )
+    OR (
+    InvoiceNum = 767559
+AND InvoiceLine = 1
+    )
+)
+;
+
+-- 10
+SELECT *
+-- DELETE
+FROM develop.silver.sat_outbound_invoice_kinetic
+WHERE 1=1
+AND
+(
+(
+    InvoiceNum = 767559
+AND InvoiceLine = 1
+)
+OR INVOICENUM IN (
+  760422
+, 765351
+, 767268
+, 767291
+, 779351
+, 787085
+)
+)
+ORDER BY InvoiceNum, InvoiceLine
+;
+
+--
+-- UAT
+--
+
+-- Backups
+
+CREATE TABLE uat.backup.hub_outbound_invoice_20260921_ticket_1570 AS
+SELECT *
+FROM uat.silver.hub_outbound_invoice
+;
+
+CREATE TABLE uat.backup.lnk_outbound_invoice_line_20260921_ticket_1570 AS
+SELECT *
+FROM uat.silver.lnk_outbound_invoice_line
+;
+
+CREATE TABLE uat.backup.sat_outbound_invoice_kinetic_20260921_ticket_1570 AS
+SELECT *
+FROM uat.silver.sat_outbound_invoice_kinetic
+;
+
+CREATE TABLE psa.backup.psa_sales_sherrigmquery_allcompanies_20260921_ticket_1570 AS
+SELECT *
+FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+;
+
+-- 1724130
+SELECT COUNT(*)
+FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+;
+
+-- 1724130
+SELECT COUNT(*)
+FROM psa.backup.psa_sales_sherrigmquery_allcompanies_20260921_ticket_1570
+;
+
+-- Record deletions
+
+-- 6
+SELECT *
+-- DELETE
+FROM uat.silver.hub_outbound_invoice
+WHERE OUTBOUND_INVOICE_HK IN (
+    SELECT OUTBOUND_INVOICE_HK
+    FROM uat.silver.lnk_outbound_invoice_line
+    WHERE INVOICE_LINE_LHK IN (
+        SELECT INVOICE_LINE_LHK
+        FROM uat.silver.sat_outbound_invoice_kinetic
+        WHERE INVOICENUM IN (
+        760422
+        , 765351
+        , 767268
+        , 767291
+        , 779351
+        , 787085
+        )
+    )
+)
+;
+
+-- 10
+SELECT *
+-- DELETE
+FROM uat.silver.lnk_outbound_invoice_line
+WHERE INVOICE_LINE_LHK IN (
+    SELECT INVOICE_LINE_LHK
+    FROM uat.silver.sat_outbound_invoice_kinetic
+    WHERE INVOICENUM IN (
+    760422
+    , 765351
+    , 767268
+    , 767291
+    , 779351
+    , 787085
+    )
+    OR (
+    InvoiceNum = 767559
+AND InvoiceLine = 1
+    )
+)
+;
+
+-- 10
+SELECT *
+-- DELETE
+FROM uat.silver.sat_outbound_invoice_kinetic
+WHERE 1=1
+AND
+(
+(
+    InvoiceNum = 767559
+AND InvoiceLine = 1
+)
+OR INVOICENUM IN (
+  760422
+, 765351
+, 767268
+, 767291
+, 779351
+, 787085
+)
+)
+ORDER BY InvoiceNum, InvoiceLine
+;
+
+SELECT *
+-- DELETE
+FROM psa.kinetic.psa_sales_sherrigmquery_allcompanies
+WHERE INVOICENUM IN (
+    760422
+    , 765351
+    , 767268
+    , 767291
+    , 779351
+    , 787085
+    )
+    OR (
+    InvoiceNum = 767559
+AND InvoiceLine = 1
+    )
+ORDER BY Extract_Date, InvoiceNum
+;
+
+--
+-- PRODUCTION
+--
+
+-- Backups
+
+CREATE TABLE production.backup.hub_outbound_invoice_20260921_ticket_1570 AS
+SELECT *
+FROM production.silver.hub_outbound_invoice
+;
+
+CREATE TABLE production.backup.lnk_outbound_invoice_line_20260921_ticket_1570 AS
+SELECT *
+FROM production.silver.lnk_outbound_invoice_line
+;
+
+CREATE TABLE production.backup.sat_outbound_invoice_kinetic_20260921_ticket_1570 AS
+SELECT *
+FROM production.silver.sat_outbound_invoice_kinetic
+;
+
+CREATE TABLE psa_prod.backup.psa_sales_sherrigmquery_allcompanies_20260921_ticket_1570 AS
+SELECT *
+FROM psa_prod.kinetic.psa_sales_sherrigmquery_allcompanies
+;
+
+-- 1730400
+SELECT COUNT(*)
+FROM psa_prod.kinetic.psa_sales_sherrigmquery_allcompanies
+;
+
+-- 1730400
+SELECT COUNT(*)
+FROM psa_prod.backup.psa_sales_sherrigmquery_allcompanies_20260921_ticket_1570
+;
+
+-- Record deletions
+
+-- 6
+SELECT *
+-- DELETE
+FROM production.silver.hub_outbound_invoice
+WHERE OUTBOUND_INVOICE_HK IN (
+    SELECT OUTBOUND_INVOICE_HK
+    FROM production.silver.lnk_outbound_invoice_line
+    WHERE INVOICE_LINE_LHK IN (
+        SELECT INVOICE_LINE_LHK
+        FROM production.silver.sat_outbound_invoice_kinetic
+        WHERE INVOICENUM IN (
+        760422
+        , 765351
+        , 767268
+        , 767291
+        , 779351
+        , 787085
+        )
+    )
+)
+;
+
+-- 10
+SELECT *
+-- DELETE
+FROM production.silver.lnk_outbound_invoice_line
+WHERE INVOICE_LINE_LHK IN (
+    SELECT INVOICE_LINE_LHK
+    FROM production.silver.sat_outbound_invoice_kinetic
+    WHERE INVOICENUM IN (
+    760422
+    , 765351
+    , 767268
+    , 767291
+    , 779351
+    , 787085
+    )
+    OR (
+    InvoiceNum = 767559
+AND InvoiceLine = 1
+    )
+)
+;
+
+-- 10
+SELECT *
+-- DELETE
+FROM production.silver.sat_outbound_invoice_kinetic
+WHERE 1=1
+AND
+(
+(
+    InvoiceNum = 767559
+AND InvoiceLine = 1
+)
+OR INVOICENUM IN (
+  760422
+, 765351
+, 767268
+, 767291
+, 779351
+, 787085
+)
+)
+ORDER BY InvoiceNum, InvoiceLine
+;
+
+SELECT *
+-- DELETE
+FROM psa_prod.kinetic.psa_sales_sherrigmquery_allcompanies
+WHERE INVOICENUM IN (
+    760422
+    , 765351
+    , 767268
+    , 767291
+    , 779351
+    , 787085
+    )
+    OR (
+    InvoiceNum = 767559
+AND InvoiceLine = 1
+    )
+ORDER BY Extract_Date, InvoiceNum
+;
+
+

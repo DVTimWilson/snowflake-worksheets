@@ -1,0 +1,12 @@
+SELECT *
+FROM landing.reftables.sherri_query_adjustments_dd
+WHERE INVOICENUM IN (730777, 731222, 730815)
+ORDER BY INVOICENUM, INVOICELINE
+;
+
+SELECT DISTINCT EXTRACT_DATE
+FROM landing.reftables.sherri_query_adjustments_dd
+;
+
+DROP SCHEMA production.production CASCADE
+;

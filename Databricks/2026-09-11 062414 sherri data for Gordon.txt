@@ -1,0 +1,6 @@
+-- SELECT COUNT(*)
+SELECT COUNT(*)
+FROM production.silver.sat_outbound_invoice_kinetic_latest
+WHERE INVOICEDATE BETWEEN '2026-01-01' AND '2026-08-31'
+ORDER BY INVOICEDATE ASC
+;

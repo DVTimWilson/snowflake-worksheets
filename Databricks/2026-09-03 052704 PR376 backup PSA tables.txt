@@ -1,0 +1,177 @@
+--
+-- DEVELOP and UAT psa_kinetic_ap_invoice_detail
+--
+
+CREATE TABLE psa.backup.psa_kinetic_ap_invoice_detail_20260903 AS
+SELECT * 
+FROM psa.kinetic.psa_kinetic_ap_invoice_detail
+;
+
+-- 2219601
+SELECT COUNT(*)
+FROM psa.kinetic.psa_kinetic_ap_invoice_detail
+;
+
+-- 2219601
+SELECT COUNT(*)
+FROM psa.backup.psa_kinetic_ap_invoice_detail_20260903
+;
+
+-- 3506406
+SELECT COUNT(*)
+FROM landing.kinetic.ap_invoice_detail
+;
+
+-- 69
+SELECT DISTINCT extract_date
+FROM landing.kinetic.ap_invoice_detail
+ORDER BY 1 DESC
+;
+
+-- 57
+SELECT DISTINCT extract_date
+FROM psa.kinetic.psa_kinetic_ap_invoice_detail
+ORDER BY 1 DESC
+;
+
+-- DROP TABLE psa.kinetic.psa_kinetic_ap_invoice_detail
+-- ;
+
+--
+-- DEVELOP and UAT psa_kinetic_trialbalancerec
+--
+
+CREATE TABLE psa.backup.psa_kinetic_trialbalancerec_20260903 AS
+SELECT * 
+FROM psa.kinetic.psa_kinetic_trialbalancerec
+;
+
+-- 12548427
+SELECT COUNT(*)
+FROM psa.kinetic.psa_kinetic_trialbalancerec
+;
+
+-- 12548427
+SELECT COUNT(*)
+FROM psa.backup.psa_kinetic_trialbalancerec_20260903
+;
+
+-- DROP TABLE psa.kinetic.psa_kinetic_trialbalancerec
+-- ;
+
+-- 79
+SELECT DISTINCT extract_date
+FROM landing.kinetic.trialbalancerec
+ORDER BY 1 DESC
+;
+
+-- 78
+SELECT DISTINCT extract_date
+FROM psa.kinetic.psa_kinetic_trialbalancerec
+ORDER BY 1 DESC
+;
+
+
+--
+-- PRODUCTION psa_kinetic_ap_invoice_detail
+--
+
+CREATE TABLE psa_prod.backup.psa_kinetic_ap_invoice_detail_20260909 AS
+SELECT * 
+FROM psa_prod.kinetic.psa_kinetic_ap_invoice_detail
+;
+
+-- 2499425
+SELECT COUNT(*)
+FROM psa_prod.kinetic.psa_kinetic_ap_invoice_detail
+;
+
+-- 2499425
+SELECT COUNT(*)
+FROM psa_prod.backup.psa_kinetic_ap_invoice_detail_20260909
+;
+
+-- 4300962
+SELECT COUNT(*)
+FROM landing.kinetic.ap_invoice_detail
+;
+
+-- 75
+SELECT DISTINCT extract_date
+FROM landing.kinetic.ap_invoice_detail
+ORDER BY 1 DESC
+;
+
+-- 72
+SELECT DISTINCT extract_date
+FROM psa_prod.kinetic.psa_kinetic_ap_invoice_detail
+ORDER BY 1 DESC
+;
+
+-- DROP TABLE psa_prod.kinetic.psa_kinetic_ap_invoice_detail
+-- ;
+
+--
+-- PRODUCTION psa_kinetic_trialbalancerec
+--
+
+CREATE TABLE psa_prod.backup.psa_kinetic_trialbalancerec_20260909 AS
+SELECT * 
+FROM psa_prod.kinetic.psa_kinetic_trialbalancerec
+;
+
+-- 13235669
+SELECT COUNT(*)
+FROM psa_prod.kinetic.psa_kinetic_trialbalancerec
+;
+
+-- 13235669
+SELECT COUNT(*)
+FROM psa_prod.backup.psa_kinetic_trialbalancerec_20260909
+;
+
+-- DROP TABLE psa_prod.kinetic.psa_kinetic_trialbalancerec
+-- ;
+
+-- 85
+SELECT DISTINCT extract_date
+FROM landing.kinetic.trialbalancerec
+ORDER BY 1 DESC
+;
+
+-- 85
+SELECT DISTINCT extract_date
+FROM FROM psa_prod.kinetic.psa_kinetic_trialbalancerec
+ORDER BY 1 DESC
+;
+
+
+GRANT USE SCHEMA ON SCHEMA ellis_mordecai.gold_sow10 TO `twilson@ecoreintl.com`
+;
+
+GRANT SELECT ON TABLE ellis_mordecai.gold_sow10.recon_report_configs TO `twilson@ecoreintl.com`
+;
+
+SELECT *
+FROM ellis_mordecai.gold_sow10.recon_report_configs
+;
+
+GRANT MANAGE ON CATALOG anthony_fornaris TO `twilson@ecoreintl.com`
+;
+
+DROP CATALOG anthony_fornaris CASCADE
+;
+
+GRANT MANAGE ON CATALOG pruthvi_kaleru TO `twilson@ecoreintl.com`
+;
+
+DROP CATALOG pruthvi_kaleru CASCADE
+;
+
+
+
+
+SELECT DISTINCT Extract_Date
+FROM uat.kinetic.psa_sales_sherrigmquery_allcompanies
+ORDER BY 1 DESC
+;

@@ -1,0 +1,99 @@
+/* {"app": "dbt", "dbt_version": "2026.8.13+43af61b", "dbt_databricks_version": "1.12.4", "databricks_sql_connector_version": "4.4.0", "profile_name": "user", "target_name": "dev", "invocation_id": "57dd36e6-a7b7-443d-8475-bd683a2a9ef6", "node_id": "test.databricks_warehouse.expect_unique_rows_mart_culling_metrics_.e9d7ba0fc4"} */
+
+    
+    select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+
+SELECT 1
+    FROM `tim_wilson`.`gold_mfg`.`mart_culling_metrics`
+    GROUP BY ALL -- `date`, `recovered_tires`, `scrapped_tires`, `jomar_tires`, `total_tires`,
+    --          `total_culling_labour_hours`, `percent_of_tires_recovered`, `percent_of_tires_scrapped`,
+    --          `cull_rate_per_manhours`, `department_name`, `plant`, `company`
+    HAVING count(*) > 1
+
+
+  
+  
+      
+    ) dbt_internal_test
+
+
+
+
+--     select
+--   count(*) as failures,
+--   count(*) != 0 as should_warn,
+--   count(*) != 0 as should_error
+-- from
+--   (
+--     WITH non_distinct_selection AS (
+--       SELECT
+--         COUNT(*) AS non_distinct_cnt
+--       FROM
+--         `francesco_longoni`.`gold_mfg`.`mart_culling_metrics`
+--     ),
+--     distinct_selection AS (
+--       SELECT
+--         COUNT(*) as distinct_cnt
+--       FROM
+--         (
+--           SELECT DISTINCT
+--             *
+--           FROM
+--             `francesco_longoni`.`gold_mfg`.`mart_culling_metrics`
+--         ) inner_query
+--     ),
+--     except_selection AS (
+--       SELECT
+--         non_distinct_cnt
+--       FROM
+--         non_distinct_selection
+--       EXCEPT
+--       SELECT
+--         distinct_cnt
+--       FROM
+--         distinct_selection
+--     )
+--     SELECT
+--       *
+--     FROM
+--       except_selection
+--   ) dbt_internal_test
+
+
+;
+
+SELECT
+  count(*) AS failures
+  ,count(*) != 0 AS should_warn
+  ,count(*) != 0 AS should_error
+FROM
+  (
+    SELECT
+      *
+    FROM
+      `tim_wilson`.`bronze`.`raw_company`
+    GROUP BY
+      ALL
+    HAVING
+      COUNT(*) > 1
+  ) dbt_internal_test
+;
+
+CREATE TABLE landing.backup.sherry_query_adjustments_dd
+TBLPROPERTIES ('delta.columnMapping.mode' = 'name')
+AS
+SELECT *
+FROM landing.reftables.sherry_query_adjustments_dd
+;
+
+CREATE TABLE landing.backup.sales_sherrigmquery_allcompanies_dedupe_20260623 AS
+SELECT *
+FROM landing.kinetic.sales_sherrigmquery_allcompanies_dedupe_20260623
+;
