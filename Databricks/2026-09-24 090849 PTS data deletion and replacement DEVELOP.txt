@@ -1,0 +1,207 @@
+--==== TO BE DELETED ====--
+
+--
+-- Backups
+--
+
+CREATE TABLE landing.backup.outbound_sales_pts_v2_20260924 AS
+SELECT * FROM landing.quickbooks.outbound_sales_pts_v2
+;
+
+-- nnnnn
+SELECT COUNT(*) FROM landing.backup.outbound_sales_pts_v2_20260924
+;
+-- nnnnn
+SELECT COUNT(*) FROM landing.quickbooks.outbound_sales_pts_v2
+;
+
+CREATE TABLE landing_workato_test.backup.outbound_sales_pts_v2_20260924 AS
+SELECT * FROM landing_workato_test.quickbooks.outbound_sales_pts_v2
+;
+
+-- nnnnn
+SELECT COUNT(*) FROM landing_workato_test.backup.outbound_sales_pts_v2_20260924
+;
+-- 3822
+SELECT COUNT(*) FROM landing_workato_test.quickbooks.outbound_sales_pts_v2
+;
+
+-- psa
+CREATE TABLE psa.backup.psa_quickbooks_staging_pts_v2_20260924 AS
+SELECT * FROM psa.quickbooks.psa_quickbooks_staging_pts_v2
+;
+
+-- nnnnn
+SELECT COUNT(*) FROM psa.backup.psa_quickbooks_staging_pts_v2_20260924
+;
+-- nnnnn
+SELECT COUNT(*) FROM psa.quickbooks.psa_quickbooks_staging_pts_v2
+;
+
+-- psa_prod
+CREATE TABLE psa_prod.backup.psa_quickbooks_staging_pts_v2_20260924 AS
+SELECT * FROM psa_prod.quickbooks.psa_quickbooks_staging_pts_v2
+;
+
+-- nnnnn
+SELECT COUNT(*) FROM psa_prod.backup.psa_quickbooks_staging_pts_v2_20260924
+;
+-- nnnnn
+SELECT COUNT(*) FROM psa_prod.quickbooks.psa_quickbooks_staging_pts_v2
+;
+
+--
+-- DEVELOP
+--
+
+CREATE TABLE develop.backup.sat_outbound_invoice_quickbooks_pts_v2_20260924 AS
+SELECT * FROM develop.silver.sat_outbound_invoice_quickbooks_pts_v2
+;
+
+CREATE TABLE develop.backup.hub_outbound_invoice_20260924 AS
+SELECT * FROM develop.silver.hub_outbound_invoice
+;
+
+CREATE TABLE develop.backup.lnk_outbound_invoice_line_20260924 AS
+SELECT * FROM develop.silver.lnk_outbound_invoice_line
+;
+
+CREATE TABLE develop.backup.hub_order_20260924 AS
+SELECT * FROM develop.silver.hub_order
+;
+
+CREATE TABLE develop.backup.lnk_order_fulfilment_20260924 AS
+SELECT * FROM develop.silver.lnk_order_fulfilment
+;
+
+
+
+-- 1 hub order
+-- nnnnn
+SELECT *
+-- DELETE
+FROM develop.silver.hub_order
+WHERE ORDER_HK IN (
+SELECT DISTINCT c.ORDER_HK
+FROM develop.silver.hub_order as c
+INNER JOIN develop.silver.lnk_order_fulfilment as a
+ON c.ORDER_HK = a.ORDER_HK
+INNER JOIN develop.silver.hub_outbound_invoice as b
+ON a.OUTBOUND_INVOICE_HK = b.OUTBOUND_INVOICE_HK
+WHERE 1=1
+AND b.COMPANY_ID IN ('PTS')
+AND c.RECORD_SOURCE = 'QUICKBOOKS.STAGING_PTS_V2'
+)
+;
+
+-- 2 lnk order fulfillment
+-- nnnnn
+SELECT *
+-- DELETE
+FROM develop.silver.lnk_order_fulfilment
+WHERE OUTBOUND_INVOICE_HK IN (
+SELECT DISTINCT a.OUTBOUND_INVOICE_HK
+FROM develop.silver.lnk_order_fulfilment as a
+INNER JOIN develop.silver.hub_outbound_invoice as b
+ON a.OUTBOUND_INVOICE_HK = b.OUTBOUND_INVOICE_HK
+WHERE 1=1
+AND b.COMPANY_ID IN ('PTS')
+AND a.RECORD_SOURCE = 'QUICKBOOKS.STAGING_PTS_V2'
+)
+;
+
+--3 lnk outbound invoice line
+-- nnnnn
+SELECT *
+-- DELETE
+FROM develop.silver.lnk_outbound_invoice_line
+WHERE COMPANY_HK IN (
+SELECT DISTINCT a.COMPANY_HK
+FROM develop.silver.lnk_outbound_invoice_line as a
+INNER JOIN develop.silver.hub_outbound_invoice as b
+ON a.OUTBOUND_INVOICE_HK = b.OUTBOUND_INVOICE_HK
+WHERE 1=1
+AND b.COMPANY_ID IN ('PTS')
+AND a.RECORD_SOURCE = 'QUICKBOOKS.STAGING_PTS_V2'
+)
+;
+
+-- 4 hub outbound invoice
+-- nnnnn
+SELECT DISTINCT *
+-- DELETE
+FROM develop.silver.hub_outbound_invoice
+WHERE 1=1
+AND COMPANY_ID IN ('PTS')
+AND RECORD_SOURCE = 'QUICKBOOKS.STAGING_PTS_V2'
+;
+
+-- 5 outbound sat
+-- nnnnn
+SELECT COUNT(*)
+-- DELETE
+FROM develop.silver.sat_outbound_invoice_quickbooks_pts_v2
+;
+
+-- 6 psa
+-- nnnnn
+SELECT *
+-- DELETE
+FROM psa.quickbooks.psa_quickbooks_staging_pts_v2
+WHERE 1=1
+AND Company IN ('PTS')
+;
+
+-- 7 landing
+-- 112405
+SELECT COUNT(*)
+-- DELETE
+FROM landing.quickbooks.outbound_sales_pts_v2
+;
+
+-- nnnnn
+-- INSERT INTO landing.quickbooks.outbound_sales_pts_v2
+-- SELECT *
+-- FROM landing_workato_test.quickbooks.outbound_sales_pts_v2
+-- ;
+
+-- Check waterlevels
+-- xxxxx
+SELECT DISTINCT EXTRACT_DATE FROM landing.quickbooks.outbound_sales_pts_v2
+ORDER BY EXTRACT_DATE DESC
+;
+
+-- xxxxx
+SELECT *
+FROM develop.meta.waterlevels
+WHERE TABLE_NAME LIKE '`develop`.`bronze`.`stg_quickbooks_outbound_pts_v2`'
+ORDER BY WATERLEVEL_TS DESC
+;
+
+-- xxxxx
+SELECT *
+FROM develop.meta.waterlevels
+WHERE TABLE_NAME LIKE '`develop`.`bronze`.`stg_quickbooks_outbound_pts_v2`'
+ORDER BY STARTED_AT_TS DESC
+;
+
+-- 2026-09-24T13:22:26.322+00:00
+SELECT DISTINCT EXTRACT_DATE FROM landing_workato_test.quickbooks.outbound_sales_pts_v2
+ORDER BY EXTRACT_DATE DESC
+;
+
+-- 2023-01-19 to 2026-09-22
+SELECT DISTINCT DATE FROM landing_workato_test.quickbooks.outbound_sales_pts_v2
+ORDER BY DATE DESC
+;
+
+-- 2024-01-02 to 2026-09-15
+SELECT DISTINCT DATE FROM landing.quickbooks.outbound_sales_pts_v2
+ORDER BY DATE DESC
+;
+
+-- 3881
+SELECT COUNT(*) FROM develop.silver.sat_outbound_invoice_quickbooks_pts_v2_latest
+;
+
+

@@ -1,0 +1,216 @@
+--
+-- UAT
+--
+
+CREATE TABLE uat.backup.sat_outbound_invoice_quickbooks_pts_v2_20260925 AS
+SELECT * FROM uat.silver.sat_outbound_invoice_quickbooks_pts_v2
+;
+
+CREATE TABLE uat.backup.hub_outbound_invoice_20260925 AS
+SELECT * FROM uat.silver.hub_outbound_invoice
+;
+
+CREATE TABLE uat.backup.lnk_outbound_invoice_line_20260925 AS
+SELECT * FROM uat.silver.lnk_outbound_invoice_line
+;
+
+CREATE TABLE uat.backup.hub_order_20260925 AS
+SELECT * FROM uat.silver.hub_order
+;
+
+CREATE TABLE uat.backup.lnk_order_fulfilment_20260925 AS
+SELECT * FROM uat.silver.lnk_order_fulfilment
+;
+
+
+
+-- 1 hub order
+-- 0
+SELECT *
+-- DELETE
+FROM uat.silver.hub_order
+WHERE ORDER_HK IN (
+SELECT DISTINCT c.ORDER_HK
+FROM uat.silver.hub_order as c
+INNER JOIN uat.silver.lnk_order_fulfilment as a
+ON c.ORDER_HK = a.ORDER_HK
+INNER JOIN uat.silver.hub_outbound_invoice as b
+ON a.OUTBOUND_INVOICE_HK = b.OUTBOUND_INVOICE_HK
+WHERE 1=1
+AND b.COMPANY_ID IN ('PTS')
+AND c.RECORD_SOURCE = 'QUICKBOOKS.STAGING_PTS_V2'
+)
+;
+
+-- 2 lnk order fulfillment
+-- 0
+SELECT *
+-- DELETE
+FROM uat.silver.lnk_order_fulfilment
+WHERE OUTBOUND_INVOICE_HK IN (
+SELECT DISTINCT a.OUTBOUND_INVOICE_HK
+FROM uat.silver.lnk_order_fulfilment as a
+INNER JOIN uat.silver.hub_outbound_invoice as b
+ON a.OUTBOUND_INVOICE_HK = b.OUTBOUND_INVOICE_HK
+WHERE 1=1
+AND b.COMPANY_ID IN ('PTS')
+AND a.RECORD_SOURCE = 'QUICKBOOKS.STAGING_PTS_V2'
+)
+;
+
+--3 lnk outbound invoice line
+-- 7583
+SELECT COUNT(*)
+-- DELETE
+FROM uat.silver.lnk_outbound_invoice_line
+WHERE COMPANY_HK IN (
+SELECT DISTINCT a.COMPANY_HK
+FROM uat.silver.lnk_outbound_invoice_line as a
+INNER JOIN uat.silver.hub_outbound_invoice as b
+ON a.OUTBOUND_INVOICE_HK = b.OUTBOUND_INVOICE_HK
+WHERE 1=1
+AND b.COMPANY_ID IN ('PTS')
+AND a.RECORD_SOURCE = 'QUICKBOOKS.STAGING_PTS_V2'
+)
+;
+
+-- 4 hub outbound invoice
+-- 1213
+SELECT COUNT(*)
+-- DELETE
+FROM uat.silver.hub_outbound_invoice
+WHERE 1=1
+AND COMPANY_ID IN ('PTS')
+AND RECORD_SOURCE = 'QUICKBOOKS.STAGING_PTS_V2'
+;
+
+-- 5 outbound sat
+-- 14978
+SELECT COUNT(*)
+-- DELETE
+FROM uat.silver.sat_outbound_invoice_quickbooks_pts_v2
+;
+
+-- 3881
+-- 3820
+SELECT COUNT(*) FROM uat.silver.sat_outbound_invoice_quickbooks_pts_v2_latest
+;
+
+
+
+--
+-- PRODUCTION
+--
+
+CREATE TABLE production.backup.sat_outbound_invoice_quickbooks_pts_v2_20260925 AS
+SELECT * FROM production.silver.sat_outbound_invoice_quickbooks_pts_v2
+;
+
+CREATE TABLE production.backup.hub_outbound_invoice_20260925 AS
+SELECT * FROM production.silver.hub_outbound_invoice
+;
+
+CREATE TABLE production.backup.lnk_outbound_invoice_line_20260925 AS
+SELECT * FROM production.silver.lnk_outbound_invoice_line
+;
+
+CREATE TABLE production.backup.hub_order_20260925 AS
+SELECT * FROM production.silver.hub_order
+;
+
+CREATE TABLE production.backup.lnk_order_fulfilment_20260925 AS
+SELECT * FROM production.silver.lnk_order_fulfilment
+;
+
+
+
+-- 1 hub order
+-- 0
+SELECT *
+-- DELETE
+FROM production.silver.hub_order
+WHERE ORDER_HK IN (
+SELECT DISTINCT c.ORDER_HK
+FROM production.silver.hub_order as c
+INNER JOIN production.silver.lnk_order_fulfilment as a
+ON c.ORDER_HK = a.ORDER_HK
+INNER JOIN production.silver.hub_outbound_invoice as b
+ON a.OUTBOUND_INVOICE_HK = b.OUTBOUND_INVOICE_HK
+WHERE 1=1
+AND b.COMPANY_ID IN ('PTS')
+AND c.RECORD_SOURCE = 'QUICKBOOKS.STAGING_PTS_V2'
+)
+;
+
+-- 2 lnk order fulfillment
+-- 0
+SELECT *
+-- DELETE
+FROM production.silver.lnk_order_fulfilment
+WHERE OUTBOUND_INVOICE_HK IN (
+SELECT DISTINCT a.OUTBOUND_INVOICE_HK
+FROM production.silver.lnk_order_fulfilment as a
+INNER JOIN production.silver.hub_outbound_invoice as b
+ON a.OUTBOUND_INVOICE_HK = b.OUTBOUND_INVOICE_HK
+WHERE 1=1
+AND b.COMPANY_ID IN ('PTS')
+AND a.RECORD_SOURCE = 'QUICKBOOKS.STAGING_PTS_V2'
+)
+;
+
+--3 lnk outbound invoice line
+-- 7579
+SELECT COUNT(*)
+-- DELETE
+FROM production.silver.lnk_outbound_invoice_line
+WHERE COMPANY_HK IN (
+SELECT DISTINCT a.COMPANY_HK
+FROM production.silver.lnk_outbound_invoice_line as a
+INNER JOIN production.silver.hub_outbound_invoice as b
+ON a.OUTBOUND_INVOICE_HK = b.OUTBOUND_INVOICE_HK
+WHERE 1=1
+AND b.COMPANY_ID IN ('PTS')
+AND a.RECORD_SOURCE = 'QUICKBOOKS.STAGING_PTS_V2'
+)
+;
+
+-- 4 hub outbound invoice
+-- 1213
+SELECT COUNT(*)
+-- DELETE
+FROM production.silver.hub_outbound_invoice
+WHERE 1=1
+AND COMPANY_ID IN ('PTS')
+AND RECORD_SOURCE = 'QUICKBOOKS.STAGING_PTS_V2'
+;
+
+-- 5 outbound sat
+-- 15401
+SELECT COUNT(*)
+-- DELETE
+FROM production.silver.sat_outbound_invoice_quickbooks_pts_v2
+;
+
+GRANT MODIFY ON TABLE psa_prod.quickbooks.psa_quickbooks_staging_pts_v2 TO `twilson@ecoreintl.com`
+;
+
+-- 6 psa
+-- 90872
+SELECT COUNT(*)
+-- DELETE
+FROM psa_prod.quickbooks.psa_quickbooks_staging_pts_v2
+WHERE 1=1
+AND Company IN ('PTS')
+;
+
+-- 3881
+-- 3820
+SELECT COUNT(*) FROM production.silver.sat_outbound_invoice_quickbooks_pts_v2_latest
+;
+
+SELECT COUNT(*)
+FROM production.gold_coreview.mart_outbound_transactions
+WHERE ENTITY = 'PTS'
+;
+
+

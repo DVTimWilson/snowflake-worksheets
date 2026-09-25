@@ -1,0 +1,83 @@
+CREATE TABLE landing_workato_test.backup.stockstat_20260720 AS
+SELECT *
+FROM landing_workato_test.kinetic.stockstat_20260720
+;
+
+DROP TABLE landing_workato_test.kinetic.stockstat_20260720
+;
+
+CREATE TABLE landing_workato_test.backup.parttran_backup_2026_03_03 AS
+SELECT *
+FROM landing_workato_test.kinetic.parttran_backup_2026_03_03
+;
+
+DROP TABLE landing_workato_test.kinetic.parttran_backup_2026_03_03
+;
+
+CREATE TABLE landing_workato_test.backup.parttran_backup_2026_03_10 AS
+SELECT *
+FROM landing_workato_test.kinetic.parttran_backup_2026_03_10
+;
+
+DROP TABLE landing_workato_test.kinetic.parttran_backup_2026_03_10
+;
+
+-- This table is used!
+-- CREATE TABLE landing.backup.allocated_department_mapping_2026_05_26 AS
+-- SELECT *
+-- FROM landing.reftables.allocated_department_mapping_2026_05_26
+-- ;
+
+-- DROP TABLE landing.reftables.allocated_department_mapping_2026_05_26
+-- ;
+  
+CREATE TABLE landing.backup.bu_site_part_costs_20260729
+TBLPROPERTIES ('delta.columnMapping.mode' = 'name')
+AS
+SELECT *
+FROM landing.reftables.bu_site_part_costs_20260729
+;
+
+DROP TABLE landing.reftables.bu_site_part_costs_20260729
+;
+
+CREATE TABLE landing.backup.consolidated_part_master_2026_07_16
+TBLPROPERTIES ('delta.columnMapping.mode' = 'name')
+AS
+SELECT *
+FROM landing.reftables.consolidated_part_master_2026_07_16
+;
+
+DROP TABLE landing.reftables.consolidated_part_master_2026_07_16
+;
+
+CREATE TABLE landing.backup.manufacturing_cost_mapping_2026_07_09
+AS
+SELECT *
+FROM landing.reftables.manufacturing_cost_mapping_2026_07_09
+;
+
+DROP TABLE landing.reftables.manufacturing_cost_mapping_2026_07_09
+;
+
+-- This table is used!
+-- CREATE TABLE landing.backup.resgrpeff_distinct_departments_2026_05_12
+-- AS
+-- SELECT *
+-- FROM landing.reftables.resgrpeff_distinct_departments_2026_05_12
+-- ;
+
+-- DROP TABLE landing.reftables.resgrpeff_distinct_departments_2026_05_12
+-- ;
+
+CREATE TABLE landing.backup.sherri_query_adjustments_dd_260917_ticket_1619
+AS
+SELECT *
+FROM landing.reftables.sherri_query_adjustments_dd_260917_ticket_1619
+;
+
+DROP TABLE landing.reftables.sherri_query_adjustments_dd_260917_ticket_1619
+;
+
+
+
